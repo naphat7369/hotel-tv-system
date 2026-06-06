@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface-variant: #333535;
+  --color-surface: #121414;
+  --color-on-primary-container: #767c99;
+  --color-on-primary-fixed: #141a32;
+  --color-secondary-fixed-dim: #e9c176;
+  --color-outline-variant: #46464d;
+  --color-tertiary-container: #121313;
+  --color-surface-container-highest: #333535;
+  --color-on-tertiary-container: #7d7e7d;
+  --color-tertiary-fixed: #e3e2e2;
+  --color-error-container: #93000a;
+  --color-on-secondary-fixed-variant: #5d4201;
+  --color-secondary: #e9c176;
+  --color-inverse-primary: #575d78;
+  --color-secondary-fixed: #ffdea5;
+  --color-on-error-container: #ffdad6;
+  --color-inverse-surface: #e2e2e2;
+  --color-on-surface: #e2e2e2;
+  --color-on-secondary: #412d00;
+  --color-on-secondary-fixed: #261900;
+  --color-tertiary-fixed-dim: #c7c6c6;
+  --color-tertiary: #c7c6c6;
+  --color-inverse-on-surface: #2f3131;
+  --color-on-tertiary: #303030;
+  --color-secondary-container: #604403;
+  --color-primary-fixed-dim: #bfc5e4;
+  --color-on-primary: #292f48;
+  --color-surface-container-high: #282a2b;
+  --color-surface-container-low: #1a1c1c;
+  --color-on-tertiary-fixed: #1b1c1c;
+  --color-on-surface-variant: #c6c6ce;
+  --color-primary-fixed: #dce1ff;
+  --color-outline: #909098;
+  --color-on-error: #690005;
+  --color-on-tertiary-fixed-variant: #464747;
+  --color-error: #ffb4ab;
+  --color-primary: #bfc5e4;
+  --color-surface-bright: #38393a;
+  --color-surface-dim: #121414;
+  --color-on-background: #e2e2e2;
+  --color-on-secondary-container: #dab36a;
+  --color-surface-container: #1e2020;
+  --color-surface-container-lowest: #0c0f0f;
+  --color-background: #121414;
+  --color-surface-tint: #bfc5e4;
+  --color-on-primary-fixed-variant: #3f465f;
+  --color-primary-container: #0a1128;
+  
+  --spacing-gutter: 32px;
+  --spacing-section-margin: 64px;
+  --spacing-safe-area-x: 80px;
+  --spacing-safe-area-y: 60px;
+  --spacing-card-gap: 24px;
+  
+  --font-label-sm: "Manrope", sans-serif;
+  --font-body-md: "Manrope", sans-serif;
+  --font-body-lg: "Manrope", sans-serif;
+  --font-display-lg: "Playfair Display", serif;
+  --font-headline-lg: "Playfair Display", serif;
+  --font-headline-md: "Playfair Display", serif;
+  --font-label-lg: "Manrope", sans-serif;
+}
+
+@utility text-label-sm {
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+@utility text-body-md {
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 400;
+}
+
+@utility text-body-lg {
+  font-size: 24px;
+  line-height: 36px;
+  font-weight: 400;
+}
+
+@utility text-display-lg {
+  font-size: 72px;
+  line-height: 84px;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+@utility text-headline-lg {
+  font-size: 48px;
+  line-height: 56px;
+  font-weight: 600;
+}
+
+@utility text-headline-md {
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 500;
+}
+
+@utility text-label-lg {
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+body {
+  background-color: var(--color-background);
+  overflow: hidden;
+  height: 100vh;
+}
+
+.glass-panel {
+  background: rgba(18, 20, 20, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.nav-item-glow:focus {
+  background: rgba(233, 193, 118, 0.15);
+  box-shadow: 0 0 30px rgba(233, 193, 118, 0.2);
+  outline: none;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes marquee {
+  0% { transform: translateX(100vw); }
+  100% { transform: translateX(-100%); }
+}
+
+.animate-marquee {
+  display: inline-block;
+  white-space: nowrap;
+  animation: marquee 25s linear infinite;
+  will-change: transform;
+}
+
+.glow-focus:focus {
+  outline: none;
+  box-shadow: 0 0 40px rgba(233, 193, 118, 0.4);
+  border-color: var(--color-secondary);
+  transform: scale(1.02);
+  z-index: 50;
+}
+
+.bg-gradient-overlay-x {
+  background: linear-gradient(to right, rgba(18, 20, 20, 0.98) 0%, rgba(18, 20, 20, 0.7) 40%, rgba(18, 20, 20, 0) 100%);
+}
+

@@ -1,0 +1,54 @@
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { initWebSocket } from './websocket/socket';
+
+import deviceRoutes from './api/device.routes';
+import channelRoutes from './api/channel.routes';
+import appRoutes from './api/app.routes';
+import screenRoutes from './api/screen.routes';
+import epgRoutes from './api/epg.routes';
+import serviceRoutes from './api/service.routes';
+import analyticsRoutes from './api/analytics.routes';
+import requestRoutes from './api/request.routes';
+import mdmRoutes from './api/mdm.routes';
+
+dotenv.config();
+
+const app = express();
+const port = process.env.PORT || 3000;
+const httpServer = createServer(app);
+
+// Initialize WebSocket
+const io = initWebSocket(httpServer);
+app.set('io', io); // Allow routes to access io if needed
+
+// Middleware
+app.use(helmet());
+app.use(cors());
+app.use(express.json());
+
+// Routes
+app.use('/api/v1/devices', deviceRoutes);
+app.use('/api/v1/channels', channelRoutes);
+app.use('/api/v1/apps', appRoutes);
+app.use('/api/v1/screens', screenRoutes);
+app.use('/api/v1/epg', epgRoutes);
+app.use('/api/v1/services', serviceRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
+app.use('/api/v1/requests', requestRoutes);
+app.use('/api/v1/mdm', mdmRoutes);
+
+// Health Check
+app.get('/health', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok', message: 'Hotel TV Server is running' });
+});
+
+// Start Server
+httpServer.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
+
+export default app;

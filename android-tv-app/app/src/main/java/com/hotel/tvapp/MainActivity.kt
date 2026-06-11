@@ -52,16 +52,32 @@ class MainActivity : Activity() {
     private lateinit var apkInstaller: ApkInstaller
     private var isKioskActive = false
 
-    // ─── Secret Konami-like code to open settings ───────────────────────────
-    private val secretCode = listOf(
-        KeyEvent.KEYCODE_DPAD_UP,
-        KeyEvent.KEYCODE_DPAD_UP,
-        KeyEvent.KEYCODE_DPAD_DOWN,
-        KeyEvent.KEYCODE_DPAD_DOWN,
-        KeyEvent.KEYCODE_DPAD_LEFT,
-        KeyEvent.KEYCODE_DPAD_RIGHT
+    // ─── Secret PIN code to open settings (Default: 1234) ────────────────────
+    private val secretPin = listOf(
+        KeyEvent.KEYCODE_1,
+        KeyEvent.KEYCODE_2,
+        KeyEvent.KEYCODE_3,
+        KeyEvent.KEYCODE_4
     )
-    private val keyBuffer = mutableListOf<Int>()
+    private val pinBuffer = mutableListOf<Int>()
+
+    /**
+     * Helper to open Android Settings after unlocking Kiosk mode
+     */
+    private fun openAndroidSettings() {
+        try {
+            if (isKioskActive) {
+                try { stopLockTask() } catch (e: Exception) {}
+                isKioskActive = false
+            }
+            val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS)
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            Toast.makeText(this, "Opening Settings...", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("MDM", "Failed to open settings", e)
+        }
+    }
 
     // ════════════════════════════════════════════════════════════════════════
     //  JAVASCRIPT BRIDGE — AndroidTVBridge
@@ -418,20 +434,7 @@ class MainActivity : Activity() {
                     Log.e("MDM", "Failed to wake screen: ${e.message}")
                 }
             }
-            "open_settings" -> {
-                try {
-                    if (isKioskActive) {
-                        try { stopLockTask() } catch (e: Exception) {}
-                        isKioskActive = false
-                    }
-                    val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS)
-                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(intent)
-                    Toast.makeText(this, "Opening Settings...", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    Log.e("MDM", "Failed to open settings: ${e.message}")
-                }
-            }
+            "open_settings" -> openAndroidSettings()
             "install_apk" -> {
                 val url = payload.optString("url")
                 if (url.isNotEmpty()) {
@@ -553,28 +556,15 @@ class MainActivity : Activity() {
     // ════════════════════════════════════════════════════════════════════════
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        // Track secret code for opening settings
-        if (keyCode in listOf(
-                KeyEvent.KEYCODE_DPAD_UP, KeyEvent.KEYCODE_DPAD_DOWN,
-                KeyEvent.KEYCODE_DPAD_LEFT, KeyEvent.KEYCODE_DPAD_RIGHT)) {
+        // Track secret PIN code to open settings (e.g. 1 2 3 4)
+        if (keyCode in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9) {
+            pinBuffer.add(keyCode)
+            if (pinBuffer.size > secretPin.size) pinBuffer.removeAt(0)
 
-            keyBuffer.add(keyCode)
-            if (keyBuffer.size > secretCode.size) keyBuffer.removeAt(0)
-
-            if (keyBuffer == secretCode) {
-                keyBuffer.clear()
-                try {
-                    if (isKioskActive) {
-                        try { stopLockTask() } catch (e: Exception) {}
-                        isKioskActive = false
-                    }
-                    val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS)
-                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(intent)
-                    Toast.makeText(this, "Opening Settings...", Toast.LENGTH_SHORT).show()
-                } catch (e: Exception) {
-                    Log.e("MDM", "Failed to open settings", e)
-                }
+            if (pinBuffer == secretPin) {
+                pinBuffer.clear()
+                openAndroidSettings()
+                return true
             }
         }
 

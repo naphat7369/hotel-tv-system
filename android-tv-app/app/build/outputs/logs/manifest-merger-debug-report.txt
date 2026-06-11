@@ -1,9 +1,9 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-106:12
-INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-106:12
-INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-106:12
-INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-106:12
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-105:12
+INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-105:12
+INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-105:12
+INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-105:12
 MERGED from [androidx.activity:activity:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1b55fa1bdfd72d196162fccbc640410e\workspace\transformed\activity-1.8.2\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.activity:activity-ktx:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\798776ab3073fd78b40c5a56eb5c65e6\workspace\transformed\activity-ktx-1.8.2\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.media3:media3-ui:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\72b91d2c5e05e60b47511e09e9bd32b3\workspace\transformed\media3-ui-1.3.1\AndroidManifest.xml:17:1-22:12
@@ -123,8 +123,8 @@ ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\Andr
 	android:name
 		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:36:9-52
 application
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:39:5-104:19
-INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:39:5-104:19
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:39:5-103:19
+INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:39:5-103:19
 MERGED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:28:5-89
 MERGED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:28:5-89
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\03c29f33de80553acb268406543d4f38\workspace\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
@@ -138,95 +138,93 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gr
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:45:9-35
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:44:9-35
 	android:label
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:44:9-41
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:43:9-41
 	android:testOnly
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:42:9-32
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:41:9-33
 	android:icon
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:43:9-58
-	android:allowBackup
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:41:9-36
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:42:9-58
 	android:theme
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:46:9-71
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:45:9-71
 	android:usesCleartextTraffic
 		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:40:9-44
 activity#com.hotel.tvapp.MainActivity
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:52:9-69:20
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:51:9-68:20
 	android:screenOrientation
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:56:13-50
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:55:13-50
 	android:launchMode
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:55:13-48
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:54:13-48
 	android:exported
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:54:13-36
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:53:13-36
 	android:configChanges
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:57:13-94
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:56:13-94
 	android:theme
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:58:13-75
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:57:13-75
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:53:13-41
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:52:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.DEFAULT+category:name:android.intent.category.HOME+category:name:android.intent.category.LAUNCHER+category:name:android.intent.category.LEANBACK_LAUNCHER
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:59:13-68:29
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:58:13-67:29
 action#android.intent.action.MAIN
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:60:17-69
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:59:17-69
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:60:25-66
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:59:25-66
 category#android.intent.category.LEANBACK_LAUNCHER
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:62:17-86
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:61:17-86
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:62:27-83
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:61:27-83
 category#android.intent.category.LAUNCHER
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:64:17-77
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:63:17-77
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:64:27-74
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:63:27-74
 category#android.intent.category.HOME
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:66:17-73
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:65:17-73
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:66:27-70
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:65:27-70
 category#android.intent.category.DEFAULT
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:67:17-76
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:66:17-76
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:67:27-73
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:66:27-73
 receiver#com.hotel.tvapp.BootReceiver
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:75:9-82:20
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:74:9-81:20
 	android:enabled
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:77:13-35
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:76:13-35
 	android:exported
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:78:13-36
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:77:13-36
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:76:13-41
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:75:13-41
 intent-filter#action:name:android.intent.action.BOOT_COMPLETED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:79:13-81:29
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:78:13-80:29
 action#android.intent.action.BOOT_COMPLETED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:80:17-79
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:79:17-79
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:80:25-76
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:79:25-76
 receiver#com.hotel.tvapp.KioskAdminReceiver
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:89:9-99:20
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:88:9-98:20
 	android:exported
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:91:13-36
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:90:13-36
 	android:permission
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:92:13-70
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:91:13-70
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:90:13-47
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:89:13-47
 meta-data#android.app.device_admin
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:93:13-95:63
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:92:13-94:63
 	android:resource
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:95:17-60
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:94:17-60
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:94:17-56
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:93:17-56
 intent-filter#action:name:android.app.action.DEVICE_ADMIN_ENABLED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:96:13-98:29
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:95:13-97:29
 action#android.app.action.DEVICE_ADMIN_ENABLED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:97:17-82
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:96:17-82
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:97:25-79
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:96:25-79
 receiver#com.hotel.tvapp.InstallReceiver
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:102:9-78
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:101:9-78
 	android:exported
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:102:51-75
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:101:51-75
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:102:19-50
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:101:19-50
 uses-sdk
 INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml

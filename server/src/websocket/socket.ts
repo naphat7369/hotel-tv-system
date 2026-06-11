@@ -9,6 +9,7 @@ export interface DeviceStatus {
   macAddress?: string;
   wifiSignal?: number;
   socketId?: string;
+  roomNumber?: string;
 }
 
 // In-memory store for connected devices
@@ -37,13 +38,19 @@ export const initWebSocket = (server: HttpServer) => {
     // Device Handshake
     socket.on('register_device', (data) => {
       const deviceId = data.deviceId;
+      let roomNumber = data.roomNumber || 'Unassigned';
       if (!deviceId) return;
       
       currentDeviceId = deviceId;
-      console.log(`[WebSocket] Device registered: ${deviceId}`);
-      socket.join(`device_${deviceId}`);
-      
       const existingDevice = connectedDevices.get(deviceId) || {};
+
+      // Prevent multiple tabs from wiping out a valid room number with 'Unassigned'
+      if (roomNumber === 'Unassigned' && existingDevice.roomNumber && existingDevice.roomNumber !== 'Unassigned') {
+        roomNumber = existingDevice.roomNumber;
+      }
+
+      console.log(`[WebSocket] Device registered: ${deviceId} (Room: ${roomNumber})`);
+      socket.join(`device_${deviceId}`);
       
       // Update store but preserve existing properties like ipAddress
       connectedDevices.set(deviceId, {
@@ -51,11 +58,15 @@ export const initWebSocket = (server: HttpServer) => {
         deviceId,
         isOnline: true,
         lastSeen: new Date().toISOString(),
-        socketId: socket.id
+        socketId: socket.id,
+        roomNumber
       });
       
       broadcastDeviceList(io);
       socket.emit('registered', { status: 'success' });
+      
+      // Automatically request network status upon registration so CMS populates immediately
+      io.to(`device_${deviceId}`).emit('mdm_command', { command: 'get_network_status', payload: {} });
     });
 
     // Handle Heartbeat

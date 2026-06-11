@@ -8,6 +8,7 @@ interface Device {
   ipAddress?: string;
   macAddress?: string;
   wifiSignal?: number;
+  roomNumber?: string;
 }
 
 export const DeviceManagement = () => {
@@ -83,7 +84,7 @@ export const DeviceManagement = () => {
         <table className="min-w-full divide-y divide-gray-300">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Device ID</th>
+              <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Device & Room</th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Network Info</th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Actions</th>
@@ -97,9 +98,17 @@ export const DeviceManagement = () => {
             ) : devices.map((device) => (
               <tr key={device.deviceId}>
                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                  {device.deviceId}
-                  <div className="text-xs text-gray-500 font-normal mt-1">
-                    Last Seen: {new Date(device.lastSeen).toLocaleTimeString()}
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">📺</span>
+                    <div>
+                      <div className="font-bold text-gray-900">{device.deviceId}</div>
+                      <div className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit mt-1">
+                        Room: {device.roomNumber || 'Unassigned'}
+                      </div>
+                      <div className="text-xs text-gray-500 font-normal mt-1">
+                        Last Seen: {new Date(device.lastSeen).toLocaleTimeString()}
+                      </div>
+                    </div>
                   </div>
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm">
@@ -175,6 +184,32 @@ export const DeviceManagement = () => {
                       title="Open Android TV Settings"
                     >
                       ⚙️ TV Settings
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const newName = prompt('Enter new Cast/Device Name:', device.deviceId);
+                        if (newName) {
+                          sendCommand(device.deviceId, 'set_device_name', { name: newName });
+                        }
+                      }}
+                      disabled={!device.isOnline}
+                      className="px-3 py-1.5 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium text-xs disabled:opacity-50 transition-colors"
+                      title="Set TV Cast Name"
+                    >
+                      🏷️ Rename TV
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const newRoom = prompt('Enter Room Number for this TV:', device.roomNumber || '');
+                        if (newRoom) {
+                          sendCommand(device.deviceId, 'set_room_number', { roomNumber: newRoom });
+                        }
+                      }}
+                      disabled={!device.isOnline}
+                      className="px-3 py-1.5 rounded-md bg-pink-50 text-pink-700 hover:bg-pink-100 font-medium text-xs disabled:opacity-50 transition-colors"
+                      title="Assign TV to Room"
+                    >
+                      🔑 Set Room
                     </button>
                     <button 
                       onClick={() => sendCommand(device.deviceId, 'screen_on')}

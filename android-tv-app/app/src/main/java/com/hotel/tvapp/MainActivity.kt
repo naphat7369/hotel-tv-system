@@ -52,14 +52,7 @@ class MainActivity : Activity() {
     private lateinit var apkInstaller: ApkInstaller
     private var isKioskActive = false
 
-    // ─── Secret PIN code to open settings (Default: 1234) ────────────────────
-    private val secretPin = listOf(
-        KeyEvent.KEYCODE_1,
-        KeyEvent.KEYCODE_2,
-        KeyEvent.KEYCODE_3,
-        KeyEvent.KEYCODE_4
-    )
-    private val pinBuffer = mutableListOf<Int>()
+
 
     /**
      * Helper to open Android Settings after unlocking Kiosk mode
@@ -556,18 +549,6 @@ class MainActivity : Activity() {
     // ════════════════════════════════════════════════════════════════════════
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        // Track secret PIN code to open settings (e.g. 1 2 3 4)
-        if (keyCode in KeyEvent.KEYCODE_0..KeyEvent.KEYCODE_9) {
-            pinBuffer.add(keyCode)
-            if (pinBuffer.size > secretPin.size) pinBuffer.removeAt(0)
-
-            if (pinBuffer == secretPin) {
-                pinBuffer.clear()
-                openAndroidSettings()
-                return true
-            }
-        }
-
         return when (keyCode) {
             KeyEvent.KEYCODE_BACK -> {
                 // Send Escape to React so it can handle exit logic cleanly

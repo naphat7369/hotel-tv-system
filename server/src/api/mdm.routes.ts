@@ -24,6 +24,12 @@ router.post('/devices/:id/command', async (req: Request, res: Response) => {
   // Handle specific hardware/network commands
   if (command === 'screen_on') {
     await wakeDeviceById(id);
+  } else if (command === 'set_device_name') {
+    const device = connectedDevices.get(id);
+    if (device && device.ipAddress) {
+      const { setDeviceName } = require('../services/adb.service');
+      await setDeviceName(device.ipAddress, payload.name);
+    }
   }
 
   // For all other software commands (reload UI, clear cache, messages), emit via WebSocket

@@ -52,6 +52,10 @@ const guideMenu: MenuItem[] = [
 ]
 
 function App() {
+  // Use localStorage so the CMS can dynamically rename this device without an Android app
+  const deviceId = localStorage.getItem('device_id') || 'BOX-101-A';
+  const roomNumber = localStorage.getItem('room_number') || 'Unassigned';
+
   const [time, setTime] = useState(new Date())
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
@@ -110,11 +114,29 @@ function App() {
     const serverHost = `http://${window.location.hostname}:3000`;
     const socket = io(serverHost);
     
-    // If running inside the real TV box, use its ID. Otherwise default to BOX-101-A for testing.
-    // In production, this would be injected via AndroidBridge or URL parameters.
-    const deviceId = 'BOX-101-A';
-    socket.emit('register_device', { deviceId });
+    socket.on('connect', () => {
+      console.log(`WebSocket connected, registering device as ${deviceId} for room ${roomNumber}...`);
+      socket.emit('register_device', { deviceId, roomNumber });
+    });
     
+    // Listen for MDM commands (like rename, set room, reload, clear cache)
+    socket.on('mdm_command', (data: any) => {
+      console.log('Received MDM command:', data);
+      if (data.command === 'set_device_name' && data.payload && data.payload.name) {
+        localStorage.setItem('device_id', data.payload.name);
+        window.location.reload(); // Reload to re-register with new name
+      } else if (data.command === 'set_room_number' && data.payload && data.payload.roomNumber) {
+        localStorage.setItem('room_number', data.payload.roomNumber);
+        window.location.reload(); // Reload to re-register with new room
+      } else if (data.command === 'reload_portal') {
+        window.location.reload();
+      } else if (data.command === 'clear_cache') {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.reload();
+      }
+    });
+
     // Network status is now handled exclusively by the Native Android App.
 
     socket.on('guest_update', (data: any) => {
@@ -591,7 +613,7 @@ function App() {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                           hotelId: 'hotel-1',
-                          roomId: 'room-402',
+                          roomId: `room-${roomNumber}`,
                           requestType: 'HOUSEKEEPING',
                           items: requested
                         })
@@ -707,7 +729,7 @@ function App() {
               <div className="flex items-center gap-[2vw]">
                 <div className="text-right">
                   <p className="font-label-sm text-[0.9vw] text-secondary uppercase tracking-widest">{guestData.isCheckedIn ? (guestData.tag || 'Valued Guest') : ''}</p>
-                  <p className="font-label-lg text-[1.2vw] text-on-surface">{guestData.isCheckedIn && guestData.name ? guestData.name : 'Room 402'}</p>
+                  <p className="font-label-lg text-[1.2vw] text-on-surface">{guestData.isCheckedIn && guestData.name ? guestData.name : `Room ${roomNumber}`}</p>
                 </div>
                 <div className="rounded-full border-2 border-secondary overflow-hidden bg-black flex items-center justify-center transition-opacity" style={{ width: '5vw', height: '5vw', opacity: guestData.isCheckedIn ? 1 : 0.3 }}>
                   <span className="material-symbols-outlined text-white/80" style={{ fontSize: '3vw' }}>person</span>

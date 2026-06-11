@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Hotel TV — MainActivity Layout
+    Architecture: ExoPlayer (bottom) + WebView Overlay (top)
+
+    The FrameLayout stacks children on top of each other.
+    Layer 1 (bottom): PlayerView — hardware-accelerated video surface for UDP multicast
+    Layer 2 (top):    WebView   — transparent React UI overlay (OSD, menus, navigation)
+-->
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!--
+        ══ LAYER 1: Native ExoPlayer Video Surface ══
+        - Placed first so it renders BEHIND the WebView
+        - use_controller="false" hides all default ExoPlayer UI chrome
+          (we build our own OSD in React)
+        - resize_mode="fill" ensures the video fills the entire screen
+    -->
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/player_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000000"
+        app:use_controller="false"
+        app:resize_mode="fill"
+        xmlns:app="http://schemas.android.com/apk/res-auto"/>
+
+    <!--
+        ══ LAYER 2: WebView Transparent Overlay ══
+        - Placed second so it renders ON TOP of the PlayerView
+        - Background is set to Color.TRANSPARENT in Kotlin code
+        - The React app controls visibility of its own opaque backgrounds
+        - When playing Live TV: React sets its background to transparent,
+          revealing the ExoPlayer video playing behind it
+    -->
+    <WebView
+        android:id="@+id/web_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:layerType="software"/>
+
+</FrameLayout>

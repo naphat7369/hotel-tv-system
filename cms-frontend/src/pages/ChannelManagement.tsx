@@ -1,20 +1,65 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { api, type Channel } from '../lib/api';
-import { RefreshCw, Trash2, Power } from 'lucide-react';
+import { RefreshCw, Trash2, Power, Edit2, Play, Upload } from 'lucide-react';
+import Hls from 'hls.js';
+
+function HlsPreview({ url }: { url?: string | null }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !url) return;
+
+    let hls: Hls | null = null;
+    if (Hls.isSupported()) {
+      hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      video.src = url;
+    }
+
+    return () => {
+      if (hls) hls.destroy();
+    };
+  }, [url]);
+
+  if (!url) return (
+    <div style={{
+      width: '100%', height: '160px',
+      background: 'var(--color-surface-container-high)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      borderRadius: '8px', border: '1px solid var(--color-outline-variant)',
+      color: 'var(--color-on-surface-variant)', fontSize: '13px'
+    }}>
+      No Stream URL provided
+    </div>
+  );
+
+  return (
+    <div style={{ width: '100%', height: '160px', background: '#000', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--color-outline-variant)' }}>
+      <video ref={videoRef} style={{ width: '100%', height: '100%', objectFit: 'contain' }} controls autoPlay muted />
+    </div>
+  );
+}
+
+const CATEGORIES = ['Live TV', 'Movies', 'News', 'Sports', 'Kids', 'Music', 'Documentary', 'General'];
 
 function ChannelManagement() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
-
-  // Modal State
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newCategory, setNewCategory] = useState('');
+  const [modalMode, setModalMode] = useState<'add' | 'edit' | null>(null);
+  const [formData, setFormData] = useState<Partial<Channel>>({
+    name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const fetchChannels = async () => {
     setLoading(true);
@@ -28,22 +73,17 @@ function ChannelManagement() {
     }
   };
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchChannels();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchChannels(); }, []);
 
   const handleToggleStatus = async (channel: Channel) => {
     setProcessingId(channel.id);
-    const newStatus = channel.status === 'Active' ? 'Inactive' : 'Active';
+    const newStatus = !channel.isActive;
     try {
-      await api.updateChannelStatus(channel.id, newStatus);
-      setChannels(channels.map(c => c.id === channel.id ? { ...c, status: newStatus } : c));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setProcessingId(null);
-    }
+      await api.updateChannel(channel.id, { isActive: newStatus });
+      setChannels(channels.map(c => c.id === channel.id ? { ...c, isActive: newStatus } : c));
+    } catch (e) { console.error(e); }
+    finally { setProcessingId(null); }
   };
 
   const handleDelete = async (id: string) => {
@@ -52,31 +92,75 @@ function ChannelManagement() {
     try {
       await api.deleteChannel(id);
       setChannels(channels.filter(c => c.id !== id));
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setProcessingId(null);
-    }
+    } catch (e) { console.error(e); }
+    finally { setProcessingId(null); }
   };
 
-  const handleAddClick = () => {
-    setNewName('');
-    setNewCategory('');
-    setIsAddModalOpen(true);
+  const openAddModal = () => {
+    setFormData({ name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true });
+    setModalMode('add');
   };
 
-  const submitAddChannel = async () => {
-    if (!newName.trim()) return;
-    setProcessingId('new');
+  const openEditModal = (channel: Channel) => {
+    setFormData({ ...channel });
+    setModalMode('edit');
+  };
+
+  const submitModal = async () => {
+    if (!formData.name?.trim()) return;
+    setProcessingId('modal');
     try {
-      const newChannel = await api.addChannel({ name: newName, category: newCategory || 'General' });
-      setChannels([...channels, newChannel]);
-      setIsAddModalOpen(false);
+      if (modalMode === 'add') {
+        const newChannel = await api.addChannel(formData);
+        setChannels([...channels, newChannel]);
+      } else if (modalMode === 'edit' && formData.id) {
+        const updated = await api.updateChannel(formData.id, formData);
+        setChannels(channels.map(c => c.id === updated.id ? updated : c));
+      }
+      setModalMode(null);
     } catch (e) {
       console.error(e);
+      alert('Failed to save channel. See console.');
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingLogo(true);
+    try {
+      const res = await api.uploadChannelLogo(file);
+      setFormData(prev => ({ ...prev, logoUrl: res.url }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload logo.');
+    } finally {
+      setUploadingLogo(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    padding: '8px 10px',
+    border: '1px solid var(--color-outline-variant)',
+    borderRadius: '6px',
+    background: 'var(--color-surface-container-high)',
+    color: 'var(--color-on-surface)',
+    fontSize: '14px',
+    boxSizing: 'border-box',
+    outline: 'none'
+  };
+
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: 600,
+    marginBottom: '6px',
+    color: 'var(--color-on-surface)'
   };
 
   return (
@@ -84,7 +168,7 @@ function ChannelManagement() {
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-on-surface">Channel Management</h2>
-          <p className="text-on-surface-variant">Manage your hotel's digital experience</p>
+          <p className="text-on-surface-variant">Manage Live TV streams and assignments</p>
         </div>
         <Button onClick={fetchChannels} variant="outline" size="icon" disabled={loading}>
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -94,12 +178,13 @@ function ChannelManagement() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-surface-container-high bg-surface-container-low">
           <CardTitle className="text-lg">📺 Channel Fleet</CardTitle>
-          <Button size="sm" onClick={handleAddClick} disabled={processingId === 'new'}>+ Add Channel</Button>
+          <Button size="sm" onClick={openAddModal} disabled={processingId === 'modal'}>+ Add Channel</Button>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-16">CH</TableHead>
                 <TableHead>Channel Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
@@ -109,45 +194,34 @@ function ChannelManagement() {
             <TableBody>
               {loading && channels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-on-surface-variant">Loading channels...</TableCell>
+                  <TableCell colSpan={5} className="text-center py-8 text-on-surface-variant">Loading channels...</TableCell>
                 </TableRow>
               ) : channels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-on-surface-variant">No channels found.</TableCell>
+                  <TableCell colSpan={5} className="text-center py-8 text-on-surface-variant">No channels found.</TableCell>
                 </TableRow>
               ) : (
                 channels.map((ch) => (
                   <TableRow key={ch.id} className={processingId === ch.id ? 'opacity-50 pointer-events-none' : ''}>
-                    <TableCell className="font-bold">{ch.name}</TableCell>
-                    <TableCell>
-                      <span className="bg-surface-container-high text-on-surface-variant px-2 py-1 rounded text-xs">
-                        {ch.category}
-                      </span>
+                    <TableCell className="font-mono text-on-surface-variant">{ch.channelNumber || '-'}</TableCell>
+                    <TableCell className="font-bold">
+                      {ch.name}
+                      {ch.streamUrl && <Play className="w-3 h-3 inline-block ml-2 text-primary" />}
                     </TableCell>
                     <TableCell>
-                      {ch.status === 'Active' ? (
-                        <Badge variant="success">Active</Badge>
-                      ) : ch.status === 'Warning' ? (
-                        <Badge variant="warning">Warning</Badge>
-                      ) : (
-                        <Badge variant="error">Inactive</Badge>
-                      )}
+                      <span className="bg-surface-container-high text-on-surface-variant px-2 py-1 rounded text-xs">{ch.category}</span>
+                    </TableCell>
+                    <TableCell>
+                      {ch.isActive ? <Badge variant="success">Active</Badge> : <Badge variant="error">Inactive</Badge>}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={() => handleToggleStatus(ch)}
-                        title={ch.status === 'Active' ? 'Deactivate' : 'Activate'}
-                      >
-                        <Power className={`w-4 h-4 ${ch.status === 'Active' ? 'text-success' : 'text-on-surface-variant'}`} />
+                      <Button variant="ghost" size="sm" onClick={() => openEditModal(ch)} title="Edit">
+                        <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-error hover:text-error hover:bg-error/10"
-                        onClick={() => handleDelete(ch.id)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => handleToggleStatus(ch)} title={ch.isActive ? 'Deactivate' : 'Activate'}>
+                        <Power className={`w-4 h-4 ${ch.isActive ? 'text-success' : 'text-on-surface-variant'}`} />
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-error hover:text-error hover:bg-error/10" onClick={() => handleDelete(ch.id)}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </TableCell>
@@ -159,42 +233,131 @@ function ChannelManagement() {
         </CardContent>
       </Card>
 
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-sm shadow-xl">
-            <CardHeader className="border-b border-surface-container-high bg-surface-container-low">
-              <CardTitle>Add New Channel</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
+      {/* ── Modal ── */}
+      {modalMode && createPortal(
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 9999,
+          backgroundColor: 'rgba(0,0,0,0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div style={{
+            width: '560px',
+            maxWidth: 'calc(100vw - 32px)',
+            backgroundColor: 'var(--color-surface-container)',
+            border: '1px solid var(--color-outline-variant)',
+            borderRadius: '12px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.6)'
+          }}>
+
+            {/* Header */}
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--color-outline-variant)', backgroundColor: 'var(--color-surface-container-low)', borderRadius: '12px 12px 0 0' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--color-on-surface)' }}>
+                {modalMode === 'add' ? '📺 Add New Channel' : '✏️ Edit Channel'}
+              </h3>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+              {/* CH# + Name */}
+              <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle}>CH #</label>
+                  <input type="number" style={inputStyle}
+                    value={formData.channelNumber || ''}
+                    onChange={e => setFormData({...formData, channelNumber: parseInt(e.target.value) || null})}
+                    placeholder="1" />
+                </div>
+                <div>
+                  <label style={labelStyle}>Channel Name *</label>
+                  <input type="text" style={inputStyle}
+                    value={formData.name || ''}
+                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    placeholder="e.g. HBO Asia" />
+                </div>
+              </div>
+
+              {/* Category + Logo URL */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle}>Category</label>
+                  <select style={inputStyle}
+                    value={formData.category || 'Live TV'}
+                    onChange={e => setFormData({...formData, category: e.target.value})}>
+                    {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Logo URL</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <input type="url" style={{ ...inputStyle, fontSize: '13px', flex: 1 }}
+                      value={formData.logoUrl || ''}
+                      onChange={e => setFormData({...formData, logoUrl: e.target.value})}
+                      placeholder="https://example.com/logo.png" />
+                    
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      ref={fileInputRef} 
+                      onChange={handleLogoUpload} 
+                      style={{ display: 'none' }} 
+                    />
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      size="icon" 
+                      style={{ height: '36px', width: '36px', flexShrink: 0, padding: 0 }}
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                      title="Upload Image"
+                    >
+                      {uploadingLogo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* HLS Stream URL */}
               <div>
-                <label className="block text-sm font-semibold mb-1 text-on-surface">Channel Name</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border border-outline-variant rounded bg-surface-container text-on-surface focus:border-primary focus:outline-none" 
-                  value={newName}
-                  onChange={e => setNewName(e.target.value)}
-                  placeholder="e.g. HBO Asia"
-                />
+                <label style={labelStyle}>HLS Stream URL (.m3u8)</label>
+                <input type="url" style={{ ...inputStyle, fontSize: '13px' }}
+                  value={formData.streamUrl || ''}
+                  onChange={e => setFormData({...formData, streamUrl: e.target.value})}
+                  placeholder="https://example.com/stream.m3u8" />
               </div>
+
+              {/* Preview */}
               <div>
-                <label className="block text-sm font-semibold mb-1 text-on-surface">Category</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border border-outline-variant rounded bg-surface-container text-on-surface focus:border-primary focus:outline-none" 
-                  value={newCategory}
-                  onChange={e => setNewCategory(e.target.value)}
-                  placeholder="e.g. Movies"
-                />
+                <label style={labelStyle}>Stream Preview</label>
+                <HlsPreview url={formData.streamUrl} />
               </div>
-              <div className="flex justify-end gap-2 mt-6">
-                <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                <Button onClick={submitAddChannel} disabled={!newName.trim() || processingId === 'new'}>
-                  {processingId === 'new' ? 'Adding...' : 'Add Channel'}
-                </Button>
+
+              {/* Active */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input type="checkbox" id="isActive"
+                  checked={formData.isActive}
+                  onChange={e => setFormData({...formData, isActive: e.target.checked})}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                <label htmlFor="isActive" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+                  Active (Visible to guests)
+                </label>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '16px 24px', borderTop: '1px solid var(--color-outline-variant)', borderRadius: '0 0 12px 12px', backgroundColor: 'var(--color-surface-container-low)' }}>
+              <Button variant="ghost" onClick={() => setModalMode(null)}>Cancel</Button>
+              <Button onClick={submitModal} disabled={!formData.name?.trim() || processingId === 'modal'}>
+                {processingId === 'modal' ? 'Saving...' : 'Save Channel'}
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -8,6 +8,7 @@ export interface DeviceStatus {
   ipAddress?: string;
   macAddress?: string;
   wifiSignal?: number;
+  socketId?: string;
 }
 
 // In-memory store for connected devices
@@ -42,11 +43,15 @@ export const initWebSocket = (server: HttpServer) => {
       console.log(`[WebSocket] Device registered: ${deviceId}`);
       socket.join(`device_${deviceId}`);
       
-      // Update store
+      const existingDevice = connectedDevices.get(deviceId) || {};
+      
+      // Update store but preserve existing properties like ipAddress
       connectedDevices.set(deviceId, {
+        ...existingDevice,
         deviceId,
         isOnline: true,
-        lastSeen: new Date().toISOString()
+        lastSeen: new Date().toISOString(),
+        socketId: socket.id
       });
       
       broadcastDeviceList(io);
@@ -95,11 +100,13 @@ export const initWebSocket = (server: HttpServer) => {
       console.log(`[WebSocket] Client disconnected: ${socket.id}`);
       if (currentDeviceId) {
         const existing = connectedDevices.get(currentDeviceId);
-        if (existing) {
+        if (existing && existing.socketId === socket.id) {
           existing.isOnline = false;
           existing.lastSeen = new Date().toISOString();
           connectedDevices.set(currentDeviceId, existing);
           broadcastDeviceList(io);
+        } else if (existing) {
+          console.log(`[WebSocket] Ignored stale disconnect for ${currentDeviceId}`);
         }
       }
     });

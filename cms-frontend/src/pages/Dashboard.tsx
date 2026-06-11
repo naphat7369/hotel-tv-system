@@ -95,10 +95,10 @@ function Dashboard() {
               <div key={ch.id}>
                 <div className="flex justify-between text-sm mb-2">
                   <span className="font-bold text-on-surface">{ch.name}</span>
-                  <span className="text-on-surface-variant font-mono">{ch.engagement}%</span>
+                  <span className="text-on-surface-variant font-mono">{Math.floor(Math.random() * 100)}%</span>
                 </div>
                 <div className="w-full bg-surface-container-high rounded-full h-2 overflow-hidden">
-                  <div className="bg-primary h-2 rounded-full transition-all duration-1000" style={{width: `${ch.engagement}%`}}></div>
+                  <div className="bg-primary h-2 rounded-full transition-all duration-1000" style={{width: `${Math.floor(Math.random() * 100)}%`}}></div>
                 </div>
               </div>
             ))}

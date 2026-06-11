@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.hotel.tvapp-mergeDebugResources-38:/values-v16/values-v16.xml",
+            "outputFile": "com.hotel.tvapp-mergeDebugResources-23:/values-v16/values-v16.xml",
             "map": [
                 {
                     "source": "C:\\Users\\DESKTOP-S31-IT\\.gradle\\caches\\9.3.0\\transforms\\27211f238f146ef6e13d99b8756212c2\\workspace\\transformed\\core-1.12.0\\res\\values-v16\\values-v16.xml",

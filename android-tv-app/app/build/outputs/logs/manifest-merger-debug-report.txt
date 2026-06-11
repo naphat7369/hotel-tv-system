@@ -1,47 +1,41 @@
 -- Merging decision tree log ---
 manifest
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-89:12
-INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-89:12
-INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-89:12
-INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-89:12
-MERGED from [androidx.activity:activity-compose:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ba731fb82aae5d63367d1906de1b9da2\workspace\transformed\activity-compose-1.8.2\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.tv:tv-material:1.0.0-alpha10] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\649ae30d5abe54cc3bd57087b9845800\workspace\transformed\tv-material-1.0.0-alpha10\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.tv:tv-foundation:1.0.0-alpha10] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\7b109d36153cb8184befe7451cddc025\workspace\transformed\tv-foundation-1.0.0-alpha10\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.foundation:foundation-layout-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\5bb494b014f86fd28512014be7fac100\workspace\transformed\foundation-layout-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.foundation:foundation-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\be9898697a7ca7a8206ec4b75a2b869d\workspace\transformed\foundation-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.animation:animation-core-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1ff8e27df85fbab682dd71f2f12f78fb\workspace\transformed\animation-core-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.animation:animation-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\848024a1fb6aa5bdeddb912f6f7b1f82\workspace\transformed\animation-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.material:material-icons-core-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d58abea97dca230349fc4b73504d7741\workspace\transformed\material-icons-core-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.ui:ui-unit-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\be0567fff7e1a846776c9bd9327e9b90\workspace\transformed\ui-unit-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.ui:ui-geometry-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\e21fd0eaee04dd7dfbb5a22c5d7061ee\workspace\transformed\ui-geometry-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.ui:ui-util-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\10d898dcad2c40227e6b5386d249eced\workspace\transformed\ui-util-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2321279e1c9028d47ae65d0c1169ee05\workspace\transformed\ui-tooling-preview-release\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.compose.ui:ui-text-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1a91778614e19232e14810a56c4af713\workspace\transformed\ui-text-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.ui:ui-graphics-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c3fd0c135d39b7c5b96cc0086f93c752\workspace\transformed\ui-graphics-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.ui:ui-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\6f391080b10741ebc1e2622ea4609bc2\workspace\transformed\ui-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.activity:activity-ktx:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\798776ab3073fd78b40c5a56eb5c65e6\workspace\transformed\activity-ktx-1.8.2\AndroidManifest.xml:2:1-7:12
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-106:12
+INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-106:12
+INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-106:12
+INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:2:1-106:12
 MERGED from [androidx.activity:activity:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1b55fa1bdfd72d196162fccbc640410e\workspace\transformed\activity-1.8.2\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:17:1-35:12
-MERGED from [androidx.autofill:autofill:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8404cbdb6988833a9ca2a6b6cc764042\workspace\transformed\autofill-1.0.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.activity:activity-ktx:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\798776ab3073fd78b40c5a56eb5c65e6\workspace\transformed\activity-ktx-1.8.2\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.media3:media3-ui:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\72b91d2c5e05e60b47511e09e9bd32b3\workspace\transformed\media3-ui-1.3.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-datasource:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\5b606ce45550f75a743726a603137729\workspace\transformed\media3-datasource-1.3.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-extractor:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\19dca89bb2b4860858e826424b149305\workspace\transformed\media3-extractor-1.3.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-container:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2aa422e85d9fc2d3f1471fdb7f8999af\workspace\transformed\media3-container-1.3.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-decoder:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c072242825ecfb7dc5406d6bdd06c511\workspace\transformed\media3-decoder-1.3.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-database:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\cd97f90e55ef9841b8a28d4eefe497b9\workspace\transformed\media3-database-1.3.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-common:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\7c556182aa6e3e8573192a0e79c5bc55\workspace\transformed\media3-common-1.3.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media3:media3-exoplayer-rtsp:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\096ac78bd6893665a40dde4618676563\workspace\transformed\media3-exoplayer-rtsp-1.3.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-exoplayer-hls:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c6d5147e8abbaba1f70a639ad1cd8cfb\workspace\transformed\media3-exoplayer-hls-1.3.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-exoplayer:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\861c951e4e9b559405ba055958eb72ba\workspace\transformed\media3-exoplayer-1.3.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media:media:1.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\f1a60891a8f350611be38125331ffa3b\workspace\transformed\media-1.7.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\974f46a1b0bfc02f80c9fbaa941ebc3b\workspace\transformed\recyclerview-1.3.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\6d59fc5d21eb6c63f9526ba6776f2d32\workspace\transformed\customview-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:17:1-30:12
-MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:17:1-35:12
-MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ffdcbbc11f0c9d4b749dfbc41e20a27f\workspace\transformed\lifecycle-livedata-core-2.7.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70092ac9ea261f272b496356c058dbc1\workspace\transformed\lifecycle-viewmodel-ktx-2.7.0\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c566a33a13412d78c7648c43e3b018a8\workspace\transformed\lifecycle-viewmodel-2.7.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\b3d5d1dc7b38e3a62279654519abd6d3\workspace\transformed\lifecycle-runtime-ktx-2.7.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2ccff4a180b6fc9de8b64185c6683b62\workspace\transformed\lifecycle-runtime-2.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\89cce05fe3bd9440c01dd0f1463f4d23\workspace\transformed\savedstate-ktx-1.2.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.savedstate:savedstate:1.2.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\47a2ad0f67ac415476f94e3187b3cfb3\workspace\transformed\savedstate-1.2.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ffdcbbc11f0c9d4b749dfbc41e20a27f\workspace\transformed\lifecycle-livedata-core-2.7.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c566a33a13412d78c7648c43e3b018a8\workspace\transformed\lifecycle-viewmodel-2.7.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70092ac9ea261f272b496356c058dbc1\workspace\transformed\lifecycle-viewmodel-ktx-2.7.0\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\b3d5d1dc7b38e3a62279654519abd6d3\workspace\transformed\lifecycle-runtime-ktx-2.7.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2ccff4a180b6fc9de8b64185c6683b62\workspace\transformed\lifecycle-runtime-2.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a7301cc9e5b244421f817a63194c2242\workspace\transformed\lifecycle-viewmodel-savedstate-2.7.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\57e7383ed614d3a16d05ed7355f5b1ea\workspace\transformed\customview-poolingcontainer-1.0.0\AndroidManifest.xml:17:1-23:12
 MERGED from [androidx.core:core-ktx:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70e47e9fad34a5cbf593fe84121b0c4e\workspace\transformed\core-ktx-1.12.0\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\93063270c4c07de8d1b91d6445e0eb3e\workspace\transformed\annotation-experimental-1.3.0\AndroidManifest.xml:17:1-22:12
-MERGED from [androidx.compose.runtime:runtime-saveable-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\eaeb6592cfee0791f0f08050f9ad7422\workspace\transformed\runtime-saveable-release\AndroidManifest.xml:2:1-7:12
-MERGED from [androidx.compose.runtime:runtime-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3883b9ea67c9a3ff0388d63a67d3766f\workspace\transformed\runtime-release\AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.annotation:annotation-experimental:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\257c99abc6c83454eeb0936e2fe99ba4\workspace\transformed\annotation-experimental-1.3.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\03c29f33de80553acb268406543d4f38\workspace\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:17:1-27:12
-MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:17:1-55:12
+MERGED from [androidx.exifinterface:exifinterface:1.3.6] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d61d331bf37bc10e4d312bd0816e2f65\workspace\transformed\exifinterface-1.3.6\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8fc694aea6eaca63d762d2042b27562f\workspace\transformed\interpolator-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2cf1fbfcbe2b6d274c1d0aee008415c5\workspace\transformed\core-runtime-2.2.0\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:17:1-55:12
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:17:1-33:12
 MERGED from [androidx.tracing:tracing:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\b89d82e04196ca02fa392d3862f423cb\workspace\transformed\tracing-1.0.0\AndroidManifest.xml:17:1-24:12
 	package
@@ -58,53 +52,85 @@ ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\Andr
 		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:5:22-64
 uses-permission#android.permission.ACCESS_NETWORK_STATE
 ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:6:5-79
+MERGED from [androidx.media3:media3-common:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\7c556182aa6e3e8573192a0e79c5bc55\workspace\transformed\media3-common-1.3.1\AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-common:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\7c556182aa6e3e8573192a0e79c5bc55\workspace\transformed\media3-common-1.3.1\AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-exoplayer:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\861c951e4e9b559405ba055958eb72ba\workspace\transformed\media3-exoplayer-1.3.1\AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-exoplayer:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\861c951e4e9b559405ba055958eb72ba\workspace\transformed\media3-exoplayer-1.3.1\AndroidManifest.xml:22:5-79
 	android:name
 		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:6:22-76
 uses-permission#android.permission.ACCESS_WIFI_STATE
 ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:7:5-76
 	android:name
 		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:7:22-73
+uses-permission#android.permission.CHANGE_WIFI_STATE
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:8:5-76
+	android:name
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:8:22-73
 uses-permission#android.permission.WAKE_LOCK
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:8:5-68
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:9:5-68
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:8:22-65
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:9:22-65
+uses-permission#android.permission.CHANGE_WIFI_MULTICAST_STATE
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:11:5-86
+	android:name
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:11:22-83
 uses-permission#android.permission.RECEIVE_BOOT_COMPLETED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:11:5-81
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:15:5-81
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:11:22-78
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:15:22-78
+uses-permission#android.permission.REQUEST_INSTALL_PACKAGES
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:18:5-83
+	android:name
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:18:22-80
+uses-permission#android.permission.WRITE_EXTERNAL_STORAGE
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:19:5-108
+	android:maxSdkVersion
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:19:79-105
+	android:name
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:19:22-78
+uses-permission#android.permission.READ_EXTERNAL_STORAGE
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:20:5-107
+	android:maxSdkVersion
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:20:78-104
+	android:name
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:20:22-77
+uses-permission#android.permission.DOWNLOAD_WITHOUT_NOTIFICATION
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:21:5-88
+	android:name
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:21:22-85
+uses-permission#android.permission.QUERY_ALL_PACKAGES
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:24:5-77
+	android:name
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:24:22-74
 uses-permission#android.permission.BIND_DEVICE_ADMIN
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:13:5-76
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:27:5-76
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:13:22-73
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:27:22-73
 uses-permission#android.permission.MANAGE_DEVICE_ADMINS
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:14:5-79
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:28:5-79
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:14:22-76
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:28:22-76
 uses-feature#android.software.leanback
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:17:5-19:35
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:31:5-33:35
 	android:required
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:19:9-32
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:33:9-32
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:18:9-49
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:32:9-49
 uses-feature#android.hardware.touchscreen
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:21:5-23:36
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:35:5-37:36
 	android:required
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:23:9-33
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:37:9-33
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:22:9-52
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:36:9-52
 application
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:25:5-87:19
-INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:25:5-87:19
-MERGED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:23:5-33:19
-MERGED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:23:5-33:19
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:39:5-104:19
+INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:39:5-104:19
 MERGED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:28:5-89
 MERGED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:28:5-89
-MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:23:5-33:19
-MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:23:5-33:19
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\03c29f33de80553acb268406543d4f38\workspace\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\03c29f33de80553acb268406543d4f38\workspace\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:24:5-25:19
-MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:23:5-53:19
-MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:23:5-53:19
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:25:5-31:19
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:25:5-31:19
 	android:extractNativeLibs
@@ -112,169 +138,163 @@ MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gr
 	android:appComponentFactory
 		ADDED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:28:18-86
 	android:supportsRtl
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:31:9-35
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:45:9-35
 	android:label
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:30:9-41
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:44:9-41
 	android:testOnly
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:28:9-32
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:42:9-32
 	android:icon
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:29:9-58
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:43:9-58
 	android:allowBackup
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:27:9-36
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:41:9-36
 	android:theme
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:32:9-71
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:46:9-71
 	android:usesCleartextTraffic
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:26:9-44
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:40:9-44
 activity#com.hotel.tvapp.MainActivity
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:38:9-55:20
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:52:9-69:20
 	android:screenOrientation
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:42:13-50
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:56:13-50
 	android:launchMode
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:41:13-48
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:55:13-48
 	android:exported
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:40:13-36
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:54:13-36
 	android:configChanges
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:43:13-94
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:57:13-94
 	android:theme
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:44:13-75
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:58:13-75
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:39:13-41
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:53:13-41
 intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.DEFAULT+category:name:android.intent.category.HOME+category:name:android.intent.category.LAUNCHER+category:name:android.intent.category.LEANBACK_LAUNCHER
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:45:13-54:29
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:59:13-68:29
 action#android.intent.action.MAIN
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:46:17-69
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:60:17-69
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:46:25-66
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:60:25-66
 category#android.intent.category.LEANBACK_LAUNCHER
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:48:17-86
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:62:17-86
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:48:27-83
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:62:27-83
 category#android.intent.category.LAUNCHER
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:50:17-77
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:64:17-77
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:50:27-74
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:64:27-74
 category#android.intent.category.HOME
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:52:17-73
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:66:17-73
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:52:27-70
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:66:27-70
 category#android.intent.category.DEFAULT
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:53:17-76
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:67:17-76
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:53:27-73
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:67:27-73
 receiver#com.hotel.tvapp.BootReceiver
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:61:9-68:20
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:75:9-82:20
 	android:enabled
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:63:13-35
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:77:13-35
 	android:exported
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:64:13-36
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:78:13-36
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:62:13-41
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:76:13-41
 intent-filter#action:name:android.intent.action.BOOT_COMPLETED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:65:13-67:29
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:79:13-81:29
 action#android.intent.action.BOOT_COMPLETED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:66:17-79
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:80:17-79
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:66:25-76
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:80:25-76
 receiver#com.hotel.tvapp.KioskAdminReceiver
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:75:9-85:20
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:89:9-99:20
 	android:exported
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:77:13-36
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:91:13-36
 	android:permission
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:78:13-70
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:92:13-70
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:76:13-47
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:90:13-47
 meta-data#android.app.device_admin
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:79:13-81:63
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:93:13-95:63
 	android:resource
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:81:17-60
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:95:17-60
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:80:17-56
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:94:17-56
 intent-filter#action:name:android.app.action.DEVICE_ADMIN_ENABLED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:82:13-84:29
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:96:13-98:29
 action#android.app.action.DEVICE_ADMIN_ENABLED
-ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:83:17-82
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:97:17-82
 	android:name
-		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:83:25-79
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:97:25-79
+receiver#com.hotel.tvapp.InstallReceiver
+ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:102:9-78
+	android:exported
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:102:51-75
+	android:name
+		ADDED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:102:19-50
 uses-sdk
 INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml reason: use-sdk injection requested
 INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml
 INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml
-MERGED from [androidx.activity:activity-compose:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ba731fb82aae5d63367d1906de1b9da2\workspace\transformed\activity-compose-1.8.2\AndroidManifest.xml:5:5-44
-MERGED from [androidx.activity:activity-compose:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ba731fb82aae5d63367d1906de1b9da2\workspace\transformed\activity-compose-1.8.2\AndroidManifest.xml:5:5-44
-MERGED from [androidx.tv:tv-material:1.0.0-alpha10] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\649ae30d5abe54cc3bd57087b9845800\workspace\transformed\tv-material-1.0.0-alpha10\AndroidManifest.xml:5:5-44
-MERGED from [androidx.tv:tv-material:1.0.0-alpha10] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\649ae30d5abe54cc3bd57087b9845800\workspace\transformed\tv-material-1.0.0-alpha10\AndroidManifest.xml:5:5-44
-MERGED from [androidx.tv:tv-foundation:1.0.0-alpha10] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\7b109d36153cb8184befe7451cddc025\workspace\transformed\tv-foundation-1.0.0-alpha10\AndroidManifest.xml:5:5-44
-MERGED from [androidx.tv:tv-foundation:1.0.0-alpha10] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\7b109d36153cb8184befe7451cddc025\workspace\transformed\tv-foundation-1.0.0-alpha10\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.foundation:foundation-layout-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\5bb494b014f86fd28512014be7fac100\workspace\transformed\foundation-layout-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.foundation:foundation-layout-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\5bb494b014f86fd28512014be7fac100\workspace\transformed\foundation-layout-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.foundation:foundation-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\be9898697a7ca7a8206ec4b75a2b869d\workspace\transformed\foundation-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.foundation:foundation-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\be9898697a7ca7a8206ec4b75a2b869d\workspace\transformed\foundation-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.animation:animation-core-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1ff8e27df85fbab682dd71f2f12f78fb\workspace\transformed\animation-core-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.animation:animation-core-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1ff8e27df85fbab682dd71f2f12f78fb\workspace\transformed\animation-core-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.animation:animation-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\848024a1fb6aa5bdeddb912f6f7b1f82\workspace\transformed\animation-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.animation:animation-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\848024a1fb6aa5bdeddb912f6f7b1f82\workspace\transformed\animation-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.material:material-icons-core-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d58abea97dca230349fc4b73504d7741\workspace\transformed\material-icons-core-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.material:material-icons-core-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d58abea97dca230349fc4b73504d7741\workspace\transformed\material-icons-core-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-unit-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\be0567fff7e1a846776c9bd9327e9b90\workspace\transformed\ui-unit-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-unit-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\be0567fff7e1a846776c9bd9327e9b90\workspace\transformed\ui-unit-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-geometry-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\e21fd0eaee04dd7dfbb5a22c5d7061ee\workspace\transformed\ui-geometry-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-geometry-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\e21fd0eaee04dd7dfbb5a22c5d7061ee\workspace\transformed\ui-geometry-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-util-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\10d898dcad2c40227e6b5386d249eced\workspace\transformed\ui-util-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-util-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\10d898dcad2c40227e6b5386d249eced\workspace\transformed\ui-util-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2321279e1c9028d47ae65d0c1169ee05\workspace\transformed\ui-tooling-preview-release\AndroidManifest.xml:20:5-44
-MERGED from [androidx.compose.ui:ui-tooling-preview-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2321279e1c9028d47ae65d0c1169ee05\workspace\transformed\ui-tooling-preview-release\AndroidManifest.xml:20:5-44
-MERGED from [androidx.compose.ui:ui-text-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1a91778614e19232e14810a56c4af713\workspace\transformed\ui-text-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-text-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1a91778614e19232e14810a56c4af713\workspace\transformed\ui-text-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-graphics-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c3fd0c135d39b7c5b96cc0086f93c752\workspace\transformed\ui-graphics-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-graphics-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c3fd0c135d39b7c5b96cc0086f93c752\workspace\transformed\ui-graphics-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\6f391080b10741ebc1e2622ea4609bc2\workspace\transformed\ui-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.ui:ui-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\6f391080b10741ebc1e2622ea4609bc2\workspace\transformed\ui-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.activity:activity-ktx:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\798776ab3073fd78b40c5a56eb5c65e6\workspace\transformed\activity-ktx-1.8.2\AndroidManifest.xml:5:5-44
-MERGED from [androidx.activity:activity-ktx:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\798776ab3073fd78b40c5a56eb5c65e6\workspace\transformed\activity-ktx-1.8.2\AndroidManifest.xml:5:5-44
 MERGED from [androidx.activity:activity:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1b55fa1bdfd72d196162fccbc640410e\workspace\transformed\activity-1.8.2\AndroidManifest.xml:20:5-44
 MERGED from [androidx.activity:activity:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\1b55fa1bdfd72d196162fccbc640410e\workspace\transformed\activity-1.8.2\AndroidManifest.xml:20:5-44
-MERGED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:21:5-44
-MERGED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:21:5-44
-MERGED from [androidx.autofill:autofill:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8404cbdb6988833a9ca2a6b6cc764042\workspace\transformed\autofill-1.0.0\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.autofill:autofill:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8404cbdb6988833a9ca2a6b6cc764042\workspace\transformed\autofill-1.0.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.activity:activity-ktx:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\798776ab3073fd78b40c5a56eb5c65e6\workspace\transformed\activity-ktx-1.8.2\AndroidManifest.xml:5:5-44
+MERGED from [androidx.activity:activity-ktx:1.8.2] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\798776ab3073fd78b40c5a56eb5c65e6\workspace\transformed\activity-ktx-1.8.2\AndroidManifest.xml:5:5-44
+MERGED from [androidx.media3:media3-ui:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\72b91d2c5e05e60b47511e09e9bd32b3\workspace\transformed\media3-ui-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-ui:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\72b91d2c5e05e60b47511e09e9bd32b3\workspace\transformed\media3-ui-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\5b606ce45550f75a743726a603137729\workspace\transformed\media3-datasource-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\5b606ce45550f75a743726a603137729\workspace\transformed\media3-datasource-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-extractor:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\19dca89bb2b4860858e826424b149305\workspace\transformed\media3-extractor-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-extractor:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\19dca89bb2b4860858e826424b149305\workspace\transformed\media3-extractor-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-container:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2aa422e85d9fc2d3f1471fdb7f8999af\workspace\transformed\media3-container-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-container:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2aa422e85d9fc2d3f1471fdb7f8999af\workspace\transformed\media3-container-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-decoder:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c072242825ecfb7dc5406d6bdd06c511\workspace\transformed\media3-decoder-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-decoder:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c072242825ecfb7dc5406d6bdd06c511\workspace\transformed\media3-decoder-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-database:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\cd97f90e55ef9841b8a28d4eefe497b9\workspace\transformed\media3-database-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-database:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\cd97f90e55ef9841b8a28d4eefe497b9\workspace\transformed\media3-database-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-common:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\7c556182aa6e3e8573192a0e79c5bc55\workspace\transformed\media3-common-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-common:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\7c556182aa6e3e8573192a0e79c5bc55\workspace\transformed\media3-common-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer-rtsp:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\096ac78bd6893665a40dde4618676563\workspace\transformed\media3-exoplayer-rtsp-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer-rtsp:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\096ac78bd6893665a40dde4618676563\workspace\transformed\media3-exoplayer-rtsp-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer-hls:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c6d5147e8abbaba1f70a639ad1cd8cfb\workspace\transformed\media3-exoplayer-hls-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer-hls:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c6d5147e8abbaba1f70a639ad1cd8cfb\workspace\transformed\media3-exoplayer-hls-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\861c951e4e9b559405ba055958eb72ba\workspace\transformed\media3-exoplayer-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\861c951e4e9b559405ba055958eb72ba\workspace\transformed\media3-exoplayer-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media:media:1.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\f1a60891a8f350611be38125331ffa3b\workspace\transformed\media-1.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.media:media:1.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\f1a60891a8f350611be38125331ffa3b\workspace\transformed\media-1.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\974f46a1b0bfc02f80c9fbaa941ebc3b\workspace\transformed\recyclerview-1.3.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.recyclerview:recyclerview:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\974f46a1b0bfc02f80c9fbaa941ebc3b\workspace\transformed\recyclerview-1.3.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\6d59fc5d21eb6c63f9526ba6776f2d32\workspace\transformed\customview-1.0.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\6d59fc5d21eb6c63f9526ba6776f2d32\workspace\transformed\customview-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:21:5-44
-MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:21:5-44
-MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ffdcbbc11f0c9d4b749dfbc41e20a27f\workspace\transformed\lifecycle-livedata-core-2.7.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ffdcbbc11f0c9d4b749dfbc41e20a27f\workspace\transformed\lifecycle-livedata-core-2.7.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70092ac9ea261f272b496356c058dbc1\workspace\transformed\lifecycle-viewmodel-ktx-2.7.0\AndroidManifest.xml:5:5-44
-MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70092ac9ea261f272b496356c058dbc1\workspace\transformed\lifecycle-viewmodel-ktx-2.7.0\AndroidManifest.xml:5:5-44
-MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c566a33a13412d78c7648c43e3b018a8\workspace\transformed\lifecycle-viewmodel-2.7.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c566a33a13412d78c7648c43e3b018a8\workspace\transformed\lifecycle-viewmodel-2.7.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\b3d5d1dc7b38e3a62279654519abd6d3\workspace\transformed\lifecycle-runtime-ktx-2.7.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\b3d5d1dc7b38e3a62279654519abd6d3\workspace\transformed\lifecycle-runtime-ktx-2.7.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2ccff4a180b6fc9de8b64185c6683b62\workspace\transformed\lifecycle-runtime-2.7.0\AndroidManifest.xml:5:5-44
-MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2ccff4a180b6fc9de8b64185c6683b62\workspace\transformed\lifecycle-runtime-2.7.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\89cce05fe3bd9440c01dd0f1463f4d23\workspace\transformed\savedstate-ktx-1.2.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.savedstate:savedstate-ktx:1.2.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\89cce05fe3bd9440c01dd0f1463f4d23\workspace\transformed\savedstate-ktx-1.2.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.savedstate:savedstate:1.2.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\47a2ad0f67ac415476f94e3187b3cfb3\workspace\transformed\savedstate-1.2.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.savedstate:savedstate:1.2.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\47a2ad0f67ac415476f94e3187b3cfb3\workspace\transformed\savedstate-1.2.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ffdcbbc11f0c9d4b749dfbc41e20a27f\workspace\transformed\lifecycle-livedata-core-2.7.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\ffdcbbc11f0c9d4b749dfbc41e20a27f\workspace\transformed\lifecycle-livedata-core-2.7.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c566a33a13412d78c7648c43e3b018a8\workspace\transformed\lifecycle-viewmodel-2.7.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\c566a33a13412d78c7648c43e3b018a8\workspace\transformed\lifecycle-viewmodel-2.7.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70092ac9ea261f272b496356c058dbc1\workspace\transformed\lifecycle-viewmodel-ktx-2.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70092ac9ea261f272b496356c058dbc1\workspace\transformed\lifecycle-viewmodel-ktx-2.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\b3d5d1dc7b38e3a62279654519abd6d3\workspace\transformed\lifecycle-runtime-ktx-2.7.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime-ktx:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\b3d5d1dc7b38e3a62279654519abd6d3\workspace\transformed\lifecycle-runtime-ktx-2.7.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2ccff4a180b6fc9de8b64185c6683b62\workspace\transformed\lifecycle-runtime-2.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2ccff4a180b6fc9de8b64185c6683b62\workspace\transformed\lifecycle-runtime-2.7.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a7301cc9e5b244421f817a63194c2242\workspace\transformed\lifecycle-viewmodel-savedstate-2.7.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a7301cc9e5b244421f817a63194c2242\workspace\transformed\lifecycle-viewmodel-savedstate-2.7.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\57e7383ed614d3a16d05ed7355f5b1ea\workspace\transformed\customview-poolingcontainer-1.0.0\AndroidManifest.xml:20:5-21:38
 MERGED from [androidx.customview:customview-poolingcontainer:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\57e7383ed614d3a16d05ed7355f5b1ea\workspace\transformed\customview-poolingcontainer-1.0.0\AndroidManifest.xml:20:5-21:38
 MERGED from [androidx.core:core-ktx:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70e47e9fad34a5cbf593fe84121b0c4e\workspace\transformed\core-ktx-1.12.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.core:core-ktx:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\70e47e9fad34a5cbf593fe84121b0c4e\workspace\transformed\core-ktx-1.12.0\AndroidManifest.xml:5:5-44
-MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\93063270c4c07de8d1b91d6445e0eb3e\workspace\transformed\annotation-experimental-1.3.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.annotation:annotation-experimental:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\93063270c4c07de8d1b91d6445e0eb3e\workspace\transformed\annotation-experimental-1.3.0\AndroidManifest.xml:20:5-44
-MERGED from [androidx.compose.runtime:runtime-saveable-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\eaeb6592cfee0791f0f08050f9ad7422\workspace\transformed\runtime-saveable-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.runtime:runtime-saveable-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\eaeb6592cfee0791f0f08050f9ad7422\workspace\transformed\runtime-saveable-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.runtime:runtime-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3883b9ea67c9a3ff0388d63a67d3766f\workspace\transformed\runtime-release\AndroidManifest.xml:5:5-44
-MERGED from [androidx.compose.runtime:runtime-android:1.6.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3883b9ea67c9a3ff0388d63a67d3766f\workspace\transformed\runtime-release\AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\257c99abc6c83454eeb0936e2fe99ba4\workspace\transformed\annotation-experimental-1.3.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\257c99abc6c83454eeb0936e2fe99ba4\workspace\transformed\annotation-experimental-1.3.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\03c29f33de80553acb268406543d4f38\workspace\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\03c29f33de80553acb268406543d4f38\workspace\transformed\versionedparcelable-1.1.1\AndroidManifest.xml:20:5-22:41
-MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:21:5-44
-MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:21:5-44
+MERGED from [androidx.exifinterface:exifinterface:1.3.6] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d61d331bf37bc10e4d312bd0816e2f65\workspace\transformed\exifinterface-1.3.6\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.exifinterface:exifinterface:1.3.6] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d61d331bf37bc10e4d312bd0816e2f65\workspace\transformed\exifinterface-1.3.6\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8fc694aea6eaca63d762d2042b27562f\workspace\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.interpolator:interpolator:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8fc694aea6eaca63d762d2042b27562f\workspace\transformed\interpolator-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2cf1fbfcbe2b6d274c1d0aee008415c5\workspace\transformed\core-runtime-2.2.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.arch.core:core-runtime:2.2.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\2cf1fbfcbe2b6d274c1d0aee008415c5\workspace\transformed\core-runtime-2.2.0\AndroidManifest.xml:20:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:21:5-44
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:21:5-23:41
 MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:21:5-23:41
 MERGED from [androidx.tracing:tracing:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\b89d82e04196ca02fa392d3862f423cb\workspace\transformed\tracing-1.0.0\AndroidManifest.xml:20:5-22:41
@@ -283,28 +303,6 @@ MERGED from [androidx.tracing:tracing:1.0.0] C:\Users\DESKTOP-S31-IT\.gradle\cac
 		INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml
 	android:minSdkVersion
 		INJECTED from D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml
-provider#androidx.startup.InitializationProvider
-ADDED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:24:9-32:20
-MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:26:9-30:34
-MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:26:9-30:34
-	tools:node
-		ADDED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:28:13-31
-	android:authorities
-		ADDED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
-	android:exported
-		ADDED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
-	android:name
-		ADDED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
-meta-data#androidx.emoji2.text.EmojiCompatInitializer
-ADDED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
-	android:value
-		ADDED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
-	android:name
-		ADDED from [androidx.emoji2:emoji2:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\a349822bfdbead1d0c5d013b658309c1\workspace\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
 permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
 ADDED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:22:5-24:47
 	android:protectionLevel
@@ -325,51 +323,57 @@ uses-permission#com.hotel.tvapp.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
 ADDED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:26:5-97
 	android:name
 		ADDED from [androidx.core:core:1.12.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\27211f238f146ef6e13d99b8756212c2\workspace\transformed\core-1.12.0\AndroidManifest.xml:26:22-94
-meta-data#androidx.lifecycle.ProcessLifecycleInitializer
-ADDED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
-	android:value
-		ADDED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
-	android:name
-		ADDED from [androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\d975a1696cda23e0b4731e02726190a8\workspace\transformed\lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
-meta-data#androidx.profileinstaller.ProfileInstallerInitializer
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
-	android:value
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
-	android:name
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
-receiver#androidx.profileinstaller.ProfileInstallReceiver
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
-	android:enabled
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+provider#androidx.startup.InitializationProvider
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\0ceb8bad29c92db8b596774fd875342f\workspace\transformed\startup-runtime-1.1.1\AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:28:13-31
+	android:authorities
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:26:13-68
 	android:exported
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:25:13-67
+meta-data#androidx.profileinstaller.ProfileInstallerInitializer
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:30:17-85
+receiver#androidx.profileinstaller.ProfileInstallReceiver
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:34:9-52:20
+	android:enabled
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:37:13-35
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:38:13-36
 	android:permission
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:39:13-57
 	android:directBootAware
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:36:13-44
 	android:name
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:35:13-76
 intent-filter#action:name:androidx.profileinstaller.action.INSTALL_PROFILE
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:40:13-42:29
 action#androidx.profileinstaller.action.INSTALL_PROFILE
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:17-91
 	android:name
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:41:25-88
 intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:43:13-45:29
 action#androidx.profileinstaller.action.SKIP_FILE
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:17-85
 	android:name
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:44:25-82
 intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:46:13-48:29
 action#androidx.profileinstaller.action.SAVE_PROFILE
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:17-88
 	android:name
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:47:25-85
 intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:49:13-51:29
 action#androidx.profileinstaller.action.BENCHMARK_OPERATION
-ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:17-95
 	android:name
-		ADDED from [androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\8ae2952bd2c193a1fe0a2076d079326e\workspace\transformed\profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] C:\Users\DESKTOP-S31-IT\.gradle\caches\9.3.0\transforms\3ef5a401550fec2c8abe2245317c428f\workspace\transformed\profileinstaller-1.3.0\AndroidManifest.xml:50:25-92

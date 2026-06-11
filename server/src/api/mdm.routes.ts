@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { connectedDevices } from '../websocket/socket';
-import * as wol from 'wake_on_lan';
+import { wakeDeviceById } from '../services/wol.service';
+import { rebootDevice } from '../services/adb.service';
 
 const router = Router();
 
@@ -11,7 +12,7 @@ router.get('/devices', (req: Request, res: Response) => {
 });
 
 // Send an MDM command to a specific device
-router.post('/devices/:id/command', (req: Request, res: Response) => {
+router.post('/devices/:id/command', async (req: Request, res: Response) => {
   const { id } = req.params;
   const { command, payload } = req.body;
 
@@ -20,23 +21,12 @@ router.post('/devices/:id/command', (req: Request, res: Response) => {
     return res.status(500).json({ error: 'WebSocket server not initialized' });
   }
 
-  // Handle Wake-on-LAN specially because the device might be offline
+  // Handle specific hardware/network commands
   if (command === 'screen_on') {
-    const device = connectedDevices.get(id);
-    if (device && device.macAddress) {
-      wol.wake(device.macAddress, (error: any) => {
-        if (error) {
-          console.error(`WoL Error for ${id}:`, error);
-        } else {
-          console.log(`Sent Wake-on-LAN magic packet to ${id} (${device.macAddress})`);
-        }
-      });
-    } else {
-      console.warn(`Attempted screen_on (WoL) for ${id} but MAC address is unknown.`);
-    }
+    await wakeDeviceById(id);
   }
 
-  // For all commands, emit the event via WebSocket to the targeted device room
+  // For all other software commands (reload UI, clear cache, messages), emit via WebSocket
   io.to(`device_${id}`).emit('mdm_command', { command, payload });
   
   console.log(`[MDM] Sent command '${command}' to device ${id}`);

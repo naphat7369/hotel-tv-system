@@ -11,10 +11,10 @@ interface SidebarProps {
 
 const navItems = [
   { name: "Dashboard", path: "/", icon: LayoutDashboard },
-  { name: "Device Monitor", path: "/devices", icon: MonitorPlay },
   { name: "Channel Mgmt", path: "/channels", icon: Tv },
   { name: "App Mgmt", path: "/apps", icon: Smartphone },
   { name: "Device Management", path: "/mdm", icon: Smartphone },
+  { name: "Broadcast Marquee", path: "/broadcast", icon: Activity },
   { name: "Guest Services", path: "/services", icon: Users },
   { name: "Guest Requests", path: "/requests", icon: Activity },
   { name: "Screen Designer", path: "/screens", icon: LayoutDashboard },

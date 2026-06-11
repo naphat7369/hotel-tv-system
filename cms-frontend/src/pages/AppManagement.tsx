@@ -1,20 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { Badge } from '../components/ui/Badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
-import { api, type StreamingApp } from '../lib/api';
-import { RefreshCw, Trash2, Power } from 'lucide-react';
+import { api } from '../lib/api';
+import { RefreshCw, Trash2, Upload, Send } from 'lucide-react';
+
+interface RealApp {
+  filename: string;
+  size: number;
+  url: string;
+  createdAt: string;
+}
 
 function AppManagement() {
-  const [apps, setApps] = useState<StreamingApp[]>([]);
+  const [apps, setApps] = useState<RealApp[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processingId, setProcessingId] = useState<string | null>(null);
-
-  // Modal State
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newName, setNewName] = useState('');
-  const [newCategory, setNewCategory] = useState('');
+  const [uploading, setUploading] = useState(false);
+  const [pushing, setPushing] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchApps = async () => {
     setLoading(true);
@@ -33,49 +36,47 @@ function AppManagement() {
     fetchApps();
   }, []);
 
-  const handleToggleStatus = async (app: StreamingApp) => {
-    setProcessingId(app.id);
-    const newStatus = app.status === 'Active' ? 'Inactive' : 'Active';
+  const handleDelete = async (filename: string) => {
+    if (!confirm('Are you sure you want to delete this APK?')) return;
     try {
-      await api.updateAppStatus(app.id, newStatus);
-      setApps(apps.map(a => a.id === app.id ? { ...a, status: newStatus } : a));
+      await api.deleteApp(filename);
+      setApps(apps.filter(a => a.filename !== filename));
     } catch (e) {
       console.error(e);
-    } finally {
-      setProcessingId(null);
+      alert('Failed to delete app');
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this app?')) return;
-    setProcessingId(id);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(true);
     try {
-      await api.deleteApp(id);
-      setApps(apps.filter(a => a.id !== id));
+      await api.uploadApp(file);
+      await fetchApps();
     } catch (e) {
       console.error(e);
+      alert('Failed to upload APK');
     } finally {
-      setProcessingId(null);
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
 
-  const handleAddClick = () => {
-    setNewName('');
-    setNewCategory('');
-    setIsAddModalOpen(true);
-  };
-
-  const submitAddApp = async () => {
-    if (!newName.trim()) return;
-    setProcessingId('new');
+  const handlePush = async (app: RealApp) => {
+    if (!confirm(`Are you sure you want to push ${app.filename} to all online TVs?`)) return;
+    setPushing(app.filename);
     try {
-      const newApp = await api.addApp({ name: newName, category: newCategory || 'App' });
-      setApps([...apps, newApp]);
-      setIsAddModalOpen(false);
+      // Must use the actual LAN IP of the Node.js server so the TV box can reach it!
+      const fullUrl = `http://192.168.1.63:3000${app.url}`;
+      await api.pushInstallToAll(fullUrl);
+      alert('Push command sent to all online TVs!');
     } catch (e) {
       console.error(e);
+      alert('Failed to push APK to TVs');
     } finally {
-      setProcessingId(null);
+      setPushing(null);
     }
   };
 
@@ -93,16 +94,28 @@ function AppManagement() {
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between border-b border-surface-container-high bg-surface-container-low">
-          <CardTitle className="text-lg">🎬 App Catalog</CardTitle>
-          <Button size="sm" onClick={handleAddClick} disabled={processingId === 'new'}>+ Add App</Button>
+          <CardTitle className="text-lg">🎬 App Catalog (APKs)</CardTitle>
+          <div>
+            <input 
+              type="file" 
+              accept=".apk" 
+              className="hidden" 
+              ref={fileInputRef} 
+              onChange={handleFileChange} 
+            />
+            <Button size="sm" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+              <Upload className="w-4 h-4 mr-2" />
+              {uploading ? 'Uploading...' : 'Upload APK'}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>App Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Filename</TableHead>
+                <TableHead>Size</TableHead>
+                <TableHead>Uploaded At</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -113,40 +126,29 @@ function AppManagement() {
                 </TableRow>
               ) : apps.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-on-surface-variant">No apps found.</TableCell>
+                  <TableCell colSpan={4} className="text-center py-8 text-on-surface-variant">No APKs found. Upload one to get started.</TableCell>
                 </TableRow>
               ) : (
                 apps.map((app) => (
-                  <TableRow key={app.id} className={processingId === app.id ? 'opacity-50 pointer-events-none' : ''}>
-                    <TableCell className="font-bold">{app.name}</TableCell>
-                    <TableCell>
-                      <span className="bg-surface-container-high text-on-surface-variant px-2 py-1 rounded text-xs">
-                        {app.category}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {app.status === 'Active' ? (
-                        <Badge variant="success">Active</Badge>
-                      ) : app.status === 'Warning' ? (
-                        <Badge variant="warning">Warning</Badge>
-                      ) : (
-                        <Badge variant="error">Inactive</Badge>
-                      )}
-                    </TableCell>
+                  <TableRow key={app.filename}>
+                    <TableCell className="font-bold">{app.filename}</TableCell>
+                    <TableCell>{(app.size / (1024 * 1024)).toFixed(2)} MB</TableCell>
+                    <TableCell>{new Date(app.createdAt).toLocaleString()}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button 
-                        variant="ghost" 
+                        variant="default" 
                         size="sm"
-                        onClick={() => handleToggleStatus(app)}
-                        title={app.status === 'Active' ? 'Deactivate' : 'Activate'}
+                        onClick={() => handlePush(app)}
+                        disabled={pushing === app.filename}
                       >
-                        <Power className={`w-4 h-4 ${app.status === 'Active' ? 'text-success' : 'text-on-surface-variant'}`} />
+                        <Send className="w-4 h-4 mr-2" />
+                        {pushing === app.filename ? 'Pushing...' : 'Push to TVs'}
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm" 
                         className="text-error hover:text-error hover:bg-error/10"
-                        onClick={() => handleDelete(app.id)}
+                        onClick={() => handleDelete(app.filename)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -159,43 +161,7 @@ function AppManagement() {
         </CardContent>
       </Card>
 
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-sm shadow-xl">
-            <CardHeader className="border-b border-surface-container-high bg-surface-container-low">
-              <CardTitle>Add New App</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 pt-6">
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-on-surface">App Name</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border border-outline-variant rounded bg-surface-container text-on-surface focus:border-primary focus:outline-none" 
-                  value={newName}
-                  onChange={e => setNewName(e.target.value)}
-                  placeholder="e.g. Spotify"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-on-surface">Category</label>
-                <input 
-                  type="text" 
-                  className="w-full p-2 border border-outline-variant rounded bg-surface-container text-on-surface focus:border-primary focus:outline-none" 
-                  value={newCategory}
-                  onChange={e => setNewCategory(e.target.value)}
-                  placeholder="e.g. Streaming"
-                />
-              </div>
-              <div className="flex justify-end gap-2 mt-6">
-                <Button variant="ghost" onClick={() => setIsAddModalOpen(false)}>Cancel</Button>
-                <Button onClick={submitAddApp} disabled={!newName.trim() || processingId === 'new'}>
-                  {processingId === 'new' ? 'Adding...' : 'Add App'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+
     </div>
   );
 }

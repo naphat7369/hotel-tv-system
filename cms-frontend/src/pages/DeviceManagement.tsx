@@ -169,6 +169,14 @@ export const DeviceManagement = () => {
                       Sleep
                     </button>
                     <button 
+                      onClick={() => sendCommand(device.deviceId, 'open_settings')}
+                      disabled={!device.isOnline}
+                      className="px-3 py-1.5 rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-medium text-xs disabled:opacity-50 transition-colors"
+                      title="Open Android TV Settings"
+                    >
+                      ⚙️ TV Settings
+                    </button>
+                    <button 
                       onClick={() => sendCommand(device.deviceId, 'screen_on')}
                       className="px-3 py-1.5 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium text-xs transition-colors"
                       title="Uses Wake-on-LAN if offline"

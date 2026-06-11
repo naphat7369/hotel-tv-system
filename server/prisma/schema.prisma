@@ -3,18 +3,18 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 model Hotel {
-  id              String            @id @default(uuid()) @db.Uuid
-  name            String            @db.VarChar(200)
-  code            String            @unique @db.VarChar(20)
-  timezone        String?           @db.VarChar(50)
-  locale          String?           @db.VarChar(10)
-  settings        Json?
-  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  id              String            @id @default(uuid()) 
+  name            String            
+  code            String            @unique 
+  timezone        String?           
+  locale          String?           
+  settings        String?
+  createdAt       DateTime          @default(now()) @map("created_at") 
   rooms           Room[]
   devices         Device[]
   channels        Channel[]
@@ -23,17 +23,19 @@ model Hotel {
   reservations    Reservation[]
   usageEvents     UsageEvent[]
   guestRequests   GuestRequest[]
+  savedMessages   SavedMessage[]
+  activeBroadcasts ActiveBroadcast[]
 
   @@map("hotels")
 }
 
 model Room {
-  id           String        @id @default(uuid()) @db.Uuid
-  hotelId      String        @map("hotel_id") @db.Uuid
-  roomNumber   String        @map("room_number") @db.VarChar(20)
+  id           String        @id @default(uuid()) 
+  hotelId      String        @map("hotel_id") 
+  roomNumber   String        @map("room_number") 
   floor        Int?
-  roomType     String?       @map("room_type") @db.VarChar(50)
-  building     String?       @db.VarChar(50)
+  roomType     String?       @map("room_type") 
+  building     String?       
   isActive     Boolean       @default(true) @map("is_active")
   hotel        Hotel         @relation(fields: [hotelId], references: [id])
   devices      Device[]
@@ -45,20 +47,20 @@ model Room {
 }
 
 model Device {
-  id               String          @id @default(uuid()) @db.Uuid
-  hotelId          String          @map("hotel_id") @db.Uuid
-  roomId           String?         @map("room_id") @db.Uuid
-  boxSerial        String          @unique @map("box_serial") @db.VarChar(100)
-  macAddress       String?         @map("mac_address") @db.VarChar(17)
-  ipAddress        String?         @map("ip_address") @db.Inet
-  androidVersion   String?         @map("android_version") @db.VarChar(20)
-  appVersion       String?         @map("app_version") @db.VarChar(20)
+  id               String          @id @default(uuid()) 
+  hotelId          String          @map("hotel_id") 
+  roomId           String?         @map("room_id") 
+  boxSerial        String          @unique @map("box_serial") 
+  macAddress       String?         @map("mac_address") 
+  ipAddress        String?         @map("ip_address") 
+  androidVersion   String?         @map("android_version") 
+  appVersion       String?         @map("app_version") 
   isOnline         Boolean         @default(false) @map("is_online")
-  lastSeen         DateTime?       @map("last_seen") @db.Timestamptz
-  tvPowerState     String?         @map("tv_power_state") @db.VarChar(20)
-  currentApp       String?         @map("current_app") @db.VarChar(100)
+  lastSeen         DateTime?       @map("last_seen") 
+  tvPowerState     String?         @map("tv_power_state") 
+  currentApp       String?         @map("current_app") 
   currentChannel   Int?            @map("current_channel")
-  registeredAt     DateTime        @default(now()) @map("registered_at") @db.Timestamptz
+  registeredAt     DateTime        @default(now()) @map("registered_at") 
   hotel            Hotel           @relation(fields: [hotelId], references: [id])
   room             Room?           @relation(fields: [roomId], references: [id])
   usageEvents      UsageEvent[]
@@ -68,35 +70,35 @@ model Device {
 }
 
 model Channel {
-  id             String   @id @default(uuid()) @db.Uuid
-  hotelId        String   @map("hotel_id") @db.Uuid
+  id             String   @id @default(uuid()) 
+  hotelId        String   @map("hotel_id") 
   channelNumber  Int?     @map("channel_number")
-  name           String   @db.VarChar(100)
-  logoUrl        String?  @map("logo_url") @db.Text
-  category       String?  @db.VarChar(50)
-  streamUrl      String?  @map("stream_url") @db.Text
-  streamType     String?  @map("stream_type") @db.VarChar(20)
-  epgId          String?  @map("epg_id") @db.VarChar(50)
+  name           String   
+  logoUrl        String?  @map("logo_url") 
+  category       String?  
+  streamUrl      String?  @map("stream_url") 
+  streamType     String?  @map("stream_type") 
+  epgId          String?  @map("epg_id") 
   isActive       Boolean  @default(true) @map("is_active")
-  accessLevel    String   @default("all") @map("access_level") @db.VarChar(20)
+  accessLevel    String   @default("all") @map("access_level") 
   parentalLock   Boolean  @default(false) @map("parental_lock")
   sortOrder      Int?     @map("sort_order")
-  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt      DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  createdAt      DateTime @default(now()) @map("created_at") 
+  updatedAt      DateTime @default(now()) @map("updated_at") 
   hotel          Hotel    @relation(fields: [hotelId], references: [id])
 
   @@map("channels")
 }
 
 model StreamingApp {
-  id              String  @id @default(uuid()) @db.Uuid
-  hotelId         String  @map("hotel_id") @db.Uuid
-  name            String  @db.VarChar(100)
-  packageName     String? @map("package_name") @db.VarChar(200)
-  iconUrl         String? @map("icon_url") @db.Text
-  deepLink        String? @map("deep_link") @db.Text
+  id              String  @id @default(uuid()) 
+  hotelId         String  @map("hotel_id") 
+  name            String  
+  packageName     String? @map("package_name") 
+  iconUrl         String? @map("icon_url") 
+  deepLink        String? @map("deep_link") 
   autoLogout      Boolean @default(true) @map("auto_logout")
-  logoutCommand   String? @map("logout_command") @db.Text
+  logoutCommand   String? @map("logout_command") 
   isActive        Boolean @default(true) @map("is_active")
   sortOrder       Int?    @map("sort_order")
   hotel           Hotel   @relation(fields: [hotelId], references: [id])
@@ -105,36 +107,36 @@ model StreamingApp {
 }
 
 model ScreenTemplate {
-  id            String   @id @default(uuid()) @db.Uuid
-  hotelId       String   @map("hotel_id") @db.Uuid
-  name          String   @db.VarChar(100)
-  screenType    String?  @map("screen_type") @db.VarChar(50)
-  templateData  Json?    @map("template_data")
-  backgroundUrl String?  @map("background_url") @db.Text
+  id            String   @id @default(uuid()) 
+  hotelId       String   @map("hotel_id") 
+  name          String   
+  screenType    String?  @map("screen_type") 
+  templateData  String?    @map("template_data")
+  backgroundUrl String?  @map("background_url") 
   isActive      Boolean  @default(true) @map("is_active")
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  createdAt     DateTime @default(now()) @map("created_at") 
+  updatedAt     DateTime @default(now()) @map("updated_at") 
   hotel         Hotel    @relation(fields: [hotelId], references: [id])
 
   @@map("screen_templates")
 }
 
 model Reservation {
-  id                 String       @id @default(uuid()) @db.Uuid
-  hotelId            String       @map("hotel_id") @db.Uuid
-  roomId             String?      @map("room_id") @db.Uuid
-  pmsReservationId   String?      @map("pms_reservation_id") @db.VarChar(100)
-  guestFirstName     String?      @map("guest_first_name") @db.VarChar(100)
-  guestLastName      String?      @map("guest_last_name") @db.VarChar(100)
-  guestLoyaltyTier   String?      @map("guest_loyalty_tier") @db.VarChar(20)
-  guestLoyaltyId     String?      @map("guest_loyalty_id") @db.VarChar(50)
-  guestLanguage      String?      @map("guest_language") @db.VarChar(10)
-  checkIn            DateTime?    @map("check_in") @db.Date
-  checkOut           DateTime?    @map("check_out") @db.Date
-  roomType           String?      @map("room_type") @db.VarChar(50)
-  status             String?      @db.VarChar(20)
-  createdAt          DateTime     @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt          DateTime     @default(now()) @map("updated_at") @db.Timestamptz
+  id                 String       @id @default(uuid()) 
+  hotelId            String       @map("hotel_id") 
+  roomId             String?      @map("room_id") 
+  pmsReservationId   String?      @map("pms_reservation_id") 
+  guestFirstName     String?      @map("guest_first_name") 
+  guestLastName      String?      @map("guest_last_name") 
+  guestLoyaltyTier   String?      @map("guest_loyalty_tier") 
+  guestLoyaltyId     String?      @map("guest_loyalty_id") 
+  guestLanguage      String?      @map("guest_language") 
+  checkIn            DateTime?    @map("check_in") 
+  checkOut           DateTime?    @map("check_out") 
+  roomType           String?      @map("room_type") 
+  status             String?      
+  createdAt          DateTime     @default(now()) @map("created_at") 
+  updatedAt          DateTime     @default(now()) @map("updated_at") 
   hotel              Hotel        @relation(fields: [hotelId], references: [id])
   room               Room?        @relation(fields: [roomId], references: [id])
   usageEvents        UsageEvent[]
@@ -143,16 +145,16 @@ model Reservation {
 }
 
 model UsageEvent {
-  id               String       @id @default(uuid()) @db.Uuid
-  hotelId          String       @map("hotel_id") @db.Uuid
-  roomId           String?      @map("room_id") @db.Uuid
-  deviceId         String?      @map("device_id") @db.Uuid
-  reservationId    String?      @map("reservation_id") @db.Uuid
-  eventType        String?      @map("event_type") @db.VarChar(50)
-  value            String?      @db.VarChar(200)
+  id               String       @id @default(uuid()) 
+  hotelId          String       @map("hotel_id") 
+  roomId           String?      @map("room_id") 
+  deviceId         String?      @map("device_id") 
+  reservationId    String?      @map("reservation_id") 
+  eventType        String?      @map("event_type") 
+  value            String?      
   durationSeconds  Int?         @map("duration_seconds")
-  guestType        String?      @map("guest_type") @db.VarChar(20)
-  timestamp        DateTime     @default(now()) @db.Timestamptz
+  guestType        String?      @map("guest_type") 
+  timestamp        DateTime     @default(now()) 
   hotel            Hotel        @relation(fields: [hotelId], references: [id])
   room             Room?        @relation(fields: [roomId], references: [id])
   device           Device?      @relation(fields: [deviceId], references: [id])
@@ -162,31 +164,59 @@ model UsageEvent {
 }
 
 model DeviceCommand {
-  id          String    @id @default(uuid()) @db.Uuid
-  deviceId    String?   @map("device_id") @db.Uuid
-  commandType String?   @map("command_type") @db.VarChar(50)
-  payload     Json?
-  status      String?   @db.VarChar(20)
-  sentAt      DateTime? @map("sent_at") @db.Timestamptz
-  ackAt       DateTime? @map("ack_at") @db.Timestamptz
-  createdBy   String?   @map("created_by") @db.Uuid
-  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  id          String    @id @default(uuid()) 
+  deviceId    String?   @map("device_id") 
+  commandType String?   @map("command_type") 
+  payload     String?
+  status      String?   
+  sentAt      DateTime? @map("sent_at") 
+  ackAt       DateTime? @map("ack_at") 
+  createdBy   String?   @map("created_by") 
+  createdAt   DateTime  @default(now()) @map("created_at") 
   device      Device?   @relation(fields: [deviceId], references: [id])
 
   @@map("device_commands")
 }
 
 model GuestRequest {
-  id            String   @id @default(uuid()) @db.Uuid
-  hotelId       String   @map("hotel_id") @db.Uuid
-  roomId        String?  @map("room_id") @db.Uuid
-  requestType   String   @map("request_type") @db.VarChar(50)
-  items         Json
-  status        String   @default("PENDING") @db.VarChar(20)
-  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt     DateTime @default(now()) @map("updated_at") @db.Timestamptz
+  id            String   @id @default(uuid()) 
+  hotelId       String   @map("hotel_id") 
+  roomId        String?  @map("room_id") 
+  requestType   String   @map("request_type") 
+  items         String
+  status        String   @default("PENDING") 
+  createdAt     DateTime @default(now()) @map("created_at") 
+  updatedAt     DateTime @default(now()) @map("updated_at") 
   hotel         Hotel    @relation(fields: [hotelId], references: [id])
   room          Room?    @relation(fields: [roomId], references: [id])
 
   @@map("guest_requests")
+}
+
+model SavedMessage {
+  id        String   @id @default(uuid())
+  hotelId   String   @map("hotel_id")
+  message   String
+  type      String   @default("custom") 
+  createdAt DateTime @default(now()) @map("created_at")
+  hotel     Hotel    @relation(fields: [hotelId], references: [id])
+
+  @@map("saved_messages")
+}
+
+model ActiveBroadcast {
+  id           String    @id @default(uuid())
+  hotelId      String    @map("hotel_id")
+  message      String
+  type         String    @default("default")
+  target       String    @default("all")
+  targetRoom   String?   @map("target_room")
+  targetFloor  Int?      @map("target_floor")
+  startTime    DateTime? @map("start_time")
+  endTime      DateTime? @map("end_time")
+  isActive     Boolean   @default(true) @map("is_active")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  hotel        Hotel     @relation(fields: [hotelId], references: [id])
+
+  @@map("active_broadcasts")
 }

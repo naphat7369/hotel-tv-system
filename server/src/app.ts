@@ -3,7 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+import path from 'path';
 import { initWebSocket } from './websocket/socket';
+import { initCronJobs } from './services/cron.service';
 
 import deviceRoutes from './api/device.routes';
 import channelRoutes from './api/channel.routes';
@@ -14,6 +16,8 @@ import serviceRoutes from './api/service.routes';
 import analyticsRoutes from './api/analytics.routes';
 import requestRoutes from './api/request.routes';
 import mdmRoutes from './api/mdm.routes';
+import broadcastRoutes from './api/broadcast.routes';
+import pmsRoutes from './api/pms.routes';
 
 dotenv.config();
 
@@ -25,10 +29,16 @@ const httpServer = createServer(app);
 const io = initWebSocket(httpServer);
 app.set('io', io); // Allow routes to access io if needed
 
+// Initialize Cron Jobs
+initCronJobs(io);
+
 // Middleware
-app.use(helmet());
+app.use(helmet({ crossOriginResourcePolicy: false })); // Allow cross-origin static file serving
 app.use(cors());
 app.use(express.json());
+
+// Serve Static Files (For APK distribution)
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 // Routes
 app.use('/api/v1/devices', deviceRoutes);
@@ -40,6 +50,8 @@ app.use('/api/v1/services', serviceRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/requests', requestRoutes);
 app.use('/api/v1/mdm', mdmRoutes);
+app.use('/api/v1/broadcast', broadcastRoutes);
+app.use('/api/v1/pms', pmsRoutes);
 
 // Health Check
 app.get('/health', (req: Request, res: Response) => {

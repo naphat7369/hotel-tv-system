@@ -14,8 +14,11 @@ export interface Channel {
   id: string;
   name: string;
   category: string;
-  status: 'Active' | 'Warning' | 'Inactive';
-  engagement: number;
+  streamUrl?: string | null;
+  logoUrl?: string | null;
+  channelNumber?: number | null;
+  isActive: boolean;
+  sortOrder?: number | null;
 }
 
 export interface ServiceItem {
@@ -72,12 +75,7 @@ export interface StreamingApp {
   engagement: number;
 }
 
-let mockChannels: Channel[] = [
-  { id: 'c1', name: 'HBO Asia', category: 'Premium', status: 'Active', engagement: 34 },
-  { id: 'c2', name: 'CNN Intl', category: 'News', status: 'Active', engagement: 28 },
-  { id: 'c3', name: 'True Series', category: 'Thai', status: 'Active', engagement: 21 },
-  { id: 'c4', name: 'National Geo', category: 'Docs', status: 'Warning', engagement: 12 },
-];
+// Removed mockChannels
 
 let mockApps: StreamingApp[] = [
   { id: 'a1', name: 'Netflix', category: 'Streaming', status: 'Active', engagement: 52 },
@@ -119,7 +117,7 @@ export const api = {
       totalDevices: mockDevices.length,
       avgWatchTime: 3.2,
       roomServiceOrders: 142,
-      topChannels: mockChannels.sort((a, b) => b.engagement - a.engagement).slice(0, 3),
+      topChannels: [],
       topApps: mockApps.sort((a, b) => b.engagement - a.engagement).slice(0, 3)
     };
   },
@@ -163,66 +161,93 @@ export const api = {
     return true;
   },
 
-  // CHANNELS
+  // CHANNELS (Real Backend Integration)
   getChannels: async () => {
-    await delay(300);
-    return [...mockChannels];
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/channels`);
+    if (!res.ok) throw new Error('Failed to fetch channels');
+    return res.json() as Promise<Channel[]>;
   },
 
-  updateChannelStatus: async (id: string, newStatus: Channel['status']) => {
-    await delay(300);
-    mockChannels = mockChannels.map(c => c.id === id ? { ...c, status: newStatus } : c);
-    return true;
+  updateChannel: async (id: string, data: Partial<Channel>) => {
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/channels/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update channel');
+    return res.json();
   },
   
   deleteChannel: async (id: string) => {
-    await delay(300);
-    mockChannels = mockChannels.filter(c => c.id !== id);
-    return true;
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/channels/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete channel');
+    return res.json();
   },
 
-  addChannel: async (data: { name: string; category: string }) => {
-    await delay(300);
-    const newChannel: Channel = {
-      id: `c${Date.now()}`,
-      name: data.name,
-      category: data.category,
-      status: 'Active',
-      engagement: 0,
-    };
-    mockChannels = [...mockChannels, newChannel];
-    return newChannel;
+  addChannel: async (data: Partial<Channel>) => {
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/channels`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to add channel');
+    return res.json() as Promise<Channel>;
   },
 
-  // APPS
+  uploadChannelLogo: async (file: File) => {
+    const formData = new FormData();
+    formData.append('logo', file);
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/channels/upload-logo`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Failed to upload logo');
+    return res.json() as Promise<{ url: string }>;
+  },
+
+  // APPS (Real Backend Integration)
   getApps: async () => {
-    await delay(300);
-    return [...mockApps];
+    const res = await fetch('http://localhost:3000/api/v1/apps');
+    if (!res.ok) throw new Error('Failed to fetch apps');
+    return res.json();
   },
 
-  updateAppStatus: async (id: string, newStatus: StreamingApp['status']) => {
-    await delay(300);
-    mockApps = mockApps.map(a => a.id === id ? { ...a, status: newStatus } : a);
-    return true;
-  },
-  
-  deleteApp: async (id: string) => {
-    await delay(300);
-    mockApps = mockApps.filter(a => a.id !== id);
-    return true;
+  uploadApp: async (file: File) => {
+    const formData = new FormData();
+    formData.append('apkFile', file);
+    const res = await fetch('http://localhost:3000/api/v1/apps/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Failed to upload app');
+    return res.json();
   },
 
-  addApp: async (data: { name: string; category: string }) => {
-    await delay(300);
-    const newApp: StreamingApp = {
-      id: `a${Date.now()}`,
-      name: data.name,
-      category: data.category,
-      status: 'Active',
-      engagement: 0,
-    };
-    mockApps = [...mockApps, newApp];
-    return newApp;
+  deleteApp: async (filename: string) => {
+    const res = await fetch(`http://localhost:3000/api/v1/apps/${filename}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete app');
+    return res.json();
+  },
+
+  pushInstallToAll: async (apkUrl: string) => {
+    const res = await fetch('http://localhost:3000/api/v1/mdm/devices');
+    const devices = await res.json();
+    for (const d of devices) {
+      if (d.isOnline) {
+        await fetch(`http://localhost:3000/api/v1/mdm/devices/${d.deviceId}/command`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            command: 'install_apk',
+            payload: { url: apkUrl }
+          })
+        });
+      }
+    }
   },
 
   // SERVICES

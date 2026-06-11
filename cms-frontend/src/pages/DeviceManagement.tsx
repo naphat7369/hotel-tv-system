@@ -9,13 +9,12 @@ interface Device {
   macAddress?: string;
   wifiSignal?: number;
   roomNumber?: string;
+  deviceName?: string;
 }
 
 export const DeviceManagement = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [messageText, setMessageText] = useState('');
-  const [selectedDevice, setSelectedDevice] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,13 +65,6 @@ export const DeviceManagement = () => {
     }
   };
 
-  const handleSendMessage = () => {
-    if (!selectedDevice || !messageText) return;
-    sendCommand(selectedDevice, 'send_message', { message: messageText });
-    setMessageText('');
-    setSelectedDevice(null);
-  };
-
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -101,7 +93,10 @@ export const DeviceManagement = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-lg">📺</span>
                     <div>
-                      <div className="font-bold text-gray-900">{device.deviceId}</div>
+                      <div className="font-bold text-gray-900">{device.deviceName || device.deviceId}</div>
+                      {device.deviceName && (
+                        <div className="text-xs text-gray-400">ID: {device.deviceId}</div>
+                      )}
                       <div className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full w-fit mt-1">
                         Room: {device.roomNumber || 'Unassigned'}
                       </div>
@@ -160,23 +155,9 @@ export const DeviceManagement = () => {
                     >
                       Clear Cache
                     </button>
-                    <button 
-                      onClick={() => setSelectedDevice(device.deviceId)}
-                      disabled={!device.isOnline}
-                      className="px-3 py-1.5 rounded-md bg-purple-50 text-purple-700 hover:bg-purple-100 font-medium text-xs disabled:opacity-50 transition-colors"
-                    >
-                      Send Message
-                    </button>
                     
                     <div className="w-full h-px bg-gray-100 my-1" /> {/* Divider */}
 
-                    <button 
-                      onClick={() => sendCommand(device.deviceId, 'screen_off')}
-                      disabled={!device.isOnline}
-                      className="px-3 py-1.5 rounded-md bg-slate-100 text-slate-700 hover:bg-slate-200 font-medium text-xs disabled:opacity-50 transition-colors"
-                    >
-                      Sleep
-                    </button>
                     <button 
                       onClick={() => sendCommand(device.deviceId, 'open_settings')}
                       disabled={!device.isOnline}
@@ -196,7 +177,7 @@ export const DeviceManagement = () => {
                       className="px-3 py-1.5 rounded-md bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-medium text-xs disabled:opacity-50 transition-colors"
                       title="Set TV Cast Name"
                     >
-                      🏷️ Rename TV
+                      🏷️ Set Device Name
                     </button>
                     <button 
                       onClick={() => {
@@ -210,13 +191,6 @@ export const DeviceManagement = () => {
                       title="Assign TV to Room"
                     >
                       🔑 Set Room
-                    </button>
-                    <button 
-                      onClick={() => sendCommand(device.deviceId, 'screen_on')}
-                      className="px-3 py-1.5 rounded-md bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium text-xs transition-colors"
-                      title="Uses Wake-on-LAN if offline"
-                    >
-                      Wake (WoL)
                     </button>
                     <button 
                       onClick={() => {
@@ -236,51 +210,6 @@ export const DeviceManagement = () => {
           </tbody>
         </table>
       </div>
-
-      {/* Message Modal */}
-      {selectedDevice && (
-        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-          <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" onClick={() => setSelectedDevice(null)}></div>
-            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-              <div>
-                <div className="mt-3 text-center sm:mt-5">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                    Send Message to {selectedDevice}
-                  </h3>
-                  <div className="mt-2">
-                    <textarea
-                      className="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-3"
-                      rows={4}
-                      placeholder="Enter message to display on TV..."
-                      value={messageText}
-                      onChange={(e) => setMessageText(e.target.value)}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense">
-                <button
-                  type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:col-start-2 sm:text-sm"
-                  onClick={handleSendMessage}
-                >
-                  Send
-                </button>
-                <button
-                  type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:col-start-1 sm:text-sm"
-                  onClick={() => { setSelectedDevice(null); setMessageText(''); }}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };

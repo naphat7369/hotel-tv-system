@@ -33,23 +33,7 @@ const mockApps = [
   { id: 4, name: 'Disney+', packageName: 'com.disney.disneyplus', icon: 'D+', color: 'bg-[#113ccf]', bgImage: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=800&q=80' },
 ]
 
-const diningMenu: MenuItem[] = [
-  { id: 'd1', name: 'In-Room Dining', subtitle: 'Available 24 hours', icon: '🍽️', color: 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]', displayType: 'QR_CODE', displayContent: 'https://menu.hotel.com/room-dining', bgImage: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80' },
-  { id: 'd2', name: 'Breakfast Buffet', subtitle: '06:30 – 10:30', icon: '🥐', color: 'bg-gradient-to-br from-[#2a1a0a] to-[#4a3020]', displayType: 'TEXT_INFO', displayContent: JSON.stringify({ hours: '06:30 – 10:30 (Mon-Fri) / 11:00 (Sat-Sun)', price: 'THB 850 net per person', highlight: 'Live Egg Station · Thai Classics' }), bgImage: 'https://images.unsplash.com/photo-1525648199074-cee30ba79a4a?w=800&q=80' },
-  { id: 'd3', name: 'Happy Hour', subtitle: '17:00 – 20:00', icon: '🍹', color: 'bg-gradient-to-br from-[#2a0a1a] to-[#6a2040]', displayType: 'IMAGE_ONLY', displayContent: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1200&q=80', bgImage: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80' },
-]
 
-const servicesMenu: MenuItem[] = [
-  { id: 's1', name: 'Ice Bath & Sauna', subtitle: 'Health declaration', icon: '🧊', color: 'bg-gradient-to-br from-[#0a1a2a] to-[#1a3a5a]', displayType: 'QR_CODE', displayContent: 'https://forms.hotel.com/health-declaration', bgImage: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=800&q=80' },
-  { id: 's2', name: 'Spa & Massage', subtitle: '09:00 – 22:00', icon: '💆', color: 'bg-gradient-to-br from-[#2a0a2a] to-[#5a1a5a]', displayType: 'TEXT_INFO', displayContent: JSON.stringify({ hours: '09:00 – 22:00 daily', info: 'Please book at least 2 hours in advance.', contact: 'Ext. 400' }), bgImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAF-aIMfFv76ec15VeoP1t0xAPslNC4VRwzaB1fxkn1gQuAHwFUeR3ka5AMQp8IpwjiDBGqweNRfuiANbgx8424vaO4RHYTJWfaC0vxCxH952I5Zp2UsURb8HoDKOywbxvvHUKk25cgorTkIQ_izB4sDZgpZuSwqwxTgFjbNxi_4evWs_LPd4DCMf9dCOEMfRZnZE69ZOx0DKFfmgffXeFtDlEXDfiLFEvtbNCnq9PXJKbKHwjjPmi33LCfomTq4AbAof77XXloSFa-' },
-  { id: 's3', name: 'Housekeeping', subtitle: 'Interactive Request', icon: '🛎️', color: 'bg-gradient-to-br from-[#1a1a2a] to-[#3a3a5a]', displayType: 'SERVICE_REQUEST', displayContent: JSON.stringify([{ id: 'h1', name: 'Fresh Towel', icon: 'dry_cleaning' }, { id: 'h2', name: 'Soap / Shower Gel', icon: 'soap' }, { id: 'h3', name: 'Bottle of Water', icon: 'water_drop' }, { id: 'h4', name: 'Extra Pillow', icon: 'bed' }]), bgImage: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAOxAntdvCTb7s4bxohBjPgYAALYXfBheMHcdVpAV4IHCC9LBk5ai1ieB_JB94Rt-deDZtvETzbFt6dIzlFeCbbFZ5bCKL1pTuO95YHc7NUNBt8_fgkiAmPlxGVWQ3OAhoULqHA6-lAtYSElRtm0tJIaS_a2o3ocHmoUDMs4j2vsrC9K2FuNNn8jUvvd1MUhPc7aLfgq_-Fe3PEbLPEbeUCkcjgKbASvU5oo3V4iilNvxicXMRALa7HwYJKsK5XN8PRJ-5sB0CjJU0E' },
-]
-
-const guideMenu: MenuItem[] = [
-  { id: 'g1', name: 'EmQuartier & Emporium', subtitle: 'Shopping', icon: '🛍️', color: 'bg-gradient-to-br from-[#1a0a3a] to-[#3a1a6a]', displayType: 'IMAGE_ONLY', displayContent: 'https://images.unsplash.com/photo-1582035974465-b1ab1ccfdfd5?w=1200&q=80', bgImage: 'https://images.unsplash.com/photo-1582035974465-b1ab1ccfdfd5?w=800&q=80' },
-  { id: 'g2', name: 'Benchasiri Park', subtitle: 'Nature', icon: '🌳', color: 'bg-gradient-to-br from-[#0a2a0a] to-[#1a5a1a]', displayType: 'IMAGE_ONLY', displayContent: 'https://images.unsplash.com/photo-1542202652-32a2491b29a2?w=1200&q=80', bgImage: 'https://images.unsplash.com/photo-1542202652-32a2491b29a2?w=800&q=80' },
-  { id: 'g3', name: 'BTS Phrom Phong', subtitle: 'Transit', icon: '🚊', color: 'bg-gradient-to-br from-[#1a2a0a] to-[#3a5a10]', displayType: 'TEXT_INFO', displayContent: JSON.stringify({ distance: '450 meters (approx 6 min walk)', hours: '05:30 – 00:00 daily', fare: 'Asok/Nana: 25 THB · Siam: 35 THB' }), bgImage: 'https://images.unsplash.com/photo-1542202652-32a2491b29a2?w=800&q=80' },
-]
 
 function App() {
   // Use localStorage so the CMS can dynamically rename this device without an Android app
@@ -58,6 +42,20 @@ function App() {
 
   const [time, setTime] = useState(new Date())
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
+
+  // Dynamic menu items from CMS with localStorage offline caching fallback
+  const [servicesMenu, setServicesMenu] = useState<MenuItem[]>(() => {
+    const cached = localStorage.getItem('services_menu_cache');
+    return cached ? JSON.parse(cached) : [];
+  })
+  const [diningMenu, setDiningMenu] = useState<MenuItem[]>(() => {
+    const cached = localStorage.getItem('dining_menu_cache');
+    return cached ? JSON.parse(cached) : [];
+  })
+  const [guideMenu, setGuideMenu] = useState<MenuItem[]>(() => {
+    const cached = localStorage.getItem('guide_menu_cache');
+    return cached ? JSON.parse(cached) : [];
+  })
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
   
   // Live TV State
@@ -109,8 +107,46 @@ function App() {
     }
   }, []);
 
+  // Fetch dynamic menu items from CMS backend
+  const fetchMenuItems = useCallback(async () => {
+    try {
+      const serverHost = `http://${window.location.hostname}:3000`;
+      // Fetch with ?scheduled=true so backend filters out items outside their activeFrom/activeUntil window
+      const res = await fetch(`${serverHost}/api/v1/services/menu-items?scheduled=true`);
+      if (res.ok) {
+        const data: any[] = await res.json();
+        const toMenuItem = (item: any): MenuItem => ({
+          id: item.id,
+          name: item.name,
+          subtitle: item.subtitle,
+          icon: item.icon || '🎯',
+          color: item.color || 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
+          displayType: item.displayType as DisplayType,
+          displayContent: item.displayContent,
+          bgImage: item.bgImage,
+        });
+        
+        const services = data.filter((i: any) => i.section === 'services').map(toMenuItem);
+        const dining = data.filter((i: any) => i.section === 'dining').map(toMenuItem);
+        const guide = data.filter((i: any) => i.section === 'local_guide').map(toMenuItem);
+
+        setServicesMenu(services);
+        setDiningMenu(dining);
+        setGuideMenu(guide);
+
+        // Offline caching
+        localStorage.setItem('services_menu_cache', JSON.stringify(services));
+        localStorage.setItem('dining_menu_cache', JSON.stringify(dining));
+        localStorage.setItem('guide_menu_cache', JSON.stringify(guide));
+      }
+    } catch (err) {
+      console.error('Failed to fetch menu items, falling back to cache', err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchChannels();
+    fetchMenuItems();
     const serverHost = `http://${window.location.hostname}:3000`;
     const socket = io(serverHost);
     
@@ -122,17 +158,18 @@ function App() {
     // Listen for MDM commands (like rename, set room, reload, clear cache)
     socket.on('mdm_command', (data: any) => {
       console.log('Received MDM command:', data);
-      if (data.command === 'set_device_name' && data.payload && data.payload.name) {
-        localStorage.setItem('device_id', data.payload.name);
-        window.location.reload(); // Reload to re-register with new name
-      } else if (data.command === 'set_room_number' && data.payload && data.payload.roomNumber) {
+      if (data.command === 'set_room_number' && data.payload && data.payload.roomNumber) {
         localStorage.setItem('room_number', data.payload.roomNumber);
         window.location.reload(); // Reload to re-register with new room
       } else if (data.command === 'reload_portal') {
         window.location.reload();
       } else if (data.command === 'clear_cache') {
+        const savedDeviceId = localStorage.getItem('device_id');
+        const savedRoomNumber = localStorage.getItem('room_number');
         localStorage.clear();
         sessionStorage.clear();
+        if (savedDeviceId) localStorage.setItem('device_id', savedDeviceId);
+        if (savedRoomNumber) localStorage.setItem('room_number', savedRoomNumber);
         window.location.reload();
       }
     });
@@ -150,6 +187,12 @@ function App() {
 
     socket.on('refresh_channels', () => {
       fetchChannels();
+    });
+    
+    // Listen for realtime menu changes from CMS
+    socket.on('refresh_guest_menu', (data: any) => {
+      console.log('Received refresh_guest_menu:', data);
+      fetchMenuItems();
     });
     socket.on('show_marquee', (data: any) => {
       if (data && data.message) {

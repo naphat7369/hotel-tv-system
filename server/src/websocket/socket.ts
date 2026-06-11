@@ -10,6 +10,7 @@ export interface DeviceStatus {
   wifiSignal?: number;
   socketId?: string;
   roomNumber?: string;
+  deviceName?: string;
 }
 
 // In-memory store for connected devices

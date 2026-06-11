@@ -37,8 +37,13 @@ app.use(helmet({ crossOriginResourcePolicy: false })); // Allow cross-origin sta
 app.use(cors());
 app.use(express.json());
 
-// Serve Static Files (For APK distribution)
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+// Serve Static Files — covers /uploads/logos, /uploads/menu-images, /uploads/apks, etc.
+// CORS is open (helmet crossOriginResourcePolicy: false) so TV portals can load images cross-origin.
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {
+  maxAge: '7d',          // Cache images on TV for 7 days
+  etag: true,
+  lastModified: true,
+}));
 
 // Routes
 app.use('/api/v1/devices', deviceRoutes);

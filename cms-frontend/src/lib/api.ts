@@ -36,6 +36,27 @@ export interface ServiceCategory {
   items: ServiceItem[];
 }
 
+export type DisplayType = 'IMAGE_ONLY' | 'QR_CODE' | 'TEXT_INFO' | 'SERVICE_REQUEST';
+
+export interface GuestMenuItem {
+  id: string;
+  hotelId: string;
+  section: 'services' | 'dining' | 'local_guide';
+  name: string;
+  subtitle?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  displayType: DisplayType;
+  displayContent: string;
+  bgImage?: string | null;
+  sortOrder: number;
+  isActive: boolean;
+  activeFrom?: string | null;
+  activeUntil?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // Generate 500 mock devices
 const generateMockDevices = (): Device[] => {
   const devices: Device[] = [];
@@ -250,37 +271,76 @@ export const api = {
     }
   },
 
-  // SERVICES
+  // SERVICES (Legacy mock — kept for backward compatibility)
   getServices: async () => {
     await delay(300);
-    // Deep clone to simulate server fetch
     return JSON.parse(JSON.stringify(mockServices)) as ServiceCategory[];
   },
 
   addServiceItem: async (categoryId: string, item: Omit<ServiceItem, 'id' | 'categoryId'>) => {
     await delay(300);
-    const newItem: ServiceItem = {
-      ...item,
-      id: `item_${Date.now()}`,
-      categoryId
-    };
-    mockServices = mockServices.map(cat => {
-      if (cat.id === categoryId) {
-        return { ...cat, items: [...cat.items, newItem] };
-      }
-      return cat;
-    });
+    const newItem: ServiceItem = { ...item, id: `item_${Date.now()}`, categoryId };
+    mockServices = mockServices.map(cat =>
+      cat.id === categoryId ? { ...cat, items: [...cat.items, newItem] } : cat
+    );
     return newItem;
   },
 
   deleteServiceItem: async (categoryId: string, itemId: string) => {
     await delay(300);
-    mockServices = mockServices.map(cat => {
-      if (cat.id === categoryId) {
-        return { ...cat, items: cat.items.filter(i => i.id !== itemId) };
-      }
-      return cat;
-    });
+    mockServices = mockServices.map(cat =>
+      cat.id === categoryId ? { ...cat, items: cat.items.filter(i => i.id !== itemId) } : cat
+    );
     return true;
+  },
+
+  // ── GUEST MENU ITEMS (Real Backend) ──
+  getGuestMenuItems: async (section?: string) => {
+    const url = section
+      ? `http://${window.location.hostname}:3000/api/v1/services/menu-items?section=${section}`
+      : `http://${window.location.hostname}:3000/api/v1/services/menu-items`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Failed to fetch menu items');
+    return res.json() as Promise<GuestMenuItem[]>;
+  },
+
+  createGuestMenuItem: async (data: Omit<GuestMenuItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/services/menu-items`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to create menu item');
+    return res.json() as Promise<GuestMenuItem>;
+  },
+
+  updateGuestMenuItem: async (id: string, data: Partial<GuestMenuItem>) => {
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/services/menu-items/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Failed to update menu item');
+    return res.json() as Promise<GuestMenuItem>;
+  },
+
+  deleteGuestMenuItem: async (id: string) => {
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/services/menu-items/${id}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Failed to delete menu item');
+    return res.json();
+  },
+
+  uploadMenuImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/services/upload-image`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) throw new Error('Failed to upload image');
+    return res.json() as Promise<{ url: string }>;
   }
 };
+

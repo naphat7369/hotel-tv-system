@@ -25,6 +25,7 @@ model Hotel {
   guestRequests   GuestRequest[]
   savedMessages   SavedMessage[]
   activeBroadcasts ActiveBroadcast[]
+  guestMenuItems  GuestMenuItem[]
 
   @@map("hotels")
 }
@@ -220,3 +221,26 @@ model ActiveBroadcast {
 
   @@map("active_broadcasts")
 }
+
+model GuestMenuItem {
+  id             String    @id @default(uuid())
+  hotelId        String    @map("hotel_id")
+  section        String    // "services" | "dining" | "local_guide"
+  name           String
+  subtitle       String?
+  icon           String?
+  color          String?   @default("bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]")
+  displayType    String    @map("display_type")
+  displayContent String    @map("display_content")
+  bgImage        String?   @map("bg_image")
+  sortOrder      Int       @default(0) @map("sort_order")
+  isActive       Boolean   @default(true) @map("is_active")
+  activeFrom     DateTime? @map("active_from")   // null = always active
+  activeUntil    DateTime? @map("active_until")  // null = no expiry
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+  hotel          Hotel     @relation(fields: [hotelId], references: [id])
+
+  @@map("guest_menu_items")
+}
+

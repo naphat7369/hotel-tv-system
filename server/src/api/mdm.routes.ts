@@ -29,6 +29,21 @@ router.post('/devices/:id/command', async (req: Request, res: Response) => {
     if (device && device.ipAddress) {
       const { setDeviceName } = require('../services/adb.service');
       await setDeviceName(device.ipAddress, payload.name);
+      // Save in memory
+      device.deviceName = payload.name;
+      connectedDevices.set(id, device);
+      // Broadcast updated list to CMS
+      const devicesList = Array.from(connectedDevices.values());
+      io.emit('device_status_update', devicesList);
+    }
+  } else if (command === 'set_room_number') {
+    const device = connectedDevices.get(id);
+    if (device) {
+      device.roomNumber = payload.roomNumber;
+      connectedDevices.set(id, device);
+      // Broadcast update immediately to CMS
+      const devicesList = Array.from(connectedDevices.values());
+      io.emit('device_status_update', devicesList);
     }
   }
 

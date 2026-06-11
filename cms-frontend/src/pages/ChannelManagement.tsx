@@ -55,6 +55,7 @@ function ChannelManagement() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [modalMode, setModalMode] = useState<'add' | 'edit' | null>(null);
+  const [bandwidthStats, setBandwidthStats] = useState<Record<string, number>>({});
   const [formData, setFormData] = useState<Partial<Channel>>({
     name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true
   });
@@ -65,7 +66,8 @@ function ChannelManagement() {
     setLoading(true);
     try {
       const data = await api.getChannels();
-      setChannels(data);
+      const sortedData = data.sort((a, b) => (a.channelNumber || 999) - (b.channelNumber || 999));
+      setChannels(sortedData);
     } catch (e) {
       console.error(e);
     } finally {
@@ -75,6 +77,34 @@ function ChannelManagement() {
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchChannels(); }, []);
+
+  // Bandwidth Monitor Simulation
+  useEffect(() => {
+    if (channels.length === 0) return;
+    
+    const interval = setInterval(() => {
+      setBandwidthStats(prev => {
+        const newStats = { ...prev };
+        channels.forEach(ch => {
+          if (ch.isActive && ch.streamUrl) {
+            // Simulate 2.5 - 5.5 Mbps
+            const base = newStats[ch.id] || (3.0 + Math.random() * 2);
+            // Fluctuate by +/- 0.3
+            const change = (Math.random() - 0.5) * 0.6;
+            let current = base + change;
+            if (current < 1.0) current = 1.5;
+            if (current > 6.0) current = 5.8;
+            newStats[ch.id] = parseFloat(current.toFixed(1));
+          } else {
+            newStats[ch.id] = 0;
+          }
+        });
+        return newStats;
+      });
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, [channels]);
 
   const handleToggleStatus = async (channel: Channel) => {
     setProcessingId(channel.id);
@@ -112,10 +142,10 @@ function ChannelManagement() {
     try {
       if (modalMode === 'add') {
         const newChannel = await api.addChannel(formData);
-        setChannels([...channels, newChannel]);
+        setChannels([...channels, newChannel].sort((a, b) => (a.channelNumber || 999) - (b.channelNumber || 999)));
       } else if (modalMode === 'edit' && formData.id) {
         const updated = await api.updateChannel(formData.id, formData);
-        setChannels(channels.map(c => c.id === updated.id ? updated : c));
+        setChannels(channels.map(c => c.id === updated.id ? updated : c).sort((a, b) => (a.channelNumber || 999) - (b.channelNumber || 999)));
       }
       setModalMode(null);
     } catch (e) {
@@ -188,17 +218,18 @@ function ChannelManagement() {
                 <TableHead>Channel Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Bandwidth</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading && channels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-on-surface-variant">Loading channels...</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-on-surface-variant">Loading channels...</TableCell>
                 </TableRow>
               ) : channels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-on-surface-variant">No channels found.</TableCell>
+                  <TableCell colSpan={6} className="text-center py-8 text-on-surface-variant">No channels found.</TableCell>
                 </TableRow>
               ) : (
                 channels.map((ch) => (
@@ -213,6 +244,39 @@ function ChannelManagement() {
                     </TableCell>
                     <TableCell>
                       {ch.isActive ? <Badge variant="success">Active</Badge> : <Badge variant="error">Inactive</Badge>}
+                    </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const bw = bandwidthStats[ch.id] || 0;
+                        let colorClass = "text-on-surface-variant";
+                        let progressColor = "var(--color-outline-variant)";
+                        let percent = 0;
+                        if (bw > 3.0) {
+                          colorClass = "text-success font-bold";
+                          progressColor = "var(--color-success, #10B981)";
+                          percent = Math.min((bw / 6.0) * 100, 100);
+                        } else if (bw > 1.0) {
+                          colorClass = "text-warning font-bold";
+                          progressColor = "var(--color-warning, #F59E0B)";
+                          percent = Math.min((bw / 6.0) * 100, 100);
+                        } else if (bw > 0) {
+                          colorClass = "text-error font-bold";
+                          progressColor = "var(--color-error, #EF4444)";
+                          percent = Math.min((bw / 6.0) * 100, 100);
+                        }
+
+                        return (
+                          <div className="flex flex-col gap-1 w-24">
+                            <span className={`text-sm ${colorClass}`}>{bw.toFixed(1)} Mbps</span>
+                            <div className="h-1.5 w-full bg-surface-container-high rounded-full overflow-hidden border border-outline-variant">
+                              <div 
+                                className="h-full rounded-full transition-all duration-500" 
+                                style={{ width: `${percent}%`, backgroundColor: progressColor }} 
+                              />
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button variant="ghost" size="sm" onClick={() => openEditModal(ch)} title="Edit">

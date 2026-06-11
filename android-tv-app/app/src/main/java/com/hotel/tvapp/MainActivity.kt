@@ -197,7 +197,7 @@ class MainActivity : Activity() {
                 javaScriptEnabled       = true
                 domStorageEnabled       = true
                 mediaPlaybackRequiresUserGesture = false
-                cacheMode               = WebSettings.LOAD_DEFAULT
+                cacheMode               = WebSettings.LOAD_CACHE_ELSE_NETWORK
                 mixedContentMode        = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 useWideViewPort         = true
                 loadWithOverviewMode    = true

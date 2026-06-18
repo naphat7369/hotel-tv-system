@@ -1,12 +1,44 @@
 package com.hotel.tvapp
 
-object Config {
-    // Hardcoded device configuration for the initial phase
-    const val DEVICE_ID = "BOX-101-A"
-    
-    // Default server URL (For Android Emulator connecting to local host, use 10.0.2.2)
-    const val SERVER_URL = "ws://192.168.1.63:3000"
+import android.content.Context
 
-    // URL for the Web Portal
-    const val PORTAL_URL = "http://192.168.1.63:5174"
+object Config {
+    // ── Device Identity ──────────────────────────────────────────────────────
+    const val DEVICE_ID = "BOX-101-A"
+
+    // ── SharedPreferences keys ───────────────────────────────────────────────
+    const val PREFS_NAME       = "hotel_tv_config"
+    const val KEY_SERVER_IP    = "server_ip"
+    const val DEFAULT_SERVER_IP = "10.0.101.253"
+
+    // ── Dynamic Getters ──────────────────────────────────────────────────────
+
+    /**
+     * Returns the currently saved Server IP, falling back to DEFAULT_SERVER_IP.
+     */
+    fun getServerIp(context: Context): String =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString(KEY_SERVER_IP, DEFAULT_SERVER_IP) ?: DEFAULT_SERVER_IP
+
+    /**
+     * Persists a new Server IP to SharedPreferences.
+     */
+    fun saveServerIp(context: Context, ip: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .edit()
+            .putString(KEY_SERVER_IP, ip.trim())
+            .apply()
+    }
+
+    /**
+     * Full WebSocket URL used by the native WebSocketClient.
+     */
+    fun getServerUrl(context: Context): String =
+        "ws://${getServerIp(context)}:3000"
+
+    /**
+     * Full HTTP URL used by the WebView to load the React portal.
+     */
+    fun getPortalUrl(context: Context): String =
+        "http://${getServerIp(context)}:5174"
 }

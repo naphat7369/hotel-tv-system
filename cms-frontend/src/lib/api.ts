@@ -19,6 +19,14 @@ export interface Channel {
   channelNumber?: number | null;
   isActive: boolean;
   sortOrder?: number | null;
+  inputProtocol?: string | null;
+  inputIp?: string | null;
+  inputPort?: number | null;
+  inputEth?: string | null;
+  outputProtocol?: string | null;
+  outputIp?: string | null;
+  outputPort?: number | null;
+  outputEth?: string | null;
 }
 
 export interface ServiceItem {
@@ -66,19 +74,25 @@ const generateMockDevices = (): Device[] => {
   for (let f = 1; f <= floors; f++) {
     for (let r = 1; r <= roomsPerFloor; r++) {
       const roomNum = `${f}${r.toString().padStart(2, '0')}`;
-      const isOffline = Math.random() < 0.1;
-      const isMaintenance = !isOffline && Math.random() < 0.05;
+      
+      // Explicitly set our physical box (Room 101) to be Online at the correct IP
+      const isTargetBox = roomNum === '101';
+      const ipAddress = isTargetBox ? '192.168.1.62' : `192.168.1.${Math.floor(Math.random() * 253) + 2}`;
       
       let status: DeviceStatus = 'Online';
-      if (isOffline) status = 'Offline';
-      if (isMaintenance) status = 'Maintenance';
+      if (!isTargetBox) {
+        const isOffline = Math.random() < 0.1;
+        const isMaintenance = !isOffline && Math.random() < 0.05;
+        if (isOffline) status = 'Offline';
+        if (isMaintenance) status = 'Maintenance';
+      }
 
       devices.push({
         id: `dev_${roomNum}`,
         roomNumber: roomNum,
-        ipAddress: `192.168.10.${Math.floor(Math.random() * 255)}`,
+        ipAddress,
         status,
-        lastActive: new Date(Date.now() - Math.random() * 10000000).toISOString(),
+        lastActive: isTargetBox ? new Date().toISOString() : new Date(Date.now() - Math.random() * 10000000).toISOString(),
       });
     }
   }
@@ -184,7 +198,7 @@ export const api = {
 
   // CHANNELS (Real Backend Integration)
   getChannels: async () => {
-    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/channels`);
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/channels`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch channels');
     return res.json() as Promise<Channel[]>;
   },

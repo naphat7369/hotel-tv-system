@@ -89,16 +89,26 @@ function App() {
   // Dynamic Channels State
   const [liveChannels, setLiveChannels] = useState<BackendChannel[]>(() => {
     const cached = localStorage.getItem('channels_cache');
-    return cached ? JSON.parse(cached) : [];
+    if (cached) {
+      try {
+        const parsed: BackendChannel[] = JSON.parse(cached);
+        return parsed.sort((a, b) => (a.channelNumber || 999) - (b.channelNumber || 999));
+      } catch (e) {
+        return [];
+      }
+    }
+    return [];
   });
 
   const fetchChannels = useCallback(async () => {
     try {
       const serverHost = `http://${window.location.hostname}:3000`;
-      const res = await fetch(`${serverHost}/api/v1/channels`);
+      const res = await fetch(`${serverHost}/api/v1/channels?t=${Date.now()}`, { cache: 'no-store' });
       if (res.ok) {
         const data: BackendChannel[] = await res.json();
         const activeChannels = data.filter(c => c.isActive);
+        activeChannels.sort((a, b) => (a.channelNumber || 999) - (b.channelNumber || 999));
+        console.log('[fetchChannels] Fetched channels:', JSON.stringify(activeChannels));
         setLiveChannels(activeChannels);
         localStorage.setItem('channels_cache', JSON.stringify(activeChannels));
       }
@@ -112,7 +122,7 @@ function App() {
     try {
       const serverHost = `http://${window.location.hostname}:3000`;
       // Fetch with ?scheduled=true so backend filters out items outside their activeFrom/activeUntil window
-      const res = await fetch(`${serverHost}/api/v1/services/menu-items?scheduled=true`);
+      const res = await fetch(`${serverHost}/api/v1/services/menu-items?scheduled=true`, { cache: 'no-store' });
       if (res.ok) {
         const data: any[] = await res.json();
         const toMenuItem = (item: any): MenuItem => ({

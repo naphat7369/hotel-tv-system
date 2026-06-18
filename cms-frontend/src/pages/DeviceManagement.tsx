@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 interface Device {
   deviceId: string;
@@ -14,7 +14,6 @@ interface Device {
 
 export const DeviceManagement = () => {
   const [devices, setDevices] = useState<Device[]>([]);
-  const [socket, setSocket] = useState<Socket | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,8 +28,6 @@ export const DeviceManagement = () => {
     newSocket.on('device_status_update', (updatedDevices: Device[]) => {
       setDevices(updatedDevices);
     });
-
-    setSocket(newSocket);
 
     // Initial fetch via REST API
     fetch(`${backendUrl}/api/v1/mdm/devices`)
@@ -68,8 +65,8 @@ export const DeviceManagement = () => {
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Device Management (MDM)</h1>
-        <p className="mt-2 text-sm text-gray-700">Remote control and monitor Hotel TVs across the network.</p>
+        <h1 className="text-3xl font-bold text-on-surface">Device Management (MDM)</h1>
+        <p className="mt-2 text-sm text-on-surface-variant">Remote control and monitor Hotel TVs across the network.</p>
       </div>
 
       <div className="bg-white rounded-xl shadow ring-1 ring-black ring-opacity-5 overflow-hidden">

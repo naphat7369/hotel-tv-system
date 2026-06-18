@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { api, type Channel } from '../lib/api';
-import { RefreshCw, Trash2, Power, Edit2, Play, Upload } from 'lucide-react';
+import { RefreshCw, Trash2, Power, Edit2, Play, Upload, MonitorPlay } from 'lucide-react';
 import Hls from 'hls.js';
 
 function HlsPreview({ url }: { url?: string | null }) {
@@ -54,10 +54,13 @@ function ChannelManagement() {
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  const [modalMode, setModalMode] = useState<'add' | 'edit' | null>(null);
+  const [modalMode, setModalMode] = useState<'add' | 'edit' | 'preview' | null>(null);
+  const [previewChannel, setPreviewChannel] = useState<Channel | null>(null);
   const [bandwidthStats, setBandwidthStats] = useState<Record<string, number>>({});
   const [formData, setFormData] = useState<Partial<Channel>>({
-    name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true
+    name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true,
+    inputProtocol: 'UDP', inputIp: '', inputPort: null, inputEth: 'eth1',
+    outputProtocol: 'UDP', outputIp: '', outputPort: null, outputEth: 'All'
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -127,7 +130,7 @@ function ChannelManagement() {
   };
 
   const openAddModal = () => {
-    setFormData({ name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true });
+    setFormData({ name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true, inputProtocol: 'UDP', inputIp: '', inputPort: null, inputEth: 'eth1', outputProtocol: 'UDP', outputIp: '', outputPort: null, outputEth: 'All' });
     setModalMode('add');
   };
 
@@ -217,6 +220,8 @@ function ChannelManagement() {
                 <TableHead className="w-16">CH</TableHead>
                 <TableHead>Channel Name</TableHead>
                 <TableHead>Category</TableHead>
+                <TableHead>Input</TableHead>
+                <TableHead>Output</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Bandwidth</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -241,6 +246,22 @@ function ChannelManagement() {
                     </TableCell>
                     <TableCell>
                       <span className="bg-surface-container-high text-on-surface-variant px-2 py-1 rounded text-xs">{ch.category}</span>
+                    </TableCell>
+                    <TableCell className="text-xs text-on-surface-variant">
+                      {ch.inputIp ? (
+                        <div>
+                          <div><span className="font-semibold">{ch.inputProtocol}</span> {ch.inputEth}</div>
+                          <div>{ch.inputIp}:{ch.inputPort}</div>
+                        </div>
+                      ) : '-'}
+                    </TableCell>
+                    <TableCell className="text-xs text-on-surface-variant">
+                      {ch.outputIp ? (
+                        <div>
+                          <div><span className="font-semibold">{ch.outputProtocol}</span> {ch.outputEth}</div>
+                          <div>{ch.outputIp}:{ch.outputPort}</div>
+                        </div>
+                      ) : '-'}
                     </TableCell>
                     <TableCell>
                       {ch.isActive ? <Badge variant="success">Active</Badge> : <Badge variant="error">Inactive</Badge>}
@@ -279,6 +300,9 @@ function ChannelManagement() {
                       })()}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
+                      <Button variant="ghost" size="sm" onClick={() => { setPreviewChannel(ch); setModalMode('preview'); }} title="Preview">
+                        <MonitorPlay className="w-4 h-4 text-secondary" />
+                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => openEditModal(ch)} title="Edit">
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -325,7 +349,7 @@ function ChannelManagement() {
             </div>
 
             {/* Body */}
-            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '75vh', overflowY: 'auto' }}>
 
               {/* CH# + Name */}
               <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '12px' }}>
@@ -385,19 +409,84 @@ function ChannelManagement() {
                 </div>
               </div>
 
-              {/* HLS Stream URL */}
-              <div>
-                <label style={labelStyle}>HLS Stream URL (.m3u8)</label>
-                <input type="url" style={{ ...inputStyle, fontSize: '13px' }}
-                  value={formData.streamUrl || ''}
-                  onChange={e => setFormData({...formData, streamUrl: e.target.value})}
-                  placeholder="https://example.com/stream.m3u8" />
+              {/* Headend Configuration */}
+              <div style={{ padding: '16px', backgroundColor: 'var(--color-surface-container-high)', borderRadius: '8px', border: '1px solid var(--color-outline-variant)' }}>
+                <h4 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 600, color: 'var(--color-on-surface)' }}>Headend Configuration</h4>
+                
+                {/* Input Config */}
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{...labelStyle, color: 'var(--color-on-surface-variant)'}}>Input Configuration (Used to auto-generate UDP Stream URL)</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px 80px', gap: '8px', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Protocol</div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>IP Address</div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Port</div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Eth</div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px 80px', gap: '8px' }}>
+                    <select style={{...inputStyle, fontSize: '13px'}} value={formData.inputProtocol || 'UDP'} onChange={e => setFormData({...formData, inputProtocol: e.target.value})}>
+                      <option value="UDP">UDP</option>
+                      <option value="RTP">RTP</option>
+                    </select>
+                    <input type="text" style={{...inputStyle, fontSize: '13px'}} placeholder="IP (e.g. 224.1.1.1)" value={formData.inputIp || ''} onChange={e => setFormData({...formData, inputIp: e.target.value})} />
+                    <input type="number" style={{...inputStyle, fontSize: '13px'}} placeholder="Port" value={formData.inputPort || ''} onChange={e => setFormData({...formData, inputPort: parseInt(e.target.value) || null})} />
+                    <select style={{...inputStyle, fontSize: '13px'}} value={formData.inputEth || 'eth1'} onChange={e => setFormData({...formData, inputEth: e.target.value})}>
+                      <option value="All">All</option>
+                      <option value="eth1">eth1</option>
+                      <option value="eth2">eth2</option>
+                      <option value="eth3">eth3</option>
+                      <option value="eth4">eth4</option>
+                      <option value="eth5">eth5</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Output Config */}
+                <div>
+                  <label style={{...labelStyle, color: 'var(--color-on-surface-variant)'}}>Output Configuration (For CMS Documentation Only)</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px 80px', gap: '8px', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Protocol</div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>IP Address</div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Port</div>
+                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Eth</div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px 80px', gap: '8px' }}>
+                    <select style={{...inputStyle, fontSize: '13px'}} value={formData.outputProtocol || 'UDP'} onChange={e => setFormData({...formData, outputProtocol: e.target.value})}>
+                      <option value="UDP">UDP</option>
+                      <option value="HLS">HLS</option>
+                      <option value="DASH">DASH</option>
+                    </select>
+                    <input type="text" style={{...inputStyle, fontSize: '13px'}} placeholder="IP (e.g. 10.0.101.2)" value={formData.outputIp || ''} onChange={e => setFormData({...formData, outputIp: e.target.value})} />
+                    <input type="number" style={{...inputStyle, fontSize: '13px'}} placeholder="Port" value={formData.outputPort || ''} onChange={e => setFormData({...formData, outputPort: parseInt(e.target.value) || null})} />
+                    <select style={{...inputStyle, fontSize: '13px'}} value={formData.outputEth || 'All'} onChange={e => setFormData({...formData, outputEth: e.target.value})}>
+                      <option value="All">All</option>
+                      <option value="eth1">eth1</option>
+                      <option value="eth2">eth2</option>
+                      <option value="eth3">eth3</option>
+                      <option value="eth4">eth4</option>
+                      <option value="eth5">eth5</option>
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              {/* Preview */}
+              {/* Stream URL (Read Only / Optional Override) */}
               <div>
-                <label style={labelStyle}>Stream Preview</label>
+                <label style={labelStyle}>Stream URL (Auto-generated from Input Config)</label>
+                <input type="url" style={{ ...inputStyle, fontSize: '13px', backgroundColor: 'var(--color-surface-container)' }}
+                  value={formData.streamUrl || ''}
+                  onChange={e => setFormData({...formData, streamUrl: e.target.value})}
+                  placeholder="e.g. udp://@224.1.1.1:1234" />
+              </div>
+
+              {/* Stream Preview */}
+              <div>
+                <label style={labelStyle}>Preview Stream</label>
                 <HlsPreview url={formData.streamUrl} />
+                {formData.streamUrl?.startsWith('udp://') && (
+                  <p style={{ fontSize: '12px', color: 'var(--color-warning)', marginTop: '8px' }}>
+                    ⚠️ Browser cannot preview UDP multicast streams directly. You must test UDP streams on the actual Android TV box.
+                  </p>
+                )}
               </div>
 
               {/* Active */}
@@ -418,6 +507,55 @@ function ChannelManagement() {
               <Button onClick={submitModal} disabled={!formData.name?.trim() || processingId === 'modal'}>
                 {processingId === 'modal' ? 'Saving...' : 'Save Channel'}
               </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* ── Preview Modal ── */}
+      {modalMode === 'preview' && previewChannel && createPortal(
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 9999,
+          backgroundColor: 'rgba(0,0,0,0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div style={{
+            width: '800px',
+            maxWidth: 'calc(100vw - 32px)',
+            backgroundColor: 'var(--color-surface-container)',
+            border: '1px solid var(--color-outline-variant)',
+            borderRadius: '12px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
+            overflow: 'hidden'
+          }}>
+            {/* Header */}
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--color-outline-variant)', backgroundColor: 'var(--color-surface-container-low)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--color-on-surface)' }}>
+                📺 Preview: {previewChannel.name}
+              </h3>
+              <Button variant="ghost" size="sm" onClick={() => { setModalMode(null); setPreviewChannel(null); }}>Close</Button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ padding: '12px', backgroundColor: 'var(--color-surface-container-high)', borderRadius: '8px', fontSize: '13px', color: 'var(--color-on-surface-variant)', wordBreak: 'break-all' }}>
+                <strong>Stream URL:</strong> {previewChannel.streamUrl || 'N/A'}
+              </div>
+              
+              <div style={{ height: '400px' }}>
+                 <HlsPreview url={previewChannel.streamUrl} />
+              </div>
+
+              {previewChannel.streamUrl?.startsWith('udp://') && (
+                <p style={{ fontSize: '13px', color: 'var(--color-warning)', marginTop: '8px', textAlign: 'center' }}>
+                  ⚠️ Browser cannot preview UDP multicast streams directly. You must test UDP streams on the actual Android TV box.
+                </p>
+              )}
             </div>
           </div>
         </div>,

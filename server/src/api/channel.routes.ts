@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import dgram from 'dgram';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -40,7 +41,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
@@ -55,9 +56,9 @@ const upload = multer({
 // GET /api/v1/channels - List all channels
 router.get('/', async (req: Request, res: Response) => {
   try {
-    const channels = await prisma.channel.findMany({ 
+    const channels = await prisma.channel.findMany({
       where: { hotelId: MOCK_HOTEL_ID },
-      orderBy: { sortOrder: 'asc' } 
+      orderBy: { channelNumber: 'asc' }
     });
     res.status(200).json(channels);
   } catch (error) {
@@ -83,13 +84,18 @@ router.post('/upload-logo', upload.single('logo'), (req: Request, res: Response)
 router.post('/', async (req: Request, res: Response) => {
   try {
     await ensureHotel();
-    const { name, channelNumber, category, streamUrl, logoUrl, isActive } = req.body;
-    
+    let { name, channelNumber, category, streamUrl, logoUrl, isActive, inputProtocol, inputIp, inputPort, inputEth, outputProtocol, outputIp, outputPort, outputEth } = req.body;
+
+    // Auto-generate UDP streamUrl if inputIp and inputPort are provided
+    if (inputIp && inputPort) {
+      streamUrl = `udp://@${inputIp}:${inputPort}`;
+    }
+
     // Auto-increment sortOrder
     const count = await prisma.channel.count({ where: { hotelId: MOCK_HOTEL_ID } });
 
-    const newChannel = await prisma.channel.create({ 
-      data: { 
+    const newChannel = await prisma.channel.create({
+      data: {
         hotelId: MOCK_HOTEL_ID,
         name,
         channelNumber: channelNumber ? parseInt(channelNumber) : null,
@@ -97,13 +103,21 @@ router.post('/', async (req: Request, res: Response) => {
         streamUrl,
         logoUrl,
         isActive: isActive !== undefined ? isActive : true,
-        sortOrder: count + 1
-      } 
+        sortOrder: count + 1,
+        inputProtocol,
+        inputIp,
+        inputPort: inputPort ? parseInt(inputPort) : null,
+        inputEth,
+        outputProtocol,
+        outputIp,
+        outputPort: outputPort ? parseInt(outputPort) : null,
+        outputEth
+      }
     });
-    
+
     // Broadcast change
     req.app.get('io')?.emit('refresh_channels', { action: 'created' });
-    
+
     res.status(201).json(newChannel);
   } catch (error) {
     console.error(error);
@@ -117,15 +131,22 @@ router.put('/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = { ...req.body };
     if (data.channelNumber) data.channelNumber = parseInt(data.channelNumber);
+    if (data.inputPort) data.inputPort = parseInt(data.inputPort);
+    if (data.outputPort) data.outputPort = parseInt(data.outputPort);
 
-    const updated = await prisma.channel.update({ 
-      where: { id }, 
-      data 
+    // Auto-generate UDP streamUrl if inputIp and inputPort are provided
+    if (data.inputIp && data.inputPort) {
+      data.streamUrl = `udp://@${data.inputIp}:${data.inputPort}`;
+    }
+
+    const updated = await prisma.channel.update({
+      where: { id },
+      data
     });
-    
+
     // Broadcast change
     req.app.get('io')?.emit('refresh_channels', { action: 'updated' });
-    
+
     res.status(200).json(updated);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update channel' });
@@ -137,10 +158,10 @@ router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.channel.delete({ where: { id } });
-    
+
     // Broadcast change
     req.app.get('io')?.emit('refresh_channels', { action: 'deleted' });
-    
+
     res.status(200).json({ message: 'Channel deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete channel' });

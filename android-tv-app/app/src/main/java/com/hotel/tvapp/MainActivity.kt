@@ -7,24 +7,31 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.graphics.Color
-import android.net.ConnectivityManager
 import android.net.wifi.WifiManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
+import android.text.InputType
 import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.webkit.JavascriptInterface
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.ui.PlayerView
 import com.hotel.tvapp.network.WebSocketClient
@@ -37,12 +44,17 @@ class MainActivity : Activity() {
     private lateinit var webView: WebView
     private lateinit var playerView: PlayerView
 
+    // ─── Loading Overlay Views ───────────────────────────────────────────────
+    private lateinit var loadingOverlay: LinearLayout
+    private lateinit var loadingSpinner: ProgressBar
+    private lateinit var loadingTitle: TextView
+    private lateinit var loadingSubtitle: TextView
+    private lateinit var loadingIpHint: TextView
+
     // ─── ExoPlayer ──────────────────────────────────────────────────────────
     private var exoPlayer: ExoPlayer? = null
 
     // ─── Multicast Lock ─────────────────────────────────────────────────────
-    // Required on Android to allow joining UDP multicast groups over WiFi.
-    // Without this lock, the WiFi chip filters out multicast packets.
     private var multicastLock: WifiManager.MulticastLock? = null
 
     // ─── MDM ────────────────────────────────────────────────────────────────
@@ -52,81 +64,20 @@ class MainActivity : Activity() {
     private lateinit var apkInstaller: ApkInstaller
     private var isKioskActive = false
 
-
-
-    /**
-     * Helper to open Android Settings after unlocking Kiosk mode
-     */
-    private fun openAndroidSettings() {
-        try {
-            if (isKioskActive) {
-                try { stopLockTask() } catch (e: Exception) {}
-                isKioskActive = false
-            }
-            val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS)
-            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            startActivity(intent)
-            Toast.makeText(this, "Opening Settings...", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Log.e("MDM", "Failed to open settings", e)
-        }
+    // ─── Auto-Retry Handler ──────────────────────────────────────────────────
+    private val retryHandler = Handler(Looper.getMainLooper())
+    private val retryRunnable = Runnable {
+        Log.d("LoadingOverlay", "Auto-retry: reloading portal…")
+        showLoading("Retrying…", "Attempting to reconnect to the server…")
+        webView.reload()
     }
 
-    // ════════════════════════════════════════════════════════════════════════
-    //  JAVASCRIPT BRIDGE — AndroidTVBridge
-    //  Injected into WebView so React can control native ExoPlayer
-    // ════════════════════════════════════════════════════════════════════════
-    inner class AndroidTVBridge {
-
-        /**
-         * Called by React when the user selects a Live TV channel.
-         *
-         * Supports:
-         *   - UDP Multicast: udp://@239.x.x.x:port  (zero latency, LAN only)
-         *   - RTP:           rtp://@239.x.x.x:port
-         *   - RTSP:          rtsp://server:port/stream
-         *   - HLS fallback:  http://server/stream.m3u8  (internet fallback)
-         */
-        @JavascriptInterface
-        fun playStream(streamUrl: String) {
-            Log.d("AndroidTVBridge", "playStream called with: $streamUrl")
-            runOnUiThread {
-                acquireMulticastLock()
-                initAndPlay(streamUrl)
-            }
-        }
-
-        /**
-         * Called by React when the user exits Live TV mode (Back/Escape).
-         * Stops the player and releases hardware resources.
-         */
-        @JavascriptInterface
-        fun stopStream() {
-            Log.d("AndroidTVBridge", "stopStream called")
-            runOnUiThread {
-                releasePlayer()
-                releaseMulticastLock()
-            }
-        }
-
-        /**
-         * Called by React to check if we are running inside the native Android app.
-         * React can use this to decide whether to use AndroidTVBridge or HLS.js fallback.
-         *
-         * Usage in React:
-         *   if (window.AndroidTVBridge) { use native } else { use HLS.js }
-         */
-        @JavascriptInterface
-        fun isNativePlayer(): Boolean = true
-
-        /**
-         * Called by React to get the current stream URL (useful for OSD after rotation).
-         */
-        @JavascriptInterface
-        fun getCurrentStream(): String {
-            return exoPlayer?.currentMediaItem?.localConfiguration?.uri?.toString() ?: ""
-        }
-    }
+    // ─── 5-Click Counter ─────────────────────────────────────────────────────
+    // Stores the timestamp of each center-key press. We keep the last 5.
+    // The dialog fires only if the 5th click arrives within 2000ms of the 1st.
+    private val clickTimestamps = ArrayDeque<Long>(5)
+    private val CLICK_WINDOW_MS = 2000L
+    private val REQUIRED_CLICKS  = 5
 
     // ════════════════════════════════════════════════════════════════════════
     //  LIFECYCLE
@@ -136,14 +87,13 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Keep screen on — essential for a TV display that runs 24/7
+        System.setProperty("java.net.preferIPv4Stack", "true")
         window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         enterImmersiveMode()
 
-        // ── Device Admin / Kiosk ──────────────────────────────────────────
         devicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
-        adminComponentName = ComponentName(this, KioskAdminReceiver::class.java)
-        apkInstaller = ApkInstaller(this)
+        adminComponentName  = ComponentName(this, KioskAdminReceiver::class.java)
+        apkInstaller        = ApkInstaller(this)
 
         if (isDeviceOwner()) {
             devicePolicyManager.setLockTaskPackages(adminComponentName, arrayOf(packageName))
@@ -151,30 +101,102 @@ class MainActivity : Activity() {
         }
 
         // ── MDM WebSocket ────────────────────────────────────────────────
-        webSocketClient = WebSocketClient(Config.SERVER_URL)
+        webSocketClient = WebSocketClient(Config.getServerUrl(this))
         webSocketClient.onMessageReceived = { message ->
             runOnUiThread { handleMdmCommand(message) }
         }
         webSocketClient.connect()
 
         // ── Inflate Layout ────────────────────────────────────────────────
-        // The layout has: FrameLayout > [PlayerView (bottom), WebView (top)]
         setContentView(R.layout.activity_main)
 
-        playerView = findViewById(R.id.player_view)
-        webView    = findViewById(R.id.web_view)
+        playerView      = findViewById(R.id.player_view)
+        webView         = findViewById(R.id.web_view)
+        loadingOverlay  = findViewById(R.id.loading_overlay)
+        loadingSpinner  = findViewById(R.id.loading_spinner)
+        loadingTitle    = findViewById(R.id.loading_title)
+        loadingSubtitle = findViewById(R.id.loading_subtitle)
+        loadingIpHint   = findViewById(R.id.loading_ip_hint)
 
-        // ── Configure PlayerView ──────────────────────────────────────────
-        // Hardware-accelerated layer for maximum performance
         playerView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
-        // Hide the player view initially; it will appear when playStream() is called
         playerView.visibility = View.GONE
 
-        // ── Configure WebView ─────────────────────────────────────────────
         configureWebView()
+        loadPortal()
+    }
 
-        // Load the React portal
-        webView.loadUrl(Config.PORTAL_URL)
+    // ════════════════════════════════════════════════════════════════════════
+    //  LOADING OVERLAY HELPERS
+    // ════════════════════════════════════════════════════════════════════════
+
+    /**
+     * Show the loading overlay with a given title and subtitle.
+     * Updates the current-IP hint so staff can always see what IP is being used.
+     */
+    private fun showLoading(title: String, subtitle: String) {
+        runOnUiThread {
+            loadingOverlay.visibility = View.VISIBLE
+            loadingSpinner.visibility = View.VISIBLE
+            loadingTitle.text   = title
+            loadingSubtitle.text = subtitle
+            loadingIpHint.text  = "Server: ${Config.getPortalUrl(this)}"
+        }
+    }
+
+    /**
+     * Switch the overlay to an error state.
+     * Hides the spinner, shows a red-tinted title and a detailed subtitle.
+     * Also schedules an automatic retry.
+     */
+    private fun showError(detail: String = "") {
+        runOnUiThread {
+            loadingOverlay.visibility = View.VISIBLE
+            loadingSpinner.visibility = View.GONE
+            loadingTitle.text   = "Connection Failed"
+            loadingSubtitle.text = if (detail.isNotBlank())
+                detail
+            else
+                "Check the server IP or network.\nThe app will retry automatically."
+            loadingIpHint.text  = "Server: ${Config.getPortalUrl(this)}"
+        }
+        scheduleRetry()
+    }
+
+    /** Hide the overlay (page loaded successfully). */
+    private fun hideLoading() {
+        runOnUiThread {
+            cancelRetry()
+            loadingOverlay.animate()
+                .alpha(0f)
+                .setDuration(400)
+                .withEndAction {
+                    loadingOverlay.visibility = View.GONE
+                    loadingOverlay.alpha = 1f   // reset for next time
+                }
+                .start()
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  AUTO-RETRY
+    // ════════════════════════════════════════════════════════════════════════
+
+    private fun scheduleRetry() {
+        retryHandler.removeCallbacks(retryRunnable)
+        retryHandler.postDelayed(retryRunnable, 8000L)
+    }
+
+    private fun cancelRetry() {
+        retryHandler.removeCallbacks(retryRunnable)
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  PORTAL LOADING
+    // ════════════════════════════════════════════════════════════════════════
+
+    private fun loadPortal() {
+        showLoading("Connecting…", "Loading hotel portal from ${Config.getServerIp(this)}…")
+        webView.loadUrl(Config.getPortalUrl(this))
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -184,44 +206,81 @@ class MainActivity : Activity() {
     @SuppressLint("SetJavaScriptEnabled")
     private fun configureWebView() {
         webView.apply {
-            // ── CRITICAL: Make the WebView background transparent ──────────
-            // This allows the ExoPlayer video (behind the WebView) to show through
-            // when React sets its own background to transparent during TV playback.
             setBackgroundColor(Color.TRANSPARENT)
             background.alpha = 0
-
-            // Since API 21+, Hardware layer supports transparent backgrounds natively
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
 
             settings.apply {
-                javaScriptEnabled       = true
-                domStorageEnabled       = true
+                javaScriptEnabled                = true
+                domStorageEnabled                = true
                 mediaPlaybackRequiresUserGesture = false
-                cacheMode               = WebSettings.LOAD_CACHE_ELSE_NETWORK
-                mixedContentMode        = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-                useWideViewPort         = true
-                loadWithOverviewMode    = true
+                cacheMode                        = WebSettings.LOAD_DEFAULT
+                mixedContentMode                 = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                useWideViewPort                  = true
+                loadWithOverviewMode             = true
                 setSupportZoom(false)
-                builtInZoomControls    = false
-                displayZoomControls    = false
+                builtInZoomControls   = false
+                displayZoomControls   = false
             }
 
             webViewClient = object : WebViewClient() {
+
+                override fun onPageStarted(
+                    view: WebView?,
+                    url: String?,
+                    favicon: android.graphics.Bitmap?
+                ) {
+                    super.onPageStarted(view, url, favicon)
+                    showLoading("Connecting…", "Reaching server at ${Config.getServerIp(this@MainActivity)}…")
+                }
+
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     enterImmersiveMode()
+                    // Only hide if the URL is our portal (not about:blank from an error)
+                    if (url != null && url != "about:blank") {
+                        Log.d("WebView", "Page finished: $url — hiding overlay.")
+                        hideLoading()
+                    }
                 }
+
+                /** Network-level errors (no connection, DNS failure, timeout). */
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    super.onReceivedError(view, request, error)
+                    // Only handle errors for the main frame (not sub-resources)
+                    if (request?.isForMainFrame == true) {
+                        val description = error?.description?.toString() ?: "Unknown error"
+                        Log.e("WebView", "Main frame error: $description")
+                        showError("Could not reach the server.\nCheck Server IP or network.\n($description)")
+                    }
+                }
+
+                /** HTTP-level errors (404, 502, etc.). */
+                override fun onReceivedHttpError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    errorResponse: WebResourceResponse?
+                ) {
+                    super.onReceivedHttpError(view, request, errorResponse)
+                    if (request?.isForMainFrame == true) {
+                        val code = errorResponse?.statusCode ?: 0
+                        Log.e("WebView", "HTTP error: $code")
+                        showError("Server returned an error (HTTP $code).\nCheck if the server is running.")
+                    }
+                }
+
                 override fun shouldOverrideUrlLoading(
                     view: WebView?,
                     request: WebResourceRequest?
                 ): Boolean = false
             }
 
-            // ── Inject AndroidTVBridge ────────────────────────────────────
-            // React can now call: window.AndroidTVBridge.playStream("udp://...")
+            // ── JavaScript Bridges ────────────────────────────────────────
             addJavascriptInterface(AndroidTVBridge(), "AndroidTVBridge")
-
-            // ── App Launcher Bridge (existing) ────────────────────────────
             addJavascriptInterface(object {
                 @JavascriptInterface
                 fun launchApp(packageName: String) {
@@ -248,120 +307,143 @@ class MainActivity : Activity() {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    //  EXOPLAYER — Initialize & Play
+    //  5-CLICK IP CONFIGURATION DIALOG
+    //  Uses timestamp-array approach:
+    //    - Each CENTER/ENTER press adds System.currentTimeMillis() to a deque.
+    //    - We keep at most REQUIRED_CLICKS (5) entries.
+    //    - After 5 presses, check if (newest - oldest) <= CLICK_WINDOW_MS (2000ms).
+    //    - If yes → open dialog. Always reset the deque after dialog opens OR
+    //      if the window has already expired.
     // ════════════════════════════════════════════════════════════════════════
 
-    private fun initAndPlay(streamUrl: String) {
-        // Release any existing player before creating a new one
-        releasePlayer()
+    private fun recordBackClick(): Boolean {
+        val now = System.currentTimeMillis()
 
-        Log.d("ExoPlayer", "Initializing player for stream: $streamUrl")
+        // Prune expired entries (older than the window) before adding
+        clickTimestamps.removeAll { (now - it) > CLICK_WINDOW_MS }
 
-        // Build ExoPlayer with DefaultMediaSourceFactory.
-        // This factory supports: HLS (.m3u8), DASH, RTSP, and UDP (udp://)
-        // UDP multicast is handled by UdpDataSource under the hood.
-        exoPlayer = ExoPlayer.Builder(this)
-            .setMediaSourceFactory(
-                DefaultMediaSourceFactory(this)
-            )
-            .build()
-            .also { player ->
+        clickTimestamps.addLast(now)
 
-                // Attach the player to the PlayerView surface
-                playerView.player = player
+        // Keep only the last REQUIRED_CLICKS entries
+        while (clickTimestamps.size > REQUIRED_CLICKS) {
+            clickTimestamps.removeFirst()
+        }
 
-                // Build the MediaItem from the given URL.
-                // ExoPlayer auto-detects the protocol (UDP, RTSP, HLS, etc.)
-                val mediaItem = MediaItem.fromUri(streamUrl)
-                player.setMediaItem(mediaItem)
+        Log.d("5Click", "Back click recorded — ${clickTimestamps.size}/$REQUIRED_CLICKS in window")
 
-                // Add listener for state changes (optional: for error handling)
-                player.addListener(object : Player.Listener {
-                    override fun onPlaybackStateChanged(state: Int) {
-                        when (state) {
-                            Player.STATE_READY -> {
-                                Log.d("ExoPlayer", "Playback READY — stream connected")
-                                // Show PlayerView once stream is ready
-                                playerView.visibility = View.VISIBLE
-                            }
-                            Player.STATE_BUFFERING -> {
-                                Log.d("ExoPlayer", "Buffering...")
-                            }
-                            Player.STATE_ENDED -> {
-                                Log.d("ExoPlayer", "Stream ended")
-                            }
-                            Player.STATE_IDLE -> {
-                                Log.d("ExoPlayer", "Player IDLE")
-                            }
-                        }
+        if (clickTimestamps.size == REQUIRED_CLICKS) {
+            val delta = clickTimestamps.last() - clickTimestamps.first()
+            Log.d("5Click", "5 back clicks detected — delta = ${delta}ms (max $CLICK_WINDOW_MS ms)")
+            if (delta <= CLICK_WINDOW_MS) {
+                clickTimestamps.clear()
+                showIpConfigDialog()
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun showIpConfigDialog() {
+        Log.d("5Click", "Opening IP config dialog")
+        val currentIp = Config.getServerIp(this)
+
+        val input = EditText(this).apply {
+            // Standard text keyboard to allow multiple dots in IP address
+            inputType = InputType.TYPE_CLASS_TEXT
+            setText(currentIp)
+            hint      = "e.g. 192.168.1.63"
+            setSelectAllOnFocus(true)
+            requestFocus()
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("⚙️ Server IP Configuration")
+            .setMessage("Enter the IP address of the Hotel TV Server.")
+            .setView(input)
+            .setPositiveButton("Connect") { dialog, _ ->
+                val newIp = input.text.toString().trim()
+                if (newIp.isNotEmpty() && newIp != currentIp) {
+                    Config.saveServerIp(this, newIp)
+                    Toast.makeText(this, "IP saved: $newIp — reconnecting…", Toast.LENGTH_LONG).show()
+                    Log.d("Config", "New server IP saved: $newIp")
+                    cancelRetry()
+                    reconnectWebSocket()
+                    loadPortal()
+                } else if (newIp == currentIp) {
+                    Toast.makeText(this, "IP unchanged. Retrying current server…", Toast.LENGTH_SHORT).show()
+                    cancelRetry()
+                    loadPortal()
+                } else {
+                    Toast.makeText(this, "Invalid IP entered.", Toast.LENGTH_SHORT).show()
+                }
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel") { dialog, _ -> dialog.dismiss() }
+            .show()
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  WEBSOCKET RECONNECT WITH NEW IP
+    // ════════════════════════════════════════════════════════════════════════
+
+    private fun reconnectWebSocket() {
+        webSocketClient.disconnect()
+        webSocketClient = WebSocketClient(Config.getServerUrl(this))
+        webSocketClient.onMessageReceived = { message ->
+            runOnUiThread { handleMdmCommand(message) }
+        }
+        webSocketClient.connect()
+        Log.d("WebSocket", "Reconnected to ${Config.getServerUrl(this)}")
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  KEY HANDLING — D-Pad navigation, 5-click secret, Home button
+    // ════════════════════════════════════════════════════════════════════════
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        return when (keyCode) {
+
+            // Center / Enter — forward the event to WebView for normal UI navigation.
+            KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_ENTER,
+            KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                event?.let { webView.dispatchKeyEvent(it) }
+                true
+            }
+
+            KeyEvent.KEYCODE_BACK -> {
+                if (!recordBackClick()) {
+                    // Normal back behavior: webView back or Escape key event
+                    if (webView.canGoBack()) {
+                        webView.goBack()
+                    } else {
+                        webView.evaluateJavascript(
+                            "window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', keyCode: 27}));",
+                            null
+                        )
                     }
-
-                    override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                        Log.e("ExoPlayer", "Playback error: ${error.message}", error)
-                        // Notify React about the error so it can show error UI
-                        runOnUiThread {
-                            webView.evaluateJavascript(
-                                "window.dispatchEvent(new CustomEvent('nativePlayerError', { detail: { message: '${error.message}' } }));",
-                                null
-                            )
-                        }
-                    }
-                })
-
-                // Prepare and start playback
-                player.prepare()
-                player.playWhenReady = true
-
-                // Show the player view (will be fully visible after STATE_READY)
-                playerView.visibility = View.VISIBLE
-                Log.d("ExoPlayer", "Player prepared and starting playback")
+                }
+                true
             }
-    }
 
-    // ════════════════════════════════════════════════════════════════════════
-    //  EXOPLAYER — Release
-    // ════════════════════════════════════════════════════════════════════════
-
-    private fun releasePlayer() {
-        exoPlayer?.let { player ->
-            Log.d("ExoPlayer", "Releasing player")
-            player.stop()
-            player.release()
-            exoPlayer = null
-        }
-        playerView.player = null
-        playerView.visibility = View.GONE
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    //  MULTICAST LOCK — Required for UDP multicast over WiFi
-    // ════════════════════════════════════════════════════════════════════════
-
-    private fun acquireMulticastLock() {
-        if (multicastLock?.isHeld == true) return
-
-        try {
-            val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            multicastLock = wifiManager.createMulticastLock("HotelTV_IPTV_Lock").apply {
-                setReferenceCounted(true)
-                acquire()
-                Log.d("Multicast", "MulticastLock acquired — UDP multicast enabled")
+            KeyEvent.KEYCODE_HOME -> {
+                webView.evaluateJavascript(
+                    "window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Home'}));",
+                    null
+                )
+                true
             }
-        } catch (e: Exception) {
-            Log.e("Multicast", "Failed to acquire MulticastLock: ${e.message}")
-        }
-    }
 
-    private fun releaseMulticastLock() {
-        try {
-            if (multicastLock?.isHeld == true) {
-                multicastLock?.release()
-                Log.d("Multicast", "MulticastLock released")
+            KeyEvent.KEYCODE_DPAD_UP,
+            KeyEvent.KEYCODE_DPAD_DOWN,
+            KeyEvent.KEYCODE_DPAD_LEFT,
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                event?.let { webView.dispatchKeyEvent(it) }
+                true
             }
-        } catch (e: Exception) {
-            Log.e("Multicast", "Failed to release MulticastLock: ${e.message}")
+
+            else -> super.onKeyDown(keyCode, event)
         }
-        multicastLock = null
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -388,10 +470,10 @@ class MainActivity : Activity() {
                 }
             }
             "reload_portal" -> {
-                // Stop any playing stream before reloading
                 releasePlayer()
                 releaseMulticastLock()
-                webView.reload()
+                cancelRetry()
+                loadPortal()
                 Toast.makeText(this, "Portal Reloaded", Toast.LENGTH_SHORT).show()
             }
             "get_network_status" -> reportNetworkStatus()
@@ -441,6 +523,156 @@ class MainActivity : Activity() {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    //  HELPER — Open Android Settings (unlocks kiosk first)
+    // ════════════════════════════════════════════════════════════════════════
+
+    private fun openAndroidSettings() {
+        try {
+            if (isKioskActive) {
+                try { stopLockTask() } catch (e: Exception) {}
+                isKioskActive = false
+            }
+            val intent = android.content.Intent(android.provider.Settings.ACTION_SETTINGS)
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+            Toast.makeText(this, "Opening Settings…", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Log.e("MDM", "Failed to open settings", e)
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  JAVASCRIPT BRIDGE — AndroidTVBridge
+    // ════════════════════════════════════════════════════════════════════════
+
+    inner class AndroidTVBridge {
+
+        @JavascriptInterface
+        fun playStream(streamUrl: String) {
+            // Keep the URL as-is; CustomMulticastDataSource handles udp://@IP:PORT format
+            Log.d("AndroidTVBridge", "playStream: $streamUrl")
+            runOnUiThread {
+                acquireMulticastLock()
+                initAndPlay(streamUrl)
+            }
+        }
+
+        @JavascriptInterface
+        fun stopStream() {
+            Log.d("AndroidTVBridge", "stopStream")
+            runOnUiThread {
+                releasePlayer()
+                releaseMulticastLock()
+            }
+        }
+
+        @JavascriptInterface
+        fun isNativePlayer(): Boolean = true
+
+        @JavascriptInterface
+        fun getCurrentStream(): String =
+            exoPlayer?.currentMediaItem?.localConfiguration?.uri?.toString() ?: ""
+
+        /**
+         * Allows React to read the device IP so it can connect to the right server.
+         */
+        @JavascriptInterface
+        fun getIpAddress(): String = getLocalIpAddress()
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  EXOPLAYER
+    // ════════════════════════════════════════════════════════════════════════
+
+    private fun initAndPlay(streamUrl: String) {
+        releasePlayer()
+        Log.d("ExoPlayer", "Initializing for: $streamUrl")
+
+        val dataSourceFactory = androidx.media3.datasource.DataSource.Factory {
+            if (streamUrl.startsWith("udp://")) {
+                CustomMulticastDataSource()
+            } else {
+                androidx.media3.datasource.DefaultDataSource.Factory(this@MainActivity).createDataSource()
+            }
+        }
+
+        exoPlayer = ExoPlayer.Builder(this)
+            .setMediaSourceFactory(
+                DefaultMediaSourceFactory(this).setDataSourceFactory(dataSourceFactory)
+            )
+            .build()
+            .also { player ->
+                playerView.player = player
+                val mediaItem = MediaItem.fromUri(streamUrl)
+                player.setMediaItem(mediaItem)
+
+                player.addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(state: Int) {
+                        when (state) {
+                            Player.STATE_READY    -> playerView.visibility = View.VISIBLE
+                            Player.STATE_ENDED    -> Log.d("ExoPlayer", "Stream ended")
+                            Player.STATE_BUFFERING-> Log.d("ExoPlayer", "Buffering…")
+                            Player.STATE_IDLE     -> Log.d("ExoPlayer", "Player IDLE")
+                        }
+                    }
+                    override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                        Log.e("ExoPlayer", "Playback error: ${error.message}", error)
+                        runOnUiThread {
+                            webView.evaluateJavascript(
+                                "window.dispatchEvent(new CustomEvent('nativePlayerError', { detail: { message: '${error.message}' } }));",
+                                null
+                            )
+                        }
+                    }
+                })
+
+                player.prepare()
+                player.playWhenReady = true
+                playerView.visibility = View.VISIBLE
+            }
+    }
+
+    private fun releasePlayer() {
+        exoPlayer?.let { player ->
+            player.stop()
+            player.release()
+            exoPlayer = null
+        }
+        playerView.player = null
+        playerView.visibility = View.GONE
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    //  MULTICAST LOCK
+    // ════════════════════════════════════════════════════════════════════════
+
+    private fun acquireMulticastLock() {
+        if (multicastLock?.isHeld == true) return
+        try {
+            val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            multicastLock = wifiManager.createMulticastLock("HotelTV_IPTV_Lock").apply {
+                setReferenceCounted(true)
+                acquire()
+                Log.d("Multicast", "MulticastLock acquired")
+            }
+        } catch (e: Exception) {
+            Log.e("Multicast", "Failed to acquire MulticastLock: ${e.message}")
+        }
+    }
+
+    private fun releaseMulticastLock() {
+        try {
+            if (multicastLock?.isHeld == true) {
+                multicastLock?.release()
+                Log.d("Multicast", "MulticastLock released")
+            }
+        } catch (e: Exception) {
+            Log.e("Multicast", "Failed to release MulticastLock: ${e.message}")
+        }
+        multicastLock = null
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     //  NETWORK STATUS REPORTING
     // ════════════════════════════════════════════════════════════════════════
 
@@ -471,12 +703,10 @@ class MainActivity : Activity() {
                 if (intf.name.equals("eth0", ignoreCase = true) ||
                     intf.name.equals("wlan0", ignoreCase = true)) {
                     val macBytes = intf.hardwareAddress ?: continue
-                    val res1 = StringBuilder()
-                    for (b in macBytes) {
-                        res1.append(String.format("%02X:", b))
-                    }
-                    if (res1.isNotEmpty()) res1.deleteCharAt(res1.length - 1)
-                    return res1.toString()
+                    val sb = StringBuilder()
+                    for (b in macBytes) sb.append(String.format("%02X:", b))
+                    if (sb.isNotEmpty()) sb.deleteCharAt(sb.length - 1)
+                    return sb.toString()
                 }
             }
         } catch (e: Exception) {
@@ -506,7 +736,7 @@ class MainActivity : Activity() {
             }
             webSocketClient.emit("network_status_report", report)
         } catch (e: Exception) {
-            Log.e("MDM", "Failed to get network status", e)
+            Log.e("MDM", "Failed to report network status", e)
         }
     }
 
@@ -545,40 +775,6 @@ class MainActivity : Activity() {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    //  KEY HANDLING — D-Pad navigation & secret code
-    // ════════════════════════════════════════════════════════════════════════
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        return when (keyCode) {
-            KeyEvent.KEYCODE_BACK -> {
-                // Send Escape to React so it can handle exit logic cleanly
-                webView.evaluateJavascript(
-                    "window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', keyCode: 27}));",
-                    null
-                )
-                true
-            }
-            KeyEvent.KEYCODE_HOME -> {
-                webView.evaluateJavascript(
-                    "window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Home'}));",
-                    null
-                )
-                true
-            }
-            KeyEvent.KEYCODE_DPAD_UP,
-            KeyEvent.KEYCODE_DPAD_DOWN,
-            KeyEvent.KEYCODE_DPAD_LEFT,
-            KeyEvent.KEYCODE_DPAD_RIGHT,
-            KeyEvent.KEYCODE_DPAD_CENTER,
-            KeyEvent.KEYCODE_ENTER -> {
-                event?.let { webView.dispatchKeyEvent(it) }
-                true
-            }
-            else -> super.onKeyDown(keyCode, event)
-        }
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
     //  ACTIVITY LIFECYCLE
     // ════════════════════════════════════════════════════════════════════════
 
@@ -610,8 +806,177 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        cancelRetry()
         releasePlayer()
         releaseMulticastLock()
         webSocketClient.disconnect()
+    }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+//  CUSTOM MULTICAST DATA SOURCE — bypasses Android TV EACCES bug on UDP bind
+// ════════════════════════════════════════════════════════════════════════════
+
+class CustomMulticastDataSource : androidx.media3.datasource.DataSource {
+    private var socket: java.net.MulticastSocket? = null
+    private var multicastAddress: java.net.InetAddress? = null
+    private val packetBuffer = ByteArray(188 * 1024) // 188 bytes per TS packet × 1024
+    private val packet = java.net.DatagramPacket(packetBuffer, packetBuffer.size)
+    private var opened = false
+    private var uri: android.net.Uri? = null
+    private var packetRemaining = 0
+    private var packetOffset = 0
+
+    override fun addTransferListener(transferListener: androidx.media3.datasource.TransferListener) {}
+
+    /**
+     * Parse host and port from UDP multicast URI.
+     * Supports both:
+     *   udp://@238.0.0.2:6000  (standard multicast "SSM" format)
+     *   udp://238.0.0.2:6000   (simple format)
+     */
+    private fun parseMulticastUri(uriStr: String): Pair<String, Int>? {
+        return try {
+            // Remove udp:// or udp://@  prefix
+            val stripped = uriStr
+                .removePrefix("udp://@")
+                .removePrefix("udp://")
+            val colonIdx = stripped.lastIndexOf(':')
+            if (colonIdx < 0) return null
+            val host = stripped.substring(0, colonIdx)
+            val port = stripped.substring(colonIdx + 1).toInt()
+            Pair(host, port)
+        } catch (e: Exception) {
+            android.util.Log.e("MulticastDS", "Failed to parse URI: $uriStr", e)
+            null
+        }
+    }
+
+    override fun open(dataSpec: androidx.media3.datasource.DataSpec): Long {
+        uri = dataSpec.uri
+        val uriStr = dataSpec.uri.toString()
+        android.util.Log.d("MulticastDS", "Opening URI: $uriStr")
+
+        val (host, port) = parseMulticastUri(uriStr) ?: run {
+            android.util.Log.e("MulticastDS", "Cannot parse multicast URI: $uriStr")
+            throw java.io.IOException("Cannot parse multicast URI: $uriStr")
+        }
+
+        android.util.Log.d("MulticastDS", "Multicast group=$host port=$port")
+
+        try {
+            multicastAddress = java.net.InetAddress.getByName(host)
+            socket = java.net.MulticastSocket(null).apply {
+                reuseAddress = true
+                soTimeout = 5000 // 5 second receive timeout
+                // Bind directly to the multicast group address (instead of 0.0.0.0)
+                // This is required on some Android TV boxes to prevent the kernel from dropping packets.
+                bind(java.net.InetSocketAddress(multicastAddress, port))
+            }
+
+            // Try to join on each active non-loopback network interface
+            // Prioritise eth0 (wired LAN) then wlan0 (WiFi)
+            val allInterfaces = java.net.NetworkInterface.getNetworkInterfaces()?.toList() ?: emptyList()
+            val preferredOrder = allInterfaces.sortedByDescending {
+                when {
+                    it.name.startsWith("eth") -> 2  // Ethernet first
+                    it.name.startsWith("wlan") -> 1 // WiFi second
+                    else -> 0
+                }
+            }
+
+            var joinedAny = false
+            for (ni in preferredOrder) {
+                if (!ni.isUp || !ni.supportsMulticast() || ni.isLoopback) continue
+                try {
+                    socket?.joinGroup(java.net.InetSocketAddress(multicastAddress, port), ni)
+                    android.util.Log.d("MulticastDS", "Joined $host:$port on ${ni.name}")
+                    joinedAny = true
+                } catch (e: Exception) {
+                    android.util.Log.w("MulticastDS", "Cannot join on ${ni.name}: ${e.message}")
+                }
+            }
+
+            if (!joinedAny) {
+                // Fallback: join without specifying interface
+                socket?.joinGroup(multicastAddress)
+                android.util.Log.w("MulticastDS", "Joined $host without specific interface (fallback)")
+            }
+
+            opened = true
+            android.util.Log.d("MulticastDS", "Socket opened successfully")
+        } catch (e: Exception) {
+            android.util.Log.e("MulticastDS", "Failed to open socket", e)
+            throw java.io.IOException(e)
+        }
+        return androidx.media3.common.C.LENGTH_UNSET.toLong()
+    }
+
+    override fun read(buffer: ByteArray, offset: Int, length: Int): Int {
+        if (length == 0) return 0
+        if (packetRemaining == 0) {
+            try {
+                packet.length = packetBuffer.size
+                socket?.receive(packet)
+                
+                val receivedLength = packet.length
+                var payloadOffset = 0
+
+                // IPTV streams are usually MPEG-TS (starts with 0x47).
+                // If it's RTP, it has a 12+ byte header before the TS packets.
+                // We will scan for the first 0x47 to strip any non-TS header.
+                if (receivedLength > 0 && packetBuffer[0] != 0x47.toByte()) {
+                    if (receivedLength > 12 && packetBuffer[12] == 0x47.toByte()) {
+                        // Standard 12-byte RTP header
+                        payloadOffset = 12
+                    } else {
+                        // Scan for 0x47 sync byte
+                        for (i in 0 until receivedLength) {
+                            if (packetBuffer[i] == 0x47.toByte()) {
+                                payloadOffset = i
+                                break
+                            }
+                        }
+                    }
+                }
+
+                packetRemaining = receivedLength - payloadOffset
+                packetOffset = payloadOffset
+
+            } catch (e: java.net.SocketTimeoutException) {
+                android.util.Log.w("MulticastDS", "Receive timeout — no data from multicast group")
+                return androidx.media3.common.C.RESULT_END_OF_INPUT
+            } catch (e: Exception) {
+                android.util.Log.e("MulticastDS", "Receive error: ${e.message}")
+                return androidx.media3.common.C.RESULT_END_OF_INPUT
+            }
+        }
+        val bytesToRead = minOf(packetRemaining, length)
+        System.arraycopy(packetBuffer, packetOffset, buffer, offset, bytesToRead)
+        packetOffset    += bytesToRead
+        packetRemaining -= bytesToRead
+        return bytesToRead
+    }
+
+    override fun getUri(): android.net.Uri? = uri
+
+    override fun close() {
+        if (opened) {
+            try {
+                val allInterfaces = java.net.NetworkInterface.getNetworkInterfaces()
+                while (allInterfaces?.hasMoreElements() == true) {
+                    val ni = allInterfaces.nextElement()
+                    if (!ni.isUp || !ni.supportsMulticast() || ni.isLoopback) continue
+                    try {
+                        socket?.leaveGroup(java.net.InetSocketAddress(multicastAddress, 0), ni)
+                    } catch (e: Exception) {}
+                }
+            } catch (e: Exception) {}
+            try { socket?.close() } catch (e: Exception) {}
+            socket = null
+            multicastAddress = null
+            opened = false
+            android.util.Log.d("MulticastDS", "Socket closed")
+        }
     }
 }

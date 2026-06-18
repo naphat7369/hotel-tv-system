@@ -80,6 +80,17 @@ model Channel {
   streamUrl      String?  @map("stream_url") 
   streamType     String?  @map("stream_type") 
   epgId          String?  @map("epg_id") 
+  
+  // IPTV Headend Configuration
+  inputProtocol  String?  @map("input_protocol")
+  inputIp        String?  @map("input_ip")
+  inputPort      Int?     @map("input_port")
+  inputEth       String?  @map("input_eth")
+  outputProtocol String?  @map("output_protocol")
+  outputIp       String?  @map("output_ip")
+  outputPort     Int?     @map("output_port")
+  outputEth      String?  @map("output_eth")
+
   isActive       Boolean  @default(true) @map("is_active")
   accessLevel    String   @default("all") @map("access_level") 
   parentalLock   Boolean  @default(false) @map("parental_lock")

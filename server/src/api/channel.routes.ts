@@ -86,10 +86,7 @@ router.post('/', async (req: Request, res: Response) => {
     await ensureHotel();
     let { name, channelNumber, category, streamUrl, logoUrl, isActive, inputProtocol, inputIp, inputPort, inputEth, outputProtocol, outputIp, outputPort, outputEth } = req.body;
 
-    // Auto-generate UDP streamUrl if inputIp and inputPort are provided
-    if (inputIp && inputPort) {
-      streamUrl = `udp://@${inputIp}:${inputPort}`;
-    }
+
 
     // Auto-increment sortOrder
     const count = await prisma.channel.count({ where: { hotelId: MOCK_HOTEL_ID } });
@@ -134,10 +131,7 @@ router.put('/:id', async (req: Request, res: Response) => {
     if (data.inputPort) data.inputPort = parseInt(data.inputPort);
     if (data.outputPort) data.outputPort = parseInt(data.outputPort);
 
-    // Auto-generate UDP streamUrl if inputIp and inputPort are provided
-    if (data.inputIp && data.inputPort) {
-      data.streamUrl = `udp://@${data.inputIp}:${data.inputPort}`;
-    }
+
 
     const updated = await prisma.channel.update({
       where: { id },

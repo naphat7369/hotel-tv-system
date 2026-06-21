@@ -415,7 +415,7 @@ function ChannelManagement() {
                 
                 {/* Input Config */}
                 <div style={{ marginBottom: '16px' }}>
-                  <label style={{...labelStyle, color: 'var(--color-on-surface-variant)'}}>Input Configuration (Used to auto-generate UDP Stream URL)</label>
+                  <label style={{...labelStyle, color: 'var(--color-on-surface-variant)'}}>Input Configuration (For CMS Documentation Only)</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px 80px', gap: '8px', marginBottom: '4px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Protocol</div>
                     <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>IP Address</div>
@@ -442,7 +442,7 @@ function ChannelManagement() {
 
                 {/* Output Config */}
                 <div>
-                  <label style={{...labelStyle, color: 'var(--color-on-surface-variant)'}}>Output Configuration (For CMS Documentation Only)</label>
+                  <label style={{...labelStyle, color: 'var(--color-on-surface-variant)'}}>Output Configuration (Used to auto-generate HLS Stream URL)</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px 80px', gap: '8px', marginBottom: '4px' }}>
                     <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Protocol</div>
                     <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>IP Address</div>

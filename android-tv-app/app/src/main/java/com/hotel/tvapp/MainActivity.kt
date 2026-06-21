@@ -68,8 +68,7 @@ class MainActivity : Activity() {
     private val retryHandler = Handler(Looper.getMainLooper())
     private val retryRunnable = Runnable {
         Log.d("LoadingOverlay", "Auto-retry: reloading portal…")
-        showLoading("Retrying…", "Attempting to reconnect to the server…")
-        webView.reload()
+        loadPortal()
     }
 
     // ─── 5-Click Counter ─────────────────────────────────────────────────────
@@ -183,7 +182,7 @@ class MainActivity : Activity() {
 
     private fun scheduleRetry() {
         retryHandler.removeCallbacks(retryRunnable)
-        retryHandler.postDelayed(retryRunnable, 8000L)
+        retryHandler.postDelayed(retryRunnable, 5000L)
     }
 
     private fun cancelRetry() {

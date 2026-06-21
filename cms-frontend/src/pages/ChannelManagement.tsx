@@ -6,6 +6,7 @@ import { Badge } from '../components/ui/Badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { api, type Channel } from '../lib/api';
 import { RefreshCw, Trash2, Power, Edit2, Play, Upload, MonitorPlay } from 'lucide-react';
+import { io } from 'socket.io-client';
 import Hls from 'hls.js';
 
 function HlsPreview({ url }: { url?: string | null }) {
@@ -81,33 +82,24 @@ function ChannelManagement() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { fetchChannels(); }, []);
 
-  // Bandwidth Monitor Simulation
+  // Listen for real Stream Status from Backend
   useEffect(() => {
-    if (channels.length === 0) return;
-    
-    const interval = setInterval(() => {
-      setBandwidthStats(prev => {
-        const newStats = { ...prev };
-        channels.forEach(ch => {
-          if (ch.isActive && ch.streamUrl) {
-            // Simulate 2.5 - 5.5 Mbps
-            const base = newStats[ch.id] || (3.0 + Math.random() * 2);
-            // Fluctuate by +/- 0.3
-            const change = (Math.random() - 0.5) * 0.6;
-            let current = base + change;
-            if (current < 1.0) current = 1.5;
-            if (current > 6.0) current = 5.8;
-            newStats[ch.id] = parseFloat(current.toFixed(1));
-          } else {
-            newStats[ch.id] = 0;
-          }
-        });
-        return newStats;
+    const backendUrl = `http://${window.location.hostname}:3000`;
+    const socket = io(backendUrl);
+
+    socket.on('channel_status_update', (statusMap: Record<string, boolean>) => {
+      // Map true -> 3.5 (simulated bandwidth for online), false -> 0
+      const newStats: Record<string, number> = {};
+      Object.keys(statusMap).forEach(key => {
+        newStats[key] = statusMap[key] ? 3.5 : 0;
       });
-    }, 3000);
-    
-    return () => clearInterval(interval);
-  }, [channels]);
+      setBandwidthStats(newStats);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   const handleToggleStatus = async (channel: Channel) => {
     setProcessingId(channel.id);
@@ -247,7 +239,7 @@ function ChannelManagement() {
                     <TableCell>
                       <span className="bg-surface-container-high text-on-surface-variant px-2 py-1 rounded text-xs">{ch.category}</span>
                     </TableCell>
-                    <TableCell className="text-xs text-on-surface-variant">
+                    <TableCell className="text-xs text-on-surface-variant" style={{ maxWidth: '150px', wordBreak: 'break-all' }}>
                       {ch.inputIp ? (
                         <div>
                           <div><span className="font-semibold">{ch.inputProtocol}</span> {ch.inputEth}</div>
@@ -259,7 +251,13 @@ function ChannelManagement() {
                       {ch.streamUrl ? ch.streamUrl : '-'}
                     </TableCell>
                     <TableCell>
-                      {ch.isActive ? <Badge variant="success">Active</Badge> : <Badge variant="error">Inactive</Badge>}
+                      {!ch.isActive ? (
+                        <Badge variant="secondary">Disabled</Badge>
+                      ) : (bandwidthStats[ch.id] || 0) > 0 ? (
+                        <Badge variant="success">Online</Badge>
+                      ) : (
+                        <Badge variant="error" className="animate-pulse bg-error text-white">No Signal</Badge>
+                      )}
                     </TableCell>
                     <TableCell>
                       {(() => {

@@ -6,6 +6,7 @@ import { createServer } from 'http';
 import path from 'path';
 import { initWebSocket } from './websocket/socket';
 import { initCronJobs } from './services/cron.service';
+import { StreamService } from './services/stream.service';
 
 import deviceRoutes from './api/device.routes';
 import channelRoutes from './api/channel.routes';
@@ -31,6 +32,9 @@ app.set('io', io); // Allow routes to access io if needed
 
 // Initialize Cron Jobs
 initCronJobs(io);
+
+// Initialize Stream Probing Service
+StreamService.init(io);
 
 // Middleware
 app.use(helmet({ crossOriginResourcePolicy: false })); // Allow cross-origin static file serving

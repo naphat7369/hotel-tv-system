@@ -104,7 +104,7 @@
 59-->D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:43:9-41
 60        android:supportsRtl="true"
 60-->D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:44:9-35
-61        android:testOnly="false"
+61        android:testOnly="true"
 61-->D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:41:9-33
 62        android:theme="@android:style/Theme.DeviceDefault.NoActionBar"
 62-->D:\Projects\Hotel-TV\hotel-tv-system\android-tv-app\app\src\main\AndroidManifest.xml:45:9-71

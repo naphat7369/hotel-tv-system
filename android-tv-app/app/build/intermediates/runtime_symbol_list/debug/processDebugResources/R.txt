@@ -359,6 +359,11 @@ int id italic 0x7f07006d
 int id item_touch_helper_previous_elevation 0x7f07006e
 int id line1 0x7f07006f
 int id line3 0x7f070070
+int id loading_ip_hint 0x7f07009e
+int id loading_overlay 0x7f07009f
+int id loading_spinner 0x7f0700a0
+int id loading_subtitle 0x7f0700a1
+int id loading_title 0x7f0700a2
 int id media_actions 0x7f070071
 int id media_controller_compat_view_tag 0x7f070072
 int id never 0x7f070073

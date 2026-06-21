@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     Hotel TV — MainActivity Layout
-    Architecture: ExoPlayer (bottom) + WebView Overlay (top)
-
-    The FrameLayout stacks children on top of each other.
-    Layer 1 (bottom): PlayerView — hardware-accelerated video surface for UDP multicast
-    Layer 2 (top):    WebView   — transparent React UI overlay (OSD, menus, navigation)
+    Architecture (layers, bottom to top):
+      Layer 1 — PlayerView   : Hardware-accelerated video for UDP/HLS streams
+      Layer 2 — WebView      : Transparent React UI overlay
+      Layer 3 — Loading Overlay : Native spinner/error screen (sits on top of everything)
 -->
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -18,7 +18,6 @@
         ══ LAYER 1: Native ExoPlayer Video Surface ══
         - Placed first so it renders BEHIND the WebView
         - use_controller="false" hides all default ExoPlayer UI chrome
-          (we build our own OSD in React)
         - resize_mode="fill" ensures the video fills the entire screen
     -->
     <androidx.media3.ui.PlayerView
@@ -27,8 +26,7 @@
         android:layout_height="match_parent"
         android:background="#000000"
         app:use_controller="false"
-        app:resize_mode="fill"
-        xmlns:app="http://schemas.android.com/apk/res-auto"/>
+        app:resize_mode="fill"/>
 
     <!--
         ══ LAYER 2: WebView Transparent Overlay ══
@@ -44,5 +42,81 @@
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:layerType="software"/>
+
+    <!--
+        ══ LAYER 3: Native Loading / Error Overlay ══
+        - Sits on top of everything — shown while the WebView is loading
+          or if the network/server is unreachable.
+        - Staff can see this screen instead of a black void.
+        - The 5-click IP dialog still works while this overlay is visible.
+        - Controlled entirely from Kotlin: VISIBLE → GONE on success,
+          or switches to error message + auto-retry on failure.
+    -->
+    <LinearLayout
+        android:id="@+id/loading_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#DD000000"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:visibility="visible">
+
+        <!-- Spinner — hidden when showing an error -->
+        <ProgressBar
+            android:id="@+id/loading_spinner"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:indeterminate="true"
+            android:indeterminateTint="@android:color/white"/>
+
+        <!-- Primary status title -->
+        <TextView
+            android:id="@+id/loading_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Connecting…"
+            android:textColor="@android:color/white"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:gravity="center"/>
+
+        <!-- Secondary subtitle / error detail -->
+        <TextView
+            android:id="@+id/loading_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_marginHorizontal="48dp"
+            android:text=""
+            android:textColor="#AAFFFFFF"
+            android:textSize="15sp"
+            android:gravity="center"/>
+
+        <!-- Server IP hint — always visible so staff can diagnose -->
+        <TextView
+            android:id="@+id/loading_ip_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text=""
+            android:textColor="#55FFFFFF"
+            android:textSize="13sp"
+            android:fontFamily="monospace"
+            android:gravity="center"/>
+
+        <!-- Instructional hint for the 5-click trick -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="Press OK/Enter 5× quickly to change server IP"
+            android:textColor="#33FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"/>
+
+    </LinearLayout>
 
 </FrameLayout>

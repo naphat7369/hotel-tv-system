@@ -469,13 +469,31 @@ function ChannelManagement() {
                 </div>
               </div>
 
-              {/* Stream URL (Read Only / Optional Override) */}
+              {/* Stream URL */}
               <div>
-                <label style={labelStyle}>Stream URL (Auto-generated from Input Config)</label>
+                <label style={{...labelStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                  <span>Stream URL (HLS for Android TV) *</span>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    style={{ height: '24px', padding: '0 8px', fontSize: '11px' }}
+                    onClick={() => {
+                      const ip = formData.outputIp || '10.0.101.254';
+                      const chId = prompt('Enter Wellav Row/Stream ID (e.g., 1, 2, 3):', String(formData.channelNumber || '1'));
+                      if (chId) {
+                        const paddedId = String(chId).padStart(4, '0');
+                        setFormData({...formData, streamUrl: `http://${ip}/live/${paddedId}/index.m3u8`});
+                      }
+                    }}
+                  >
+                    Auto-Generate HLS
+                  </Button>
+                </label>
                 <input type="url" style={{ ...inputStyle, fontSize: '13px', backgroundColor: 'var(--color-surface-container)' }}
                   value={formData.streamUrl || ''}
                   onChange={e => setFormData({...formData, streamUrl: e.target.value})}
-                  placeholder="e.g. udp://@224.1.1.1:1234" />
+                  placeholder="e.g. http://10.0.101.254/live/0001/index.m3u8" />
               </div>
 
               {/* Stream Preview */}

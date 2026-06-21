@@ -360,6 +360,11 @@ id italic
 id item_touch_helper_previous_elevation
 id line1
 id line3
+id loading_ip_hint
+id loading_overlay
+id loading_spinner
+id loading_subtitle
+id loading_title
 id media_actions
 id media_controller_compat_view_tag
 id never

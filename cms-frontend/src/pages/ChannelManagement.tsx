@@ -435,7 +435,7 @@ function ChannelManagement() {
                   </div>
                 </div>
 
-
+              </div>
 
               {/* Stream URL */}
               <div>

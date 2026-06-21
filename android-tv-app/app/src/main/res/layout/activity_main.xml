@@ -63,65 +63,35 @@
         android:focusableInTouchMode="true"
         android:visibility="visible">
 
-        <!-- Hotel Name — Premium gold serif text -->
-        <TextView
-            android:id="@+id/loading_hotel_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="S31 SUKHUMVIT HOTEL"
-            android:textColor="#D4AF37"
-            android:textSize="42sp"
-            android:fontFamily="serif"
-            android:textStyle="bold"
-            android:letterSpacing="0.15"
-            android:gravity="center"/>
-
-        <!-- Hotel Stars -->
-        <TextView
-            android:id="@+id/loading_hotel_stars"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="★ ★ ★ ★ ★"
-            android:textColor="#D4AF37"
-            android:textSize="20sp"
-            android:letterSpacing="0.3"
-            android:gravity="center"/>
-
-        <!-- Gold Spinner -->
+        <!-- Just a simple, subtle spinner while the WebView connects -->
         <ProgressBar
             android:id="@+id/loading_spinner"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginTop="48dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:indeterminate="true"
-            android:indeterminateTint="#D4AF37"/>
+            android:indeterminateTint="#66FFFFFF"/>
 
-        <!-- Primary status title — elegant light text -->
+        <!-- Primary status title — Used for Error messages only -->
         <TextView
             android:id="@+id/loading_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="28dp"
-            android:text="PREPARING YOUR EXPERIENCE"
-            android:textColor="#E0E0E0"
-            android:textSize="18sp"
-            android:fontFamily="sans-serif-light"
-            android:letterSpacing="0.12"
+            android:layout_marginTop="24dp"
+            android:text=""
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
             android:gravity="center"/>
 
-        <!-- Secondary subtitle -->
+        <!-- Secondary subtitle / error detail -->
         <TextView
             android:id="@+id/loading_subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginHorizontal="48dp"
-            android:text="Establishing secure connection to the hotel network…"
-            android:textColor="#88FFFFFF"
-            android:textSize="13sp"
-            android:fontFamily="sans-serif-light"
-            android:letterSpacing="0.05"
+            android:text=""
+            android:textColor="#AAFFFFFF"
+            android:textSize="15sp"
             android:gravity="center"/>
 
         <!-- Server IP hint — completely hidden from guests, kept for internal reference -->

@@ -50,8 +50,6 @@ class MainActivity : Activity() {
     private lateinit var loadingTitle: TextView
     private lateinit var loadingSubtitle: TextView
     private lateinit var loadingIpHint: TextView
-    private lateinit var loadingHotelName: TextView
-    private lateinit var loadingHotelStars: TextView
 
     // ─── ExoPlayer ──────────────────────────────────────────────────────────
     private var exoPlayer: ExoPlayer? = null
@@ -118,8 +116,6 @@ class MainActivity : Activity() {
         loadingTitle    = findViewById(R.id.loading_title)
         loadingSubtitle = findViewById(R.id.loading_subtitle)
         loadingIpHint   = findViewById(R.id.loading_ip_hint)
-        loadingHotelName  = findViewById(R.id.loading_hotel_name)
-        loadingHotelStars = findViewById(R.id.loading_hotel_stars)
 
         playerView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         playerView.visibility = View.GONE
@@ -140,8 +136,6 @@ class MainActivity : Activity() {
         runOnUiThread {
             loadingOverlay.visibility = View.VISIBLE
             loadingSpinner.visibility = View.VISIBLE
-            loadingHotelName.visibility = View.VISIBLE
-            loadingHotelStars.visibility = View.VISIBLE
             loadingTitle.text   = title
             loadingSubtitle.text = subtitle
         }
@@ -156,8 +150,6 @@ class MainActivity : Activity() {
         runOnUiThread {
             loadingOverlay.visibility = View.VISIBLE
             loadingSpinner.visibility = View.GONE
-            loadingHotelName.visibility = View.VISIBLE
-            loadingHotelStars.visibility = View.VISIBLE
             loadingTitle.text   = "CONNECTION LOST"
             loadingSubtitle.text = if (detail.isNotBlank())
                 detail
@@ -200,7 +192,7 @@ class MainActivity : Activity() {
     // ════════════════════════════════════════════════════════════════════════
 
     private fun loadPortal() {
-        showLoading("PREPARING YOUR EXPERIENCE", "Establishing secure connection to the hotel network…")
+        showLoading("", "")
         webView.loadUrl(Config.getPortalUrl(this))
     }
 
@@ -238,7 +230,7 @@ class MainActivity : Activity() {
                 ) {
                     super.onPageStarted(view, url, favicon)
                     pageHasError = false
-                    showLoading("PREPARING YOUR EXPERIENCE", "Establishing secure connection to the hotel network…")
+                    showLoading("", "")
                 }
 
                 override fun onPageFinished(view: WebView?, url: String?) {

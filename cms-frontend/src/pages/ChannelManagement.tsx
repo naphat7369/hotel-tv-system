@@ -221,7 +221,7 @@ function ChannelManagement() {
                 <TableHead>Channel Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Input</TableHead>
-                <TableHead>Output</TableHead>
+                <TableHead>Stream URL</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Bandwidth</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -255,13 +255,8 @@ function ChannelManagement() {
                         </div>
                       ) : '-'}
                     </TableCell>
-                    <TableCell className="text-xs text-on-surface-variant">
-                      {ch.outputIp ? (
-                        <div>
-                          <div><span className="font-semibold">{ch.outputProtocol}</span> {ch.outputEth}</div>
-                          <div>{ch.outputIp}:{ch.outputPort}</div>
-                        </div>
-                      ) : '-'}
+                    <TableCell className="text-xs text-on-surface-variant" style={{ maxWidth: '200px', wordBreak: 'break-all' }}>
+                      {ch.streamUrl ? ch.streamUrl : '-'}
                     </TableCell>
                     <TableCell>
                       {ch.isActive ? <Badge variant="success">Active</Badge> : <Badge variant="error">Inactive</Badge>}
@@ -440,38 +435,11 @@ function ChannelManagement() {
                   </div>
                 </div>
 
-                {/* Output Config */}
-                <div>
-                  <label style={{...labelStyle, color: 'var(--color-on-surface-variant)'}}>Output Configuration (Used to auto-generate HLS Stream URL)</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px 80px', gap: '8px', marginBottom: '4px' }}>
-                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Protocol</div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>IP Address</div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Port</div>
-                    <div style={{ fontSize: '11px', color: 'var(--color-on-surface-variant)', fontWeight: 600 }}>Eth</div>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 80px 80px', gap: '8px' }}>
-                    <select style={{...inputStyle, fontSize: '13px'}} value={formData.outputProtocol || 'UDP'} onChange={e => setFormData({...formData, outputProtocol: e.target.value})}>
-                      <option value="UDP">UDP</option>
-                      <option value="HLS">HLS</option>
-                      <option value="DASH">DASH</option>
-                    </select>
-                    <input type="text" style={{...inputStyle, fontSize: '13px'}} placeholder="IP (e.g. 10.0.101.2)" value={formData.outputIp || ''} onChange={e => setFormData({...formData, outputIp: e.target.value})} />
-                    <input type="number" style={{...inputStyle, fontSize: '13px'}} placeholder="Port" value={formData.outputPort || ''} onChange={e => setFormData({...formData, outputPort: parseInt(e.target.value) || null})} />
-                    <select style={{...inputStyle, fontSize: '13px'}} value={formData.outputEth || 'All'} onChange={e => setFormData({...formData, outputEth: e.target.value})}>
-                      <option value="All">All</option>
-                      <option value="eth1">eth1</option>
-                      <option value="eth2">eth2</option>
-                      <option value="eth3">eth3</option>
-                      <option value="eth4">eth4</option>
-                      <option value="eth5">eth5</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+
 
               {/* Stream URL */}
               <div>
-                <label style={{...labelStyle, display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                <label style={{...labelStyle, display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px'}}>
                   <span>Stream URL (HLS or UDP for Android TV) *</span>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <Button 

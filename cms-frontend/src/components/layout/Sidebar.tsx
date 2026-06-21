@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom"
-import { LayoutDashboard, Tv, MonitorPlay, Users, X, Activity, Smartphone } from "lucide-react"
+import { LayoutDashboard, Tv, MonitorPlay, Users, X, Activity, Smartphone, Settings as SettingsIcon } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Button } from "../ui/Button"
 import { ThemeToggle } from "../ui/ThemeToggle"
@@ -18,6 +18,7 @@ const navItems = [
   { name: "Guest Services", path: "/services", icon: Users },
   { name: "Guest Requests", path: "/requests", icon: Activity },
   { name: "Screen Designer", path: "/screens", icon: LayoutDashboard },
+  { name: "Brand Settings", path: "/settings", icon: SettingsIcon },
 ]
 
 export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {

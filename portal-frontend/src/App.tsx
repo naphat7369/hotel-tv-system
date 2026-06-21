@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import LiveTVPlayer from './components/LiveTVPlayer'
+import LoadingScreen from './components/LoadingScreen'
 import { io } from 'socket.io-client'
 
 export interface BackendChannel {
@@ -42,6 +43,15 @@ function App() {
 
   const [time, setTime] = useState(new Date())
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
+
+  const [appLoading, setAppLoading] = useState(true)
+  const [appSettings, setAppSettings] = useState({
+    hotelName: 'GRAND HORIZON',
+    hotelStars: '★★★★★',
+    title: 'PREPARING YOUR EXPERIENCE',
+    subtitle: 'Establishing secure connection to the hotel network...',
+    bgImage: ''
+  })
 
   // Dynamic menu items from CMS with localStorage offline caching fallback
   const [servicesMenu, setServicesMenu] = useState<MenuItem[]>(() => {
@@ -154,9 +164,34 @@ function App() {
     }
   }, []);
 
+  const fetchSettings = useCallback(async () => {
+    try {
+      const serverHost = `http://${window.location.hostname}:3000`;
+      const res = await fetch(`${serverHost}/api/v1/settings`);
+      if (res.ok) {
+        const data = await res.json();
+        setAppSettings({
+          hotelName: data.hotel_name || 'GRAND HORIZON',
+          hotelStars: data.hotel_stars || '★★★★★',
+          title: data.loading_title || 'PREPARING YOUR EXPERIENCE',
+          subtitle: data.loading_subtitle || 'Establishing secure connection to the hotel network...',
+          bgImage: data.loading_bg_image ? `${serverHost}${data.loading_bg_image}` : ''
+        });
+      }
+    } catch (e) {
+      console.error('Failed to fetch settings', e);
+    }
+  }, []);
+
   useEffect(() => {
-    fetchChannels();
-    fetchMenuItems();
+    const bootApp = async () => {
+      // Ensure the loading screen shows for at least 2.5 seconds for the premium feel
+      const minDelay = new Promise(resolve => setTimeout(resolve, 2500));
+      await Promise.all([fetchChannels(), fetchMenuItems(), fetchSettings(), minDelay]);
+      setAppLoading(false);
+    };
+    bootApp();
+
     const serverHost = `http://${window.location.hostname}:3000`;
     const socket = io(serverHost);
     
@@ -731,6 +766,16 @@ function App() {
 
   return (
     <div className="font-body-md text-on-surface">
+      {appLoading && (
+        <LoadingScreen 
+          hotelName={appSettings.hotelName}
+          hotelStars={appSettings.hotelStars}
+          title={appSettings.title}
+          subtitle={appSettings.subtitle}
+          bgImage={appSettings.bgImage}
+        />
+      )}
+      
       {/* Background Cinematic Image */}
       <div 
         className="fixed inset-0 z-0"

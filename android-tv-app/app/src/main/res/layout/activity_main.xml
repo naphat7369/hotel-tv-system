@@ -58,7 +58,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#DD000000"
+        android:background="#FF000000"
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:visibility="visible">
@@ -95,7 +95,7 @@
             android:textSize="15sp"
             android:gravity="center"/>
 
-        <!-- Server IP hint — always visible so staff can diagnose -->
+        <!-- Server IP hint — hidden as per user request -->
         <TextView
             android:id="@+id/loading_ip_hint"
             android:layout_width="wrap_content"
@@ -105,9 +105,10 @@
             android:textColor="#55FFFFFF"
             android:textSize="13sp"
             android:fontFamily="monospace"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:visibility="gone"/>
 
-        <!-- Instructional hint for the 5-click trick -->
+        <!-- Instructional hint for the 5-click trick — hidden as per user request -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -115,7 +116,8 @@
             android:text="Press OK/Enter 5× quickly to change server IP"
             android:textColor="#33FFFFFF"
             android:textSize="12sp"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:visibility="gone"/>
 
     </LinearLayout>
 

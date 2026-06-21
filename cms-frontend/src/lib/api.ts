@@ -355,6 +355,22 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to upload image');
     return res.json() as Promise<{ url: string }>;
+  },
+
+  // ── SETTINGS ──
+  getSettings: async () => {
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/settings`);
+    if (!res.ok) throw new Error('Failed to fetch settings');
+    return res.json();
+  },
+
+  updateSettings: async (formData: FormData) => {
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/settings`, {
+      method: 'POST',
+      body: formData
+    });
+    if (!res.ok) throw new Error('Failed to update settings');
+    return res.json();
   }
 };
 

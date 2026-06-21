@@ -8,6 +8,7 @@ import GuestRequests from './pages/GuestRequests';
 import ScreenDesigner from './pages/ScreenDesigner';
 import DeviceManagement from './pages/DeviceManagement';
 import BroadcastManagement from './pages/BroadcastManagement';
+import Settings from './pages/settings/Settings';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="services" element={<GuestServices />} />
           <Route path="requests" element={<GuestRequests />} />
           <Route path="screens" element={<ScreenDesigner />} />
+          <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

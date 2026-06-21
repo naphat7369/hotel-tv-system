@@ -223,6 +223,7 @@ class MainActivity : Activity() {
             }
 
             webViewClient = object : WebViewClient() {
+                private var pageHasError = false
 
                 override fun onPageStarted(
                     view: WebView?,
@@ -230,6 +231,7 @@ class MainActivity : Activity() {
                     favicon: android.graphics.Bitmap?
                 ) {
                     super.onPageStarted(view, url, favicon)
+                    pageHasError = false
                     showLoading("Connecting…", "Reaching server at ${Config.getServerIp(this@MainActivity)}…")
                 }
 
@@ -237,7 +239,7 @@ class MainActivity : Activity() {
                     super.onPageFinished(view, url)
                     enterImmersiveMode()
                     // Only hide if the URL is our portal (not about:blank from an error)
-                    if (url != null && url != "about:blank") {
+                    if (!pageHasError && url != null && url != "about:blank") {
                         Log.d("WebView", "Page finished: $url — hiding overlay.")
                         hideLoading()
                     }
@@ -252,6 +254,7 @@ class MainActivity : Activity() {
                     super.onReceivedError(view, request, error)
                     // Only handle errors for the main frame (not sub-resources)
                     if (request?.isForMainFrame == true) {
+                        pageHasError = true
                         val description = error?.description?.toString() ?: "Unknown error"
                         Log.e("WebView", "Main frame error: $description")
                         showError("Could not reach the server.\nCheck Server IP or network.\n($description)")
@@ -266,6 +269,7 @@ class MainActivity : Activity() {
                 ) {
                     super.onReceivedHttpError(view, request, errorResponse)
                     if (request?.isForMainFrame == true) {
+                        pageHasError = true
                         val code = errorResponse?.statusCode ?: 0
                         Log.e("WebView", "HTTP error: $code")
                         showError("Server returned an error (HTTP $code).\nCheck if the server is running.")

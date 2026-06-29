@@ -1,6 +1,23 @@
 import cron from 'node-cron';
+import os from 'os';
 import { Server } from 'socket.io';
 import { initBroadcastCron } from './broadcast.cron';
+
+function getLocalIpAddress() {
+  const interfaces = os.networkInterfaces();
+  for (const devName in interfaces) {
+    const iface = interfaces[devName];
+    if (iface) {
+      for (let i = 0; i < iface.length; i++) {
+        const alias = iface[i];
+        if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+          return alias.address;
+        }
+      }
+    }
+  }
+  return '127.0.0.1';
+}
 
 export const initCronJobs = (io: Server) => {
   console.log('[Cron] Initializing automated tasks...');
@@ -22,7 +39,7 @@ export const initCronJobs = (io: Server) => {
     
     // In a real scenario, we would determine the exact filename downloaded by the 2:00 AM task.
     // For now, we assume 'netflix-latest.apk' exists in our static directory.
-    const serverIp = process.env.SERVER_IP || '192.168.1.63'; // Replace with actual logic to get Server IP
+    const serverIp = process.env.SERVER_IP || getLocalIpAddress();
     const port = process.env.PORT || 3000;
     const downloadUrl = `http://${serverIp}:${port}/uploads/apks/netflix-latest.apk`;
 
@@ -41,4 +58,29 @@ export const initCronJobs = (io: Server) => {
 
   // Initialize Broadcast Scheduling Cron
   initBroadcastCron(io);
+
+  // 4:00 AM Task: Analytics Data Retention Cleanup (Delete data older than 6 months)
+  cron.schedule('0 4 * * *', async () => {
+    console.log('[Cron] [4:00 AM] Running automated Analytics Cleanup task...');
+    try {
+      const { PrismaClient } = require('@prisma/client');
+      const prisma = new PrismaClient();
+      
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const deleted = await prisma.usageEvent.deleteMany({
+        where: {
+          timestamp: {
+            lt: sixMonthsAgo
+          }
+        }
+      });
+      
+      console.log(`[Cron] Deleted ${deleted.count} old analytics records.`);
+      await prisma.$disconnect();
+    } catch (err) {
+      console.error('[Cron] Failed to cleanup analytics:', err);
+    }
+  });
 };

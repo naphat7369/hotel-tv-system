@@ -2,6 +2,14 @@ import { Router, Request, Response } from 'express';
 
 const router = Router();
 
+// Export a getter so other routes (analytics) can read in-memory stats without circular deps
+export const getRequestStats = () => ({
+  total: mockRequests.length,
+  pending: mockRequests.filter(r => r.status === 'PENDING').length,
+  inProgress: mockRequests.filter(r => r.status === 'IN_PROGRESS').length,
+  completed: mockRequests.filter(r => r.status === 'COMPLETED').length,
+});
+
 // In-memory store since Postgres is currently unreachable
 let mockRequests: any[] = [
   {

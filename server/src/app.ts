@@ -20,6 +20,8 @@ import mdmRoutes from './api/mdm.routes';
 import broadcastRoutes from './api/broadcast.routes';
 import pmsRoutes from './api/pms.routes';
 import settingsRoutes from './api/settings.routes';
+import streamingAppRoutes from './api/streaming-app.routes';
+import webhookRoutes from './api/webhook.routes';
 
 dotenv.config();
 
@@ -62,7 +64,9 @@ app.use('/api/v1/requests', requestRoutes);
 app.use('/api/v1/mdm', mdmRoutes);
 app.use('/api/v1/broadcast', broadcastRoutes);
 app.use('/api/v1/pms', pmsRoutes);
+app.use('/api/v1/webhooks/pms', webhookRoutes);
 app.use('/api/v1/settings', settingsRoutes);
+app.use('/api/v1/streaming-apps', streamingAppRoutes);
 
 // Health Check
 app.get('/health', (req: Request, res: Response) => {

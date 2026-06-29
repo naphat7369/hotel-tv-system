@@ -43,7 +43,7 @@ export const initWebSocket = (server: HttpServer) => {
       if (!deviceId) return;
       
       currentDeviceId = deviceId;
-      const existingDevice = connectedDevices.get(deviceId) || {};
+      const existingDevice: Partial<DeviceStatus> = connectedDevices.get(deviceId) || {};
 
       // Prevent multiple tabs from wiping out a valid room number with 'Unassigned'
       if (roomNumber === 'Unassigned' && existingDevice.roomNumber && existingDevice.roomNumber !== 'Unassigned') {

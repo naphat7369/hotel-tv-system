@@ -62,6 +62,53 @@ export const DeviceManagement = () => {
     }
   };
 
+  const handleCheckIn = async (device: Device) => {
+    const guestName = prompt('Enter Guest Name:', 'John Doe');
+    if (!guestName) return;
+    
+    const tag = prompt('Enter Guest Tag (Default, VIP, Honeymoon):', 'VIP');
+    if (!tag) return;
+
+    try {
+      const backendUrl = `http://${window.location.hostname}:3000`;
+      const res = await fetch(`${backendUrl}/api/v1/pms/checkin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomNumber: device.roomNumber || '101',
+          guestName: guestName,
+          guestTag: tag,
+          deviceId: device.deviceId,
+          ip: device.ipAddress
+        })
+      });
+      if (res.ok) alert('Mock Check-in sent!');
+      else alert('Check-in failed');
+    } catch (e) {
+      alert('Network error');
+    }
+  };
+
+  const handleCheckOut = async (device: Device) => {
+    if (!confirm('Simulate Check-out?')) return;
+    try {
+      const backendUrl = `http://${window.location.hostname}:3000`;
+      const res = await fetch(`${backendUrl}/api/v1/pms/checkout`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomNumber: device.roomNumber || '101',
+          deviceId: device.deviceId,
+          ip: device.ipAddress
+        })
+      });
+      if (res.ok) alert('Mock Check-out sent!');
+      else alert('Check-out failed');
+    } catch (e) {
+      alert('Network error');
+    }
+  };
+
   return (
     <div className="p-8">
       <div className="mb-8">
@@ -189,7 +236,11 @@ export const DeviceManagement = () => {
                     >
                       🔑 Set Room
                     </button>
-                    <button 
+
+                    <div className="w-full h-px bg-gray-100 my-1" /> {/* Divider */}
+
+
+                    {/* <button 
                       onClick={() => {
                         if(confirm('Are you sure you want to reboot this device?')) {
                           sendCommand(device.deviceId, 'reboot')
@@ -199,7 +250,7 @@ export const DeviceManagement = () => {
                       className="px-3 py-1.5 rounded-md bg-red-50 text-red-700 hover:bg-red-100 font-medium text-xs disabled:opacity-50 transition-colors ml-auto"
                     >
                       Reboot
-                    </button>
+                    </button> */}
                   </div>
                 </td>
               </tr>

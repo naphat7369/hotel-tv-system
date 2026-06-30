@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import LiveTVPlayer from './components/LiveTVPlayer'
 import LoadingScreen from './components/LoadingScreen'
 import { io } from 'socket.io-client'
+import { trackEvent } from './lib/analytics'
 
 export interface BackendChannel {
   id: string;
@@ -46,11 +47,14 @@ function App() {
 
   const [appLoading, setAppLoading] = useState(true)
   const [appSettings, setAppSettings] = useState({
-    hotelName: 'GRAND HORIZON',
+    hotelName: 'S31 SUKUMVIT HOTEL',
     hotelStars: '★★★★★',
     title: 'PREPARING YOUR EXPERIENCE',
     subtitle: 'Establishing secure connection to the hotel network...',
-    bgImage: ''
+    bgImage: 'https://images.unsplash.com/photo-1542314831-c53cd3816002?w=1920&q=80',
+    backgroundImages: [] as { tag: string, url: string, message?: string }[],
+    portalMainTitle: 'S31',
+    portalSubtitle: 'Hotel Sukumvit'
   })
 
   // Dynamic menu items from CMS with localStorage offline caching fallback
@@ -113,7 +117,7 @@ function App() {
   const fetchChannels = useCallback(async () => {
     try {
       const serverHost = `http://${window.location.hostname}:3000`;
-      const res = await fetch(`${serverHost}/api/v1/channels?t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`${serverHost}/api/v1/channels?t=${Date.now()}`);
       if (res.ok) {
         const data: BackendChannel[] = await res.json();
         const activeChannels = data.filter(c => c.isActive);
@@ -167,15 +171,18 @@ function App() {
   const fetchSettings = useCallback(async () => {
     try {
       const serverHost = `http://${window.location.hostname}:3000`;
-      const res = await fetch(`${serverHost}/api/v1/settings`);
+      const res = await fetch(`${serverHost}/api/v1/settings?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         setAppSettings({
-          hotelName: data.hotel_name || 'GRAND HORIZON',
+          hotelName: data.hotel_name || 'S31 SUKUMVIT HOTEL',
           hotelStars: data.hotel_stars || '★★★★★',
           title: data.loading_title || 'PREPARING YOUR EXPERIENCE',
           subtitle: data.loading_subtitle || 'Establishing secure connection to the hotel network...',
-          bgImage: data.loading_bg_image ? `${serverHost}${data.loading_bg_image}` : ''
+          bgImage: data.backgroundImages?.[0]?.url || 'https://images.unsplash.com/photo-1542314831-c53cd3816002?w=1920&q=80',
+          backgroundImages: data.backgroundImages || [],
+          portalMainTitle: data.portal_main_title || 'S31',
+          portalSubtitle: data.portal_subtitle || 'Hotel Sukumvit'
         });
       }
     } catch (e) {
@@ -239,6 +246,12 @@ function App() {
       console.log('Received refresh_guest_menu:', data);
       fetchMenuItems();
     });
+    
+    // Listen for realtime settings changes from CMS
+    socket.on('refresh_settings', () => {
+      console.log('Received refresh_settings');
+      fetchSettings();
+    });
     socket.on('show_marquee', (data: any) => {
       if (data && data.message) {
         setMarquee({ message: data.message, type: data.type || 'default' });
@@ -263,15 +276,22 @@ function App() {
     return () => {
       socket.disconnect();
     };
-  }, [fetchChannels]);
-  
+  }, [fetchChannels, fetchMenuItems, fetchSettings]);
+  // Used to prevent double-back button presses when exiting third party apps
+  const lastFocusTimeRef = useRef<number>(Date.now());
+
   // App Wake-up / Visibility Change Recovery Fetch
   const fetchStatus = useCallback(async () => {
     try {
       // In production, get IP from Android Bridge. Using actual box IP for dev.
-      const deviceIp = (window as any).AndroidBridge?.getIpAddress() || '192.168.1.62';
+      let deviceIp = '192.168.1.62';
+      if (typeof (window as any).AndroidTVBridge !== 'undefined') {
+        deviceIp = (window as any).AndroidTVBridge.getIpAddress();
+      } else if (typeof (window as any).AndroidTV !== 'undefined' && typeof (window as any).AndroidTV.getIpAddress === 'function') {
+        deviceIp = (window as any).AndroidTV.getIpAddress();
+      }
       const serverHost = `http://${window.location.hostname}:3000`;
-      const res = await fetch(`${serverHost}/api/v1/pms/status/${deviceIp}`);
+      const res = await fetch(`${serverHost}/api/v1/pms/status/${deviceIp}?t=${Date.now()}`);
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'checked_in') {
@@ -299,15 +319,27 @@ function App() {
     
     const handleFocus = () => {
       console.log('Window focused, fetching latest PMS status...');
+      lastFocusTimeRef.current = Date.now();
+      fetchStatus();
+    };
+
+    const handleAndroidResume = () => {
+      console.log('Explicit Android resume detected, updating focus time...');
+      lastFocusTimeRef.current = Date.now();
       fetchStatus();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('android_resume', handleAndroidResume);
+
+    // Initial fetch
+    fetchStatus();
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('android_resume', handleAndroidResume);
     };
   }, [fetchStatus]);
 
@@ -319,6 +351,24 @@ function App() {
     const timer = setInterval(() => setTime(new Date()), 60000)
     return () => clearInterval(timer)
   }, [])
+
+  // ── Analytics: Hardware Metrics Interval ─────────────────────────────
+  useEffect(() => {
+    const hardwareTimer = setInterval(() => {
+      let memory = undefined;
+      // @ts-ignore
+      if (performance && performance.memory) {
+        // @ts-ignore
+        memory = Math.round(performance.memory.usedJSHeapSize / 1024 / 1024);
+      }
+      trackEvent('HARDWARE_METRIC', {
+        uptimeSeconds: Math.floor(performance.now() / 1000),
+        memoryMB: memory
+      });
+    }, 5 * 60 * 1000); // Every 5 minutes
+
+    return () => clearInterval(hardwareTimer);
+  }, []);
 
   // Auto-dismiss success message after 3 seconds
   useEffect(() => {
@@ -380,6 +430,12 @@ function App() {
 
       // Close Modals / Menus on Escape or Back
       if (e.key === 'Escape' || e.key === 'Backspace' || e.keyCode === 4) {
+        // Prevent accidental menu closing if user spammed the Back button to exit an app
+        if (Date.now() - lastFocusTimeRef.current < 2500) {
+          console.log("Ignoring Back button to prevent accidental menu close right after resuming");
+          e.preventDefault();
+          return;
+        }
         if (selectedItem) {
           setSelectedItem(null)
           setShowSuccess(false)
@@ -709,6 +765,7 @@ function App() {
                       
                       if (response.ok) {
                         setShowSuccess(true)
+                        trackEvent('ORDER_SUBMITTED', { items: requested })
                       } else {
                         alert("Failed to submit request. Please call the front desk.")
                       }
@@ -744,7 +801,10 @@ function App() {
           <button
             key={item.id}
             ref={el => { if (el) subMenuRefs.current[idx] = el }}
-            onClick={() => setSelectedItem(item)}
+            onClick={() => {
+              setSelectedItem(item);
+              trackEvent('ITEM_VIEW', { itemId: item.id, name: item.name });
+            }}
             className="flex-shrink-0 w-[24vw] h-[35vh] rounded-[24px] overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.02] glow-focus outline-none"
           >
             <img loading="lazy" className="absolute inset-0 w-full h-full object-cover transform-gpu transition-transform duration-1000 group-hover:scale-110" src={item.bgImage} alt={item.name} />
@@ -763,6 +823,31 @@ function App() {
         )
     })
   }
+
+  // Compute Welcome Message dynamically
+  const getWelcomeMessage = () => {
+    const currentTag = guestData.isCheckedIn ? (guestData.tag || 'Default') : 'Default';
+    const bgs = appSettings.backgroundImages || [];
+    let msg = '';
+    
+    // 1. Try to find message for current tag
+    const tagMatch = bgs.find((bg:any) => bg.tag === currentTag);
+    if (tagMatch && tagMatch.message && tagMatch.message.trim() !== '') {
+      msg = tagMatch.message;
+    } else {
+      // 2. Fallback to default tag message
+      const defaultMatch = bgs.find((bg:any) => bg.tag === 'Default');
+      if (defaultMatch && defaultMatch.message && defaultMatch.message.trim() !== '') {
+        msg = defaultMatch.message;
+      } else {
+        // 3. Ultimate fallback
+        msg = guestData.isCheckedIn ? 'Experience unparalleled luxury tailored specifically for your stay, {name}.' : 'Please check in at the front desk to begin your luxurious stay.';
+      }
+    }
+    
+    // Replace {name} placeholder
+    return msg.replace('{name}', guestData.name || 'Valued Guest');
+  };
 
   return (
     <div className="font-body-md text-on-surface">
@@ -784,12 +869,22 @@ function App() {
         <img loading="lazy"
           className="w-full h-full object-cover brightness-50 transition-all duration-1000"
           alt="Luxury hotel lobby at dusk"
-          src={
-            guestData.tag === 'Honeymoon' ? 'https://images.unsplash.com/photo-1549488344-c276af240685?w=1920&q=80' : // Romantic sunset bed
-            guestData.tag === 'VIP' ? 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=1920&q=80' : // Luxury suite
-            guestData.isCheckedIn ? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1920&q=80' : // Standard resort view
-            'https://lh3.googleusercontent.com/aida-public/AB6AXuBadzX1Hksx5KpAd-y7mNgAJQq5yX0iyEm-05BlctuNE4J5qiuP3b8Cp3wSS5aRm0ZHHgzm5jan-uOr9j_nitsJQgzCLgIaQhWpIY3_jOwcZbAuwWpRTy-NrmSX5MwlrNwCcQjFkxljO0efYgJWeWvekGIyo7Dy1fHhh1CzFf8tEwtOe1sg3GvgoK12nXyhVXsaIqhCxz1lfyoULuplmtg2U-X1itrAoov3W-UsX_N2ud3EXM8e6Sww2rAKqhESXrjsne6M8IuxNUfy' // Vacant default lobby
-          }
+          src={(() => {
+            const serverHost = `http://${window.location.hostname}:3000`;
+            if (appSettings.backgroundImages && appSettings.backgroundImages.length > 0) {
+              if (guestData.tag === 'Honeymoon') {
+                const bg = appSettings.backgroundImages.find((b:any) => b.tag === 'Honeymoon');
+                if (bg) return `${serverHost}${bg.url}`;
+              }
+              if (guestData.tag === 'VIP') {
+                const bg = appSettings.backgroundImages.find((b:any) => b.tag === 'VIP');
+                if (bg) return `${serverHost}${bg.url}`;
+              }
+              const bgDefault = appSettings.backgroundImages.find((b:any) => b.tag === 'Default');
+              if (bgDefault) return `${serverHost}${bgDefault.url}`;
+            }
+            return appSettings.bgImage.startsWith('http') ? appSettings.bgImage : `${serverHost}${appSettings.bgImage}`;
+          })()}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-surface/40"></div>
       </div>
@@ -808,8 +903,8 @@ function App() {
            >
              <div className="flex flex-col gap-[0.5vh]">
                <div className="flex items-baseline gap-[1.5vw] mb-[0.5vh]">
-                 <h1 className="font-display-lg text-[3.5vw] text-secondary tracking-widest leading-none">LUXE</h1>
-                 <p className="font-label-sm text-[0.9vw] text-secondary tracking-[0.2em] uppercase opacity-70">Concierge</p>
+                 <h1 className="font-display-lg text-[3.5vw] text-secondary tracking-widest leading-none">{appSettings.portalMainTitle ? appSettings.portalMainTitle.toUpperCase() : 'LUXE'}</h1>
+                 <p className="font-label-sm text-[0.9vw] text-secondary tracking-[0.2em] uppercase opacity-70">{appSettings.portalSubtitle || 'Concierge'}</p>
                </div>
                <div className="flex items-center gap-[2vw]">
                  <span className="flex items-center gap-[0.5vw] text-on-surface-variant text-[1.2vw]">
@@ -841,10 +936,10 @@ function App() {
              style={{ opacity: activeMenu ? 0 : 1 }}
            >
              <h2 className="font-display-lg text-[6vw] text-white mb-[1.5vh] tracking-widest leading-none drop-shadow-2xl">
-                {guestData.isCheckedIn ? 'WELCOME' : 'S31 HOTEL'}
+                {guestData.isCheckedIn ? 'WELCOME' : `${appSettings.portalMainTitle || 'S31'} Sukumvit Hotel`}
              </h2>
-             <p className="font-body-lg text-[1.6vw] text-on-surface-variant max-w-[50vw] drop-shadow-md">
-                {guestData.isCheckedIn ? `Experience unparalleled luxury tailored specifically for your stay, ${guestData.name}.` : 'Please check in at the front desk to begin your luxurious stay.'}
+             <p className="font-body-lg text-[1.6vw] text-on-surface-variant max-w-[50vw] drop-shadow-md whitespace-pre-line">
+                {getWelcomeMessage()}
              </p>
            </div>
         </div>
@@ -885,7 +980,10 @@ function App() {
                 key={item.id}
                 tabIndex={activeMenu ? -1 : 0}
                 ref={(el) => { if (el && !activeMenu) navRef.current[refIndex] = el }}
-                onClick={() => setActiveMenu(item.id!)}
+                onClick={() => {
+                  setActiveMenu(item.id!);
+                  trackEvent('MENU_CLICK', { menu: item.id });
+                }}
                 className="nav-item-glow group relative flex flex-col items-center gap-[0.8vh] transition-all duration-300 rounded-xl hover:bg-white/10 focus:bg-white/10"
                 style={{ padding: '1.5vh 2vw', minWidth: '9vw' }}
               >
@@ -923,16 +1021,6 @@ function App() {
             <p className="font-body-md text-on-surface-variant" style={{ fontSize: '1.1vw' }}>
               Use the <span className="text-secondary font-bold">Directional Keys</span> to explore and <span className="text-secondary font-bold">OK</span> to select.
             </p>
-          </div>
-          <div className="flex gap-[1vw]">
-            <div className="flex items-center gap-[0.5vw] bg-white/5 rounded-full border border-white/10" style={{ padding: '0.8vh 1.5vw' }}>
-              <span className="rounded-full bg-[#ff4b4b] animate-pulse" style={{ width: '0.6vw', height: '0.6vw' }}></span>
-              <span className="font-label-sm" style={{ fontSize: '1vw' }}>Emergency</span>
-            </div>
-            <div className="flex items-center gap-[0.5vw] bg-secondary rounded-full text-on-secondary shadow-lg font-bold" style={{ padding: '0.8vh 1.5vw' }}>
-              <span className="material-symbols-outlined" style={{ fontSize: '1.2vw' }}>support_agent</span>
-              <span className="font-label-sm" style={{ fontSize: '1vw' }}>Assistance</span>
-            </div>
           </div>
         </footer>
 
@@ -1022,6 +1110,7 @@ function App() {
                         } else {
                           console.log("Would launch:", app.packageName);
                         }
+                        trackEvent('APP_OPEN', { appName: app.name, packageName: app.packageName });
                       }}
                       className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none"
                     >
@@ -1125,63 +1214,43 @@ function App() {
 
       {/* ── Alert Modal Overlay ── */}
       {alertModal.active && (
-        <div className="absolute top-[15vh] inset-x-0 z-[100] flex justify-center p-8 animate-in fade-in duration-300 pointer-events-none">
-          <div 
-            className="rounded-3xl w-full max-w-xl p-8 relative z-10 flex flex-col items-center text-center shadow-[0_30px_60px_rgba(0,0,0,0.9),inset_0_0_40px_rgba(212,175,55,0.05)] pointer-events-auto"
-            style={{
-              background: 'rgba(10, 10, 15, 0.85)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(212, 175, 55, 0.3)'
-            }}
-          >
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-[4px] flex justify-center items-center p-8 animate-in fade-in duration-300">
+          <div className="liquid-glass w-[40vw] max-w-2xl rounded-[28px] p-[6vh_3vw] text-center animate-in zoom-in-95 duration-500 shadow-[0_0_50px_rgba(0,0,0,0.8)] pointer-events-auto">
+            
             {/* Premium Icon/Badge */}
-            <div className="mb-6 relative">
-              <div className="absolute inset-0 bg-yellow-600 blur-xl opacity-30 rounded-full"></div>
-              <div className="w-20 h-20 rounded-full border-2 border-[#d4af37] bg-black/50 flex items-center justify-center relative z-10 shadow-[0_0_30px_rgba(212,175,55,0.2)]">
-                  <span className="material-symbols-outlined" style={{ fontSize: '2.5rem', background: 'linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>notifications_active</span>
-              </div>
-              <div className="absolute top-1/2 -left-10 -translate-y-1/2 w-6 h-px bg-gradient-to-l from-[#d4af37] to-transparent"></div>
-              <div className="absolute top-1/2 -right-10 -translate-y-1/2 w-6 h-px bg-gradient-to-r from-[#d4af37] to-transparent"></div>
+            <div className="mx-auto w-[6vw] h-[6vw] rounded-full border border-[#e9c176]/40 bg-[#e9c176]/5 flex items-center justify-center mb-[3vh] shadow-[0_0_20px_rgba(233,193,118,0.15)] relative">
+              <div className="absolute inset-0 rounded-full border border-[#e9c176]/20 animate-ping" style={{ animationDuration: '3s' }}></div>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-[3vw] w-[3vw] text-[#e9c176]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+              </svg>
             </div>
 
             {/* Title */}
-            <h2 
-              className="text-2xl md:text-3xl tracking-[0.2em] mb-4 uppercase font-bold"
-              style={{ background: 'linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c)', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}
-            >
+            <h2 className="font-display-lg text-[2.5vw] text-white mb-[1.5vh] tracking-wide uppercase">
               Important Announcement
             </h2>
 
-            {/* Divider */}
-            <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent mb-6"></div>
-
             {/* Message Content */}
-            <p className="text-gray-300 text-lg md:text-xl leading-relaxed font-light tracking-wide mb-8 whitespace-pre-wrap">
+            <p className="text-gray-300 font-light text-[1.2vw] tracking-[0.03em] leading-relaxed mb-[4vh] opacity-90 whitespace-pre-wrap">
                 {alertModal.message}
             </p>
 
             {/* Actions */}
-            <div className="flex gap-4 w-full justify-center">
+            <div className="flex gap-[1.5vw] w-full justify-center">
                 <button 
                   ref={el => alertModalRef.current[0] = el}
                   onClick={() => {
                     setAlertModal(prev => ({ ...prev, active: false }));
                     setInboxMessages(prev => [{ id: Date.now().toString(), text: alertModal.message, time: new Date() }, ...prev]);
                   }}
-                  className="px-8 py-3 rounded-full text-base tracking-[0.1em] uppercase transition-all duration-300 font-medium outline-none focus:scale-105"
-                  style={{ background: 'rgba(0, 0, 0, 0.5)', border: '1px solid rgba(212, 175, 55, 0.5)', color: '#d4af37' }}
-                  onFocus={(e) => { e.currentTarget.style.background = 'rgba(212, 175, 55, 0.1)'; e.currentTarget.style.borderColor = '#fcf6ba'; }}
-                  onBlur={(e) => { e.currentTarget.style.background = 'rgba(0, 0, 0, 0.5)'; e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.5)'; }}
+                  className="btn-ghost w-1/2 py-[1.5vh] rounded-xl font-bold tracking-widest uppercase text-[1vw]"
                 >
                     Remind Later
                 </button>
                 <button 
                   ref={el => alertModalRef.current[1] = el}
                   onClick={() => setAlertModal(prev => ({ ...prev, active: false }))}
-                  className="px-8 py-3 rounded-full text-base tracking-[0.1em] uppercase transition-all duration-300 font-bold shadow-lg outline-none focus:scale-105"
-                  style={{ background: 'linear-gradient(135deg, #d4af37 0%, #aa771c 100%)', border: '1px solid #fcf6ba', color: '#111' }}
-                  onFocus={(e) => { e.currentTarget.style.boxShadow = '0 0 0 4px rgba(212, 175, 55, 0.4)'; }}
-                  onBlur={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
+                  className="btn-premium w-1/2 py-[1.5vh] rounded-xl font-bold tracking-widest uppercase text-[1vw]"
                 >
                     Dismiss
                 </button>

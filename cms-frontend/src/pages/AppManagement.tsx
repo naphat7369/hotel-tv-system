@@ -5,15 +5,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { api } from '../lib/api';
 import { RefreshCw, Trash2, Upload, Send } from 'lucide-react';
 
-interface RealApp {
-  filename: string;
-  size: number;
-  url: string;
-  createdAt: string;
-}
+import type { StreamingApp } from '../lib/api';
 
 function AppManagement() {
-  const [apps, setApps] = useState<RealApp[]>([]);
+  const [apps, setApps] = useState<StreamingApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [pushing, setPushing] = useState<string | null>(null);
@@ -36,11 +31,11 @@ function AppManagement() {
     fetchApps();
   }, []);
 
-  const handleDelete = async (filename: string) => {
-    if (!confirm('Are you sure you want to delete this APK?')) return;
+  const handleDelete = async (appId: string) => {
+    if (!confirm('Are you sure you want to delete this app?')) return;
     try {
-      await api.deleteApp(filename);
-      setApps(apps.filter(a => a.filename !== filename));
+      await api.deleteApp(appId);
+      setApps(apps.filter(a => a.id !== appId));
     } catch (e) {
       console.error(e);
       alert('Failed to delete app');
@@ -64,13 +59,15 @@ function AppManagement() {
     }
   };
 
-  const handlePush = async (app: RealApp) => {
-    if (!confirm(`Are you sure you want to push ${app.filename} to all online TVs?`)) return;
-    setPushing(app.filename);
+  const handlePush = async (app: StreamingApp) => {
+    if (!app.deepLink) {
+      alert('No APK URL available for this app.');
+      return;
+    }
+    if (!confirm(`Are you sure you want to push ${app.name} to all online TVs?`)) return;
+    setPushing(app.id);
     try {
-      // Must use the actual LAN IP of the Node.js server so the TV box can reach it!
-      const fullUrl = `http://192.168.1.63:3000${app.url}`;
-      await api.pushInstallToAll(fullUrl);
+      await api.pushInstallToAll(app.deepLink);
       alert('Push command sent to all online TVs!');
     } catch (e) {
       console.error(e);
@@ -113,42 +110,56 @@ function AppManagement() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Filename</TableHead>
-                <TableHead>Size</TableHead>
-                <TableHead>Uploaded At</TableHead>
+                <TableHead className="w-16">Icon</TableHead>
+                <TableHead>App Name</TableHead>
+                <TableHead>Package</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading && apps.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-on-surface-variant">Loading apps...</TableCell>
+                  <TableCell colSpan={5} className="text-center py-8 text-on-surface-variant">Loading apps...</TableCell>
                 </TableRow>
               ) : apps.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-on-surface-variant">No APKs found. Upload one to get started.</TableCell>
+                  <TableCell colSpan={5} className="text-center py-8 text-on-surface-variant">No apps found. Upload an APK to get started.</TableCell>
                 </TableRow>
               ) : (
                 apps.map((app) => (
-                  <TableRow key={app.filename}>
-                    <TableCell className="font-bold">{app.filename}</TableCell>
-                    <TableCell>{(app.size / (1024 * 1024)).toFixed(2)} MB</TableCell>
-                    <TableCell>{new Date(app.createdAt).toLocaleString()}</TableCell>
+                  <TableRow key={app.id}>
+                    <TableCell>
+                      {app.iconUrl ? (
+                        <img src={`http://${window.location.hostname}:3000${app.iconUrl}`} alt={app.name} className="w-10 h-10 object-contain rounded" />
+                      ) : (
+                        <div className="w-10 h-10 bg-surface-container flex items-center justify-center rounded">
+                          <span className="material-symbols-outlined text-on-surface-variant">android</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-bold">{app.name}</TableCell>
+                    <TableCell className="text-sm text-on-surface-variant">{app.packageName}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 text-xs rounded-full ${app.isActive ? 'bg-success/20 text-success' : 'bg-on-surface/10 text-on-surface-variant'}`}>
+                        {app.isActive ? 'Active' : 'Hidden'}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button 
-                        variant="default" 
+                        variant="primary" 
                         size="sm"
                         onClick={() => handlePush(app)}
-                        disabled={pushing === app.filename}
+                        disabled={pushing === app.id || !app.deepLink}
                       >
                         <Send className="w-4 h-4 mr-2" />
-                        {pushing === app.filename ? 'Pushing...' : 'Push to TVs'}
+                        {pushing === app.id ? 'Pushing...' : 'Push to TVs'}
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="sm" 
                         className="text-error hover:text-error hover:bg-error/10"
-                        onClick={() => handleDelete(app.filename)}
+                        onClick={() => handleDelete(app.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

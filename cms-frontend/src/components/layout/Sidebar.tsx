@@ -17,8 +17,8 @@ const navItems = [
   { name: "Broadcast Marquee", path: "/broadcast", icon: Activity },
   { name: "Guest Services", path: "/services", icon: Users },
   { name: "Guest Requests", path: "/requests", icon: Activity },
-  { name: "Screen Designer", path: "/screens", icon: LayoutDashboard },
   { name: "Brand Settings", path: "/settings", icon: SettingsIcon },
+  { name: "Portal Settings", path: "/portal-settings", icon: SettingsIcon },
 ]
 
 export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {

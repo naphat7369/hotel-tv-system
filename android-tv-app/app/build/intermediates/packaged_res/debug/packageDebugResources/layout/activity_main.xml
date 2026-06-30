@@ -58,29 +58,28 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#DD000000"
+        android:background="#FF050505"
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:visibility="visible">
 
-        <!-- Spinner — hidden when showing an error -->
+        <!-- Just a simple, subtle spinner while the WebView connects -->
         <ProgressBar
             android:id="@+id/loading_spinner"
-            android:layout_width="72dp"
-            android:layout_height="72dp"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:indeterminate="true"
-            android:indeterminateTint="@android:color/white"/>
+            android:indeterminateTint="#66FFFFFF"/>
 
-        <!-- Primary status title -->
+        <!-- Primary status title — Used for Error messages only -->
         <TextView
             android:id="@+id/loading_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="Connecting…"
-            android:textColor="@android:color/white"
-            android:textSize="22sp"
-            android:textStyle="bold"
+            android:text=""
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
             android:gravity="center"/>
 
         <!-- Secondary subtitle / error detail -->
@@ -88,34 +87,24 @@
             android:id="@+id/loading_subtitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
             android:layout_marginHorizontal="48dp"
             android:text=""
             android:textColor="#AAFFFFFF"
             android:textSize="15sp"
             android:gravity="center"/>
 
-        <!-- Server IP hint — always visible so staff can diagnose -->
+        <!-- Server IP hint — completely hidden from guests, kept for internal reference -->
         <TextView
             android:id="@+id/loading_ip_hint"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:text=""
-            android:textColor="#55FFFFFF"
-            android:textSize="13sp"
-            android:fontFamily="monospace"
-            android:gravity="center"/>
-
-        <!-- Instructional hint for the 5-click trick -->
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="40dp"
-            android:text="Press OK/Enter 5× quickly to change server IP"
-            android:textColor="#33FFFFFF"
-            android:textSize="12sp"
-            android:gravity="center"/>
+            android:textColor="#00000000"
+            android:textSize="1sp"
+            android:gravity="center"
+            android:visibility="gone"/>
 
     </LinearLayout>
 

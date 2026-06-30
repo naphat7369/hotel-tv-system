@@ -73,8 +73,8 @@ router.post('/checkin', async (req: Request, res: Response) => {
       // Socket update & ADB Clear
       const io = req.app.get('io');
       if (io) {
-        let targetDeviceId = null;
-        let targetIp = null;
+        let targetDeviceId: string | null = null;
+        let targetIp: string | null = null;
         for (const [id, device] of connectedDevices.entries()) {
           if (device.roomNumber === String(roomNumber)) {
             targetDeviceId = id;
@@ -150,7 +150,7 @@ router.post('/checkin', async (req: Request, res: Response) => {
     const io = req.app.get('io');
     if (io) {
       // Find the deviceId that matches this room number
-      let targetDeviceId = null;
+      let targetDeviceId: string | null = null;
       for (const [id, device] of connectedDevices.entries()) {
         if (device.roomNumber === String(roomNumber)) {
           targetDeviceId = id;
@@ -235,8 +235,8 @@ router.post('/checkout', async (req: Request, res: Response) => {
     const io = req.app.get('io');
     if (io) {
       // Find the deviceId that matches this room number
-      let targetDeviceId = null;
-      let targetIp = null;
+      let targetDeviceId: string | null = null;
+      let targetIp: string | null = null;
       for (const [id, device] of connectedDevices.entries()) {
         if (device.roomNumber === String(roomNumber)) {
           targetDeviceId = id;

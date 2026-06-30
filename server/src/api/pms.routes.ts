@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { clearGuestApps, rebootDevice, wakeUpDevice } from '../services/adb.service';
 import { connectedDevices } from '../websocket/socket';
+import { PrismaClient } from '@prisma/client';
 
 const router = Router();
+const prisma = new PrismaClient();
 
-// In-memory store to keep track of current reservations (for fast TV recovery)
-// In a real app, this would query Prisma/database.
+// In-memory store (Deprecated: Use Prisma directly for status queries)
 const reservationsByIp = new Map<string, any>();
 
 
@@ -134,19 +135,59 @@ router.post('/checkout', async (req: Request, res: Response) => {
 
 // GET /api/v1/pms/status/:ip
 // Used by the portal frontend to recover its state on wake-up
-router.get('/status/:ip', (req: Request, res: Response) => {
+router.get('/status/:ip', async (req: Request, res: Response) => {
   const { ip } = req.params;
-  const reservation = reservationsByIp.get(ip);
   
-  if (reservation) {
-    res.json(reservation);
-  } else {
-    res.json({
-      status: 'checked_out',
-      guestName: null,
-      guestTag: null
-    });
+  // 1. Find the room number for this IP from connected devices
+  let targetRoomNumber: string | null = null;
+  for (const device of connectedDevices.values()) {
+    if (device.ipAddress === ip) {
+      targetRoomNumber = device.roomNumber;
+      break;
+    }
   }
+
+  if (targetRoomNumber) {
+    // 2. Query Prisma for an active reservation
+    const room = await prisma.room.findFirst({
+      where: { roomNumber: targetRoomNumber }
+    });
+
+    if (room) {
+      const activeRes = await prisma.reservation.findFirst({
+        where: { roomId: room.id, status: 'In-House' }
+      });
+
+      if (activeRes) {
+        return res.json({
+          status: 'checked_in',
+          guestName: activeRes.guestFirstName,
+          guestTag: activeRes.guestLoyaltyTier
+        });
+      }
+    } else {
+      // Fallback: If room isn't in DB yet, but reservation was created loosely by webhook
+      const activeRes = await prisma.reservation.findFirst({
+        where: { status: 'In-House' },
+        orderBy: { checkIn: 'desc' }
+      });
+      // This fallback isn't perfect if there are many rooms, but handles the missing Room table entry case
+      if (activeRes && activeRes.roomId === null) {
+        return res.json({
+          status: 'checked_in',
+          guestName: activeRes.guestFirstName,
+          guestTag: activeRes.guestLoyaltyTier
+        });
+      }
+    }
+  }
+
+  // Default to checked-out if no reservation found
+  res.json({
+    status: 'checked_out',
+    guestName: null,
+    guestTag: null
+  });
 });
 
 export default router;

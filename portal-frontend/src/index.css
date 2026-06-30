@@ -113,6 +113,7 @@ body {
   background-color: var(--color-background);
   overflow: hidden;
   height: 100vh;
+  font-variant-numeric: lining-nums;
 }
 
 .glass-panel {
@@ -164,3 +165,65 @@ body {
   background: linear-gradient(to right, rgba(18, 20, 20, 0.98) 0%, rgba(18, 20, 20, 0.7) 40%, rgba(18, 20, 20, 0) 100%);
 }
 
+/* Liquid Glass Alert Styles */
+.liquid-glass {
+  background: linear-gradient(135deg, rgba(30, 32, 34, 0.4), rgba(18, 20, 20, 0.2));
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(233, 193, 118, 0.3);
+  border-top: 1px solid rgba(233, 193, 118, 0.7);
+  border-left: 1px solid rgba(233, 193, 118, 0.5);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 
+              inset 0 0 20px rgba(233, 193, 118, 0.1),
+              0 0 30px rgba(233, 193, 118, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.liquid-glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.08), transparent);
+  transform: skewX(-25deg);
+  animation: liquid-shine 5s infinite;
+  pointer-events: none;
+}
+
+@keyframes liquid-shine {
+  0% { left: -150%; }
+  15% { left: 200%; }
+  100% { left: 200%; }
+}
+
+.btn-premium {
+  background: linear-gradient(135deg, rgba(233, 193, 118, 0.85), rgba(201, 168, 76, 0.85));
+  color: #121414;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-premium:hover, .btn-premium:focus {
+  background: linear-gradient(135deg, rgba(233, 193, 118, 1), rgba(201, 168, 76, 1));
+  box-shadow: 0 0 25px rgba(233, 193, 118, 0.3);
+  transform: translateY(-2px);
+  outline: none;
+}
+
+.btn-ghost {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e2e2;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.btn-ghost:hover, .btn-ghost:focus {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  outline: none;
+}

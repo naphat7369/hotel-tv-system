@@ -287,7 +287,8 @@ class MainActivity : Activity() {
                 fun launchApp(packageName: String) {
                     runOnUiThread {
                         try {
-                            val intent = context.packageManager.getLaunchIntentForPackage(packageName)
+                            val intent = context.packageManager.getLeanbackLaunchIntentForPackage(packageName)
+                                ?: context.packageManager.getLaunchIntentForPackage(packageName)
                             if (intent != null) {
                                 intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                                 context.startActivity(intent)
@@ -579,6 +580,75 @@ class MainActivity : Activity() {
          */
         @JavascriptInterface
         fun getIpAddress(): String = getLocalIpAddress()
+
+        /**
+         * Return a JSON array of all installed and launchable apps with their icons.
+         */
+        @JavascriptInterface
+        fun launchApp(packageName: String) {
+            try {
+                val intent = packageManager.getLeanbackLaunchIntentForPackage(packageName)
+                    ?: packageManager.getLaunchIntentForPackage(packageName)
+                if (intent != null) {
+                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                    Log.d("AndroidTVBridge", "Launched app: $packageName")
+                } else {
+                    Log.w("AndroidTVBridge", "App not found or not launchable: $packageName")
+                }
+            } catch (e: Exception) {
+                Log.e("AndroidTVBridge", "Failed to launch app: $packageName", e)
+            }
+        }
+
+        @JavascriptInterface
+        fun getInstalledApps(): String {
+            val pm = packageManager
+            val packages = pm.getInstalledPackages(0)
+            val jsonArray = org.json.JSONArray()
+            for (p in packages) {
+                try {
+                    val intent = pm.getLeanbackLaunchIntentForPackage(p.packageName)
+                        ?: pm.getLaunchIntentForPackage(p.packageName)
+                    if (intent != null) {
+                        val appName = p.applicationInfo.loadLabel(pm).toString()
+                        var base64Icon = ""
+                        try {
+                            val drawable = p.applicationInfo.loadIcon(pm)
+                            val bitmap = if (drawable is android.graphics.drawable.BitmapDrawable) {
+                                drawable.bitmap
+                            } else {
+                                val bmp = android.graphics.Bitmap.createBitmap(
+                                    drawable.intrinsicWidth.coerceAtLeast(1),
+                                    drawable.intrinsicHeight.coerceAtLeast(1),
+                                    android.graphics.Bitmap.Config.ARGB_8888
+                                )
+                                val canvas = android.graphics.Canvas(bmp)
+                                drawable.setBounds(0, 0, canvas.width, canvas.height)
+                                drawable.draw(canvas)
+                                bmp
+                            }
+                            val scaled = android.graphics.Bitmap.createScaledBitmap(bitmap, 96, 96, true)
+                            val stream = java.io.ByteArrayOutputStream()
+                            scaled.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, stream)
+                            val bytes = stream.toByteArray()
+                            base64Icon = "data:image/png;base64," + android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                        } catch (e: Exception) {
+                            Log.e("AndroidTVBridge", "Failed to convert icon for \${p.packageName}", e)
+                        }
+
+                        val obj = org.json.JSONObject()
+                        obj.put("packageName", p.packageName)
+                        obj.put("appName", appName)
+                        obj.put("base64Icon", base64Icon)
+                        jsonArray.put(obj)
+                    }
+                } catch (e: Exception) {
+                    Log.e("AndroidTVBridge", "Failed to process \${p.packageName}", e)
+                }
+            }
+            return jsonArray.toString()
+        }
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -783,6 +853,7 @@ class MainActivity : Activity() {
         super.onResume()
         startKioskMode()
         exoPlayer?.play()
+        webView.evaluateJavascript("window.dispatchEvent(new Event('android_resume'));", null)
     }
 
     override fun onPause() {

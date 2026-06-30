@@ -43,19 +43,14 @@ export const trackEvent = async (
       durationSeconds,
     };
 
-    // Fire and forget, no await to avoid blocking UI
-    fetch(`${API_BASE_URL}/analytics/events`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    }).catch(err => {
-      // Silently catch network errors so the UI isn't disrupted
-      console.error('[Analytics] Failed to send event (Network error):', err);
-    });
+    // Fire and forget using sendBeacon to avoid WebView network error bugs
+    try {
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      navigator.sendBeacon(`${API_BASE_URL}/analytics/events`, blob);
+    } catch (e) {
+      console.warn('[Analytics] sendBeacon failed', e);
+    }
   } catch (error) {
-    // Catch any synchronous errors (e.g. localStorage access denied)
     console.error('[Analytics] Unexpected error tracking event:', error);
   }
 };

@@ -450,8 +450,9 @@ function App() {
       }
 
       if (e.key === 'Enter') {
-        activeElement.click()
         e.preventDefault()
+        e.stopPropagation()
+        activeElement.click()
         return
       }
 
@@ -526,13 +527,15 @@ function App() {
         if (currentIndex === -1) return
 
         if (e.key === 'ArrowRight') {
+          e.preventDefault()
+          e.stopPropagation()
           const nextIndex = (currentIndex + 1) % navRef.current.length
           navRef.current[nextIndex]?.focus()
-          e.preventDefault()
         } else if (e.key === 'ArrowLeft') {
+          e.preventDefault()
+          e.stopPropagation()
           const prevIndex = (currentIndex - 1 + navRef.current.length) % navRef.current.length
           navRef.current[prevIndex]?.focus()
-          e.preventDefault()
         }
       } else {
         const activeRefs = subMenuRefs.current.filter(el => el && document.body.contains(el));
@@ -546,19 +549,21 @@ function App() {
         }
 
         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          e.stopPropagation()
           const next = Math.min(currentIndex + 1, activeRefs.length - 1);
           activeRefs[next]?.focus();
-          e.preventDefault();
         } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+          e.preventDefault()
+          e.stopPropagation()
           const prev = Math.max(currentIndex - 1, 0);
           activeRefs[prev]?.focus();
-          e.preventDefault();
         }
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    window.addEventListener('keydown', handleKeyDown, { capture: true })
+    return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
   }, [activeMenu, selectedItem, isPlayingLiveTV])
 
   const renderModalContent = () => {

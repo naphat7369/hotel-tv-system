@@ -142,7 +142,7 @@ router.get('/status/:ip', async (req: Request, res: Response) => {
   let targetRoomNumber: string | null = null;
   for (const device of connectedDevices.values()) {
     if (device.ipAddress === ip) {
-      targetRoomNumber = device.roomNumber;
+      targetRoomNumber = device.roomNumber || null;
       break;
     }
   }

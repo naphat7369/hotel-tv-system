@@ -78,7 +78,7 @@ router.post('/checkin', async (req: Request, res: Response) => {
         for (const [id, device] of connectedDevices.entries()) {
           if (device.roomNumber === String(roomNumber)) {
             targetDeviceId = id;
-            targetIp = device.ipAddress;
+            targetIp = device.ipAddress || null;
             break;
           }
         }
@@ -240,7 +240,7 @@ router.post('/checkout', async (req: Request, res: Response) => {
       for (const [id, device] of connectedDevices.entries()) {
         if (device.roomNumber === String(roomNumber)) {
           targetDeviceId = id;
-          targetIp = device.ipAddress;
+          targetIp = device.ipAddress || null;
           break;
         }
       }

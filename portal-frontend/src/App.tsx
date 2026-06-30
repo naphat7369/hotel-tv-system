@@ -814,7 +814,7 @@ function App() {
         style={{ display: isPlayingLiveTV ? 'none' : 'block' }}
       >
         {!currentBgImage.startsWith('bg-') && (
-          <img src={currentBgImage.startsWith('/') ? `http://${window.location.hostname}:3000${currentBgImage}` : currentBgImage} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-100" />
+          <img loading="lazy" src={currentBgImage.startsWith('/') ? `http://${window.location.hostname}:3000${currentBgImage}` : currentBgImage} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-100 transition-all duration-1000" />
         )}
         {/* Ambient protective gradient overlays for Option 2: Bottom-Left Layout readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none z-1"></div>

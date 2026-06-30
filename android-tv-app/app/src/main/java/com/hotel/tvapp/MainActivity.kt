@@ -222,6 +222,7 @@ class MainActivity : Activity() {
 
             webViewClient = object : WebViewClient() {
                 private var pageHasError = false
+                private var currentLoadedUrl: String? = null
 
                 override fun onPageStarted(
                     view: WebView?,
@@ -229,16 +230,19 @@ class MainActivity : Activity() {
                     favicon: android.graphics.Bitmap?
                 ) {
                     super.onPageStarted(view, url, favicon)
-                    pageHasError = false
-                    showLoading("", "")
+                    // Only show loading if this is a new top-level navigation, not a SPA internal reload
+                    if (url != null && url != currentLoadedUrl && url != "about:blank") {
+                        pageHasError = false
+                        showLoading("", "")
+                    }
                 }
 
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     enterImmersiveMode()
-                    // Only hide if the URL is our portal (not about:blank from an error)
                     if (!pageHasError && url != null && url != "about:blank") {
                         Log.d("WebView", "Page finished: $url — hiding overlay.")
+                        currentLoadedUrl = url
                         hideLoading()
                     }
                 }
@@ -250,11 +254,19 @@ class MainActivity : Activity() {
                     error: WebResourceError?
                 ) {
                     super.onReceivedError(view, request, error)
-                    // Only handle errors for the main frame (not sub-resources)
+                    // Only handle errors for the main frame (not sub-resources like API calls or fonts)
                     if (request?.isForMainFrame == true) {
+                        val description = error?.description?.toString() ?: ""
+                        val errorCode = error?.errorCode ?: 0
+                        // Ignore errors that are not real network failures
+                        // -1 = ERR_UNKNOWN, -6 = ERR_FILE_NOT_FOUND (CSS/font), -2 = ERR_FAILED (often XHR)
+                        val ignoredCodes = setOf(-6, -1)
+                        if (errorCode in ignoredCodes) {
+                            Log.w("WebView", "Ignoring non-critical error ($errorCode): $description")
+                            return
+                        }
                         pageHasError = true
-                        val description = error?.description?.toString() ?: "Unknown error"
-                        Log.e("WebView", "Main frame error: $description")
+                        Log.e("WebView", "Main frame error ($errorCode): $description")
                         showError("Could not reach the server.\nCheck Server IP or network.\n($description)")
                     }
                 }

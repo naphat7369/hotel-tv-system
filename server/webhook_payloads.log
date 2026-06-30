@@ -1,0 +1,30 @@
+--- PAYLOAD LOGS WILL APPEAR HERE ---
+Waiting for HMS to send the next check-in or check-out...
+
+[2026-06-29T09:42:59.706Z] CHECK-OUT PAYLOAD:
+{
+  "service": "delete",
+  "room": "2003"
+}
+------------------------
+
+[2026-06-29T09:45:49.207Z] CHECK-IN PAYLOAD:
+{
+  "service": "create",
+  "token": "fbba2a069d8f3f9186ff4ef94ca9d60e",
+  "account": "22003",
+  "password": "s2003",
+  "room": "2003",
+  "pdpa": "N",
+  "guest": "Khemchat Sungkakam",
+  "phone": "0934162225",
+  "email": "Khemchat02@gmail.com",
+  "sex": "M",
+  "nation": "THA",
+  "vip": "RT",
+  "idcard": "None",
+  "checkin": "2026-06-29 00:00:00",
+  "checkout": "2026-06-30 00:00:00",
+  "expired": "2026-06-30T17:00:00"
+}
+------------------------

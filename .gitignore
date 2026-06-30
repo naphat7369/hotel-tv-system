@@ -6,3 +6,14 @@ uploads/
 dev.db
 *.log
 .DS_Store
+uploads/apks/*.apk
+uploads/backgrounds/
+server/dist/
+
+# Android
+*.apk
+*.aab
+android-tv-app/.gradle/
+android-tv-app/build/
+android-tv-app/app/build/
+android-tv-app/local.properties

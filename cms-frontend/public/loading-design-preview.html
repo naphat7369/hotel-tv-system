@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium TV Loading Screen Preview</title>
+    <style>
+        /* Import Premium Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Montserrat:wght@300;400;600&display=swap');
+
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #F3E5AB;
+            --gold-dark: #996515;
+            --bg-color: #050505;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-color);
+            font-family: 'Montserrat', sans-serif;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Subtle luxury background gradient animation */
+        .background {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #000000 70%);
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* Hotel Logo / Name */
+        .hotel-brand {
+            font-family: 'Cinzel', serif;
+            font-size: 3.5rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            background: linear-gradient(to right, var(--gold-dark), var(--gold-light), var(--gold-dark));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            animation: fadeIn 2s ease-out;
+        }
+
+        .hotel-stars {
+            color: var(--gold);
+            font-size: 1.2rem;
+            letter-spacing: 0.3em;
+            margin-bottom: 4rem;
+            animation: fadeIn 2.5s ease-out;
+        }
+
+        /* Elegant Loading Spinner */
+        .loader-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 2rem;
+        }
+
+        .loader-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid rgba(212, 175, 55, 0.1); /* Faint gold */
+            border-top: 2px solid var(--gold);
+            border-radius: 50%;
+            animation: spin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+        }
+
+        .loader-circle-inner {
+            position: absolute;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 2px solid rgba(212, 175, 55, 0.1);
+            border-bottom: 2px solid var(--gold-light);
+            border-radius: 50%;
+            animation: spin-reverse 2s linear infinite;
+        }
+
+        /* Text Styling */
+        .loading-title {
+            font-size: 1.2rem;
+            font-weight: 300;
+            letter-spacing: 0.15em;
+            color: #e0e0e0;
+            margin-bottom: 0.5rem;
+            animation: pulseText 2s infinite;
+        }
+
+        .loading-subtitle {
+            font-size: 0.85rem;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            color: #888;
+            max-width: 400px;
+        }
+
+        /* Diagnostic Info - Hidden but elegant */
+        .diagnostic-info {
+            position: absolute;
+            bottom: 2rem;
+            width: 100%;
+            text-align: center;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #444; /* Very subtle */
+            letter-spacing: 0.1em;
+            z-index: 2;
+        }
+
+        .diagnostic-hint {
+            position: absolute;
+            bottom: 1rem;
+            width: 100%;
+            text-align: center;
+            font-size: 0.65rem;
+            color: #333;
+            letter-spacing: 0.05em;
+            z-index: 2;
+        }
+
+        /* Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-reverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+
+    <div class="content">
+        <div class="hotel-brand">GRAND HORIZON</div>
+        <div class="hotel-stars">★★★★★</div>
+
+        <div class="loader-container">
+            <div class="loader-circle"></div>
+            <div class="loader-circle-inner"></div>
+        </div>
+
+        <div class="loading-title">PREPARING YOUR EXPERIENCE</div>
+        <div class="loading-subtitle">Establishing secure connection to the hotel network...</div>
+    </div>
+
+    <div class="diagnostic-info">SERVER IP: 10.0.101.253</div>
+    <div class="diagnostic-hint">Press OK 5x to configure network</div>
+</body>
+</html>

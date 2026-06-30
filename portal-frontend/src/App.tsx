@@ -719,6 +719,14 @@ function App() {
         className="fixed inset-0 z-0 bg-gradient-to-br from-slate-900 to-black"
         style={{ display: isPlayingLiveTV ? 'none' : 'block' }}
       >
+        {appSettings.bgImage && (
+          <img 
+            loading="lazy"
+            className="absolute inset-0 w-full h-full object-cover brightness-50 transition-all duration-1000"
+            alt="Background"
+            src={appSettings.bgImage.startsWith('http') ? appSettings.bgImage : `http://${window.location.hostname}:3000${appSettings.bgImage}`}
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-surface/40"></div>
       </div>
 

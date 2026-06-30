@@ -25,32 +25,7 @@ export const trackEvent = async (
   value?: any,
   durationSeconds?: number
 ): Promise<void> => {
-  try {
-    // Attempt to get deviceId and roomNumber from localStorage
-    const deviceId = localStorage.getItem('device_id') || localStorage.getItem('deviceId');
-    const roomNumber = localStorage.getItem('room_number') || localStorage.getItem('roomNumber');
-
-    if (!deviceId) {
-      console.warn('[Analytics] Skipped tracking event: missing deviceId in localStorage');
-      return;
-    }
-
-    const payload = {
-      deviceId,
-      roomId: roomNumber, // backend maps roomId to roomNumber roughly, or stores it
-      eventType,
-      value,
-      durationSeconds,
-    };
-
-    // Fire and forget using sendBeacon to avoid WebView network error bugs
-    try {
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-      navigator.sendBeacon(`${API_BASE_URL}/analytics/events`, blob);
-    } catch (e) {
-      console.warn('[Analytics] sendBeacon failed', e);
-    }
-  } catch (error) {
-    console.error('[Analytics] Unexpected error tracking event:', error);
-  }
+  // DISABLED: Analytics network requests are causing buggy Android TV WebViews to 
+  // mistakenly trigger "Connection lost" (isForMainFrame bug).
+  console.log('[Analytics Disabled]', eventType, value);
 };

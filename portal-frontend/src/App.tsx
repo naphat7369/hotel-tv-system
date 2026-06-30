@@ -29,10 +29,10 @@ interface MenuItem {
 }
 
 const mockApps = [
-  { id: 1, name: 'Netflix', packageName: 'com.netflix.ninja', icon: 'N', color: 'bg-[#e50914]', bgImage: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=800&q=80' },
-  { id: 2, name: 'YouTube', packageName: 'com.google.android.youtube.tv', icon: '▶', color: 'bg-[#ff0000]', bgImage: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&q=80' },
-  { id: 3, name: 'Prime Video', packageName: 'com.amazon.amazonvideo.livingroom', icon: 'prime', color: 'bg-[#00a8e1]', bgImage: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=800&q=80' },
-  { id: 4, name: 'Disney+', packageName: 'com.disney.disneyplus', icon: 'D+', color: 'bg-[#113ccf]', bgImage: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=800&q=80' },
+  { id: 1, name: 'Netflix', packageName: 'com.netflix.ninja', icon: 'N', color: 'bg-[#e50914]' },
+  { id: 2, name: 'YouTube', packageName: 'com.google.android.youtube.tv', icon: 'Y', color: 'bg-[#ff0000]' },
+  { id: 3, name: 'Prime Video', packageName: 'com.amazon.amazonvideo.livingroom', icon: 'P', color: 'bg-[#00a8e1]' },
+  { id: 4, name: 'Spotify', packageName: 'com.spotify.tv.android', icon: 'S', color: 'bg-[#1db954]' },
 ]
 
 
@@ -51,7 +51,7 @@ function App() {
     hotelStars: '★★★★★',
     title: 'PREPARING YOUR EXPERIENCE',
     subtitle: 'Establishing secure connection to the hotel network...',
-    bgImage: 'https://images.unsplash.com/photo-1542314831-c53cd3816002?w=1920&q=80',
+    bgImage: 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
     backgroundImages: [] as { tag: string, url: string, message?: string }[],
     portalMainTitle: 'S31',
     portalSubtitle: 'Hotel Sukumvit'
@@ -95,7 +95,6 @@ function App() {
     active: false,
     message: ''
   });
-  const alertModalRef = useRef<(HTMLButtonElement | null)[]>([])
   
   // Inbox Messages State
   const [inboxMessages, setInboxMessages] = useState<{id: string, text: string, time: Date}[]>([]);
@@ -179,7 +178,7 @@ function App() {
           hotelStars: data.hotel_stars || '★★★★★',
           title: data.loading_title || 'PREPARING YOUR EXPERIENCE',
           subtitle: data.loading_subtitle || 'Establishing secure connection to the hotel network...',
-          bgImage: data.backgroundImages?.[0]?.url || 'https://images.unsplash.com/photo-1542314831-c53cd3816002?w=1920&q=80',
+          bgImage: data.backgroundImages?.[0]?.url || 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
           backgroundImages: data.backgroundImages || [],
           portalMainTitle: data.portal_main_title || 'S31',
           portalSubtitle: data.portal_subtitle || 'Hotel Sukumvit'
@@ -382,36 +381,6 @@ function App() {
     }
   }, [showSuccess])
 
-  // D-Pad Refs
-  const navRef = useRef<(HTMLButtonElement | null)[]>([])
-  const subMenuRefs = useRef<(HTMLButtonElement | null)[]>([])
-  const formRefs = useRef<(HTMLDivElement | HTMLButtonElement | null)[]>([])
-
-  useEffect(() => {
-    // Clear refs on category switch to avoid stale refs
-    subMenuRefs.current = [];
-  }, [activeMenu])
-
-  useEffect(() => {
-    // Don't auto-focus UI elements while Live TV is playing
-    if (isPlayingLiveTV) return;
-
-    if (alertModal.active) {
-      setTimeout(() => alertModalRef.current[1]?.focus(), 50) // Focus dismiss button by default
-    } else if (selectedItem) {
-      setTimeout(() => formRefs.current[0]?.focus(), 50)
-    } else if (activeMenu) {
-      // Focus the last watched channel when returning to the list
-      setTimeout(() => {
-        const activeRefs = subMenuRefs.current.filter(el => el && document.body.contains(el));
-        const target = activeRefs[currentChannelIndex] || activeRefs[0];
-        target?.focus();
-      }, 50)
-    } else {
-      setTimeout(() => navRef.current[0]?.focus(), 50)
-    }
-  }, [activeMenu, selectedItem, isPlayingLiveTV, alertModal.active])
-
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // GLOBAL: Home button takes priority over everything
@@ -449,116 +418,12 @@ function App() {
         }
       }
 
+      // Android TV's Chromium WebView native spatial navigation handles D-Pad perfectly out-of-the-box.
       if (e.key === 'Enter') {
         e.preventDefault()
         e.stopPropagation()
         activeElement.click()
         return
-      }
-
-      // ALERT MODAL NAVIGATION
-      if (alertModal.active) {
-        const currentIndex = alertModalRef.current.indexOf(activeElement as any)
-        if (currentIndex === -1) {
-           alertModalRef.current[1]?.focus()
-           e.preventDefault()
-           return
-        }
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-           alertModalRef.current[1]?.focus()
-           e.preventDefault()
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-           alertModalRef.current[0]?.focus()
-           e.preventDefault()
-        }
-        return
-      }
-
-      // MODAL NAVIGATION (For Service Request Form)
-      if (selectedItem?.displayType === 'SERVICE_REQUEST') {
-        const currentIndex = formRefs.current.indexOf(activeElement as any)
-        if (currentIndex === -1) return
-
-        if (e.key === 'ArrowDown') {
-          const nextIndex = Math.min(currentIndex + 1, formRefs.current.length - 1)
-          formRefs.current[nextIndex]?.focus()
-          e.preventDefault()
-        } else if (e.key === 'ArrowUp') {
-          const prevIndex = Math.max(currentIndex - 1, 0)
-          formRefs.current[prevIndex]?.focus()
-          e.preventDefault()
-        } else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-          // If we are focused on a form item (not the submit/cancel buttons)
-          const itemId = activeElement.getAttribute('data-item-id')
-          if (itemId) {
-            setFormQuantities(prev => {
-              const current = prev[itemId] || 0
-              const diff = e.key === 'ArrowRight' ? 1 : -1
-              return { ...prev, [itemId]: Math.max(0, current + diff) }
-            })
-            e.preventDefault()
-          } else {
-            // Horizontal navigation for buttons
-            if (e.key === 'ArrowRight') {
-               const nextIndex = Math.min(currentIndex + 1, formRefs.current.length - 1)
-               formRefs.current[nextIndex]?.focus()
-            } else {
-               const prevIndex = Math.max(currentIndex - 1, 0)
-               formRefs.current[prevIndex]?.focus()
-            }
-            e.preventDefault()
-          }
-        }
-        return
-      }
-
-      // MODAL NAVIGATION (For simple dismiss)
-      if (selectedItem) {
-         if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-            formRefs.current[0]?.focus()
-            e.preventDefault()
-         }
-         return
-      }
-
-      // MAIN NAV & SUB NAV
-      if (!activeMenu) {
-        const currentIndex = navRef.current.indexOf(activeElement as any)
-        if (currentIndex === -1) return
-
-        if (e.key === 'ArrowRight') {
-          e.preventDefault()
-          e.stopPropagation()
-          const nextIndex = (currentIndex + 1) % navRef.current.length
-          navRef.current[nextIndex]?.focus()
-        } else if (e.key === 'ArrowLeft') {
-          e.preventDefault()
-          e.stopPropagation()
-          const prevIndex = (currentIndex - 1 + navRef.current.length) % navRef.current.length
-          navRef.current[prevIndex]?.focus()
-        }
-      } else {
-        const activeRefs = subMenuRefs.current.filter(el => el && document.body.contains(el));
-        if (activeRefs.length === 0) return;
-
-        const currentIndex = activeRefs.indexOf(activeElement as any);
-        if (currentIndex === -1) {
-          activeRefs[0]?.focus();
-          e.preventDefault();
-          return;
-        }
-
-        if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-          e.preventDefault()
-          e.stopPropagation()
-          const next = Math.min(currentIndex + 1, activeRefs.length - 1);
-          activeRefs[next]?.focus();
-        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-          e.preventDefault()
-          e.stopPropagation()
-          const prev = Math.max(currentIndex - 1, 0);
-          activeRefs[prev]?.focus();
-        }
       }
     }
 
@@ -579,7 +444,6 @@ function App() {
               <p className="text-on-surface-variant text-[1.2vw] mt-[1vh]">{selectedItem.subtitle}</p>
             </div>
             <button
-              ref={el => formRefs.current[0] = el}
               onClick={() => setSelectedItem(null)}
               className="absolute top-[2vh] right-[2vw] w-[3.5vw] h-[3.5vw] rounded-full border border-white/20 bg-black/50 flex items-center justify-center text-white focus:bg-white/20 focus:border-secondary focus:text-secondary outline-none transition-all"
             >
@@ -592,14 +456,12 @@ function App() {
         return (
           <div className="relative flex w-[82vw] rounded-[20px] overflow-hidden shadow-2xl bg-surface">
              <button
-              ref={el => formRefs.current[0] = el}
               onClick={() => setSelectedItem(null)}
               className="absolute top-[2vh] right-[2vw] z-50 w-[3.5vw] h-[3.5vw] rounded-full border border-white/20 bg-black/50 flex items-center justify-center text-white focus:bg-white/20 focus:border-secondary focus:text-secondary outline-none transition-all"
             >
               <span className="material-symbols-outlined" style={{ fontSize: '1.6vw' }}>close</span>
             </button>
-            <div className="flex-1 relative min-h-[65vh]">
-              <img loading="lazy" src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80" alt={selectedItem.name} className="w-full h-full object-cover" />
+            <div className="flex-1 relative min-h-[65vh] bg-gradient-to-tr from-slate-900 to-slate-800">
               <div className="absolute inset-0 bg-gradient-to-tr from-black/70 to-black/30 flex flex-col justify-end p-[3vh_3vw]">
                 <h3 className="font-display-lg text-[3vw] text-white leading-none mb-[1vh]">{selectedItem.name}</h3>
                 <p className="text-white/80 text-[1.2vw]">{selectedItem.subtitle}</p>
@@ -653,7 +515,6 @@ function App() {
             </div>
             <div className="p-[2vh_3vw] bg-surface2 flex justify-end">
                <button
-                 ref={el => formRefs.current[0] = el}
                  onClick={() => setSelectedItem(null)}
                  className="px-[2vw] py-[1.2vh] rounded-lg border border-white/10 bg-white/5 text-white font-semibold text-[1.1vw] focus:bg-white/10 focus:border-secondary focus:text-secondary outline-none transition-colors"
                >
@@ -675,7 +536,6 @@ function App() {
                 Our housekeeping team has been notified and will be with you shortly.
               </p>
               <button
-                ref={el => formRefs.current[0] = el}
                 onClick={() => {
                   setShowSuccess(false);
                   setSelectedItem(null);
@@ -708,14 +568,11 @@ function App() {
               </div>
             </div>
             <div className="p-[3vh_3vw] flex flex-col gap-[1.5vh]">
-              {formItems.map((item, idx) => {
+              {formItems.map((item) => {
                 const qty = formQuantities[item.id] || 0
                 return (
                   <div
                     key={item.id}
-                    tabIndex={0}
-                    data-item-id={item.id}
-                    ref={el => formRefs.current[idx] = el}
                     className="flex justify-between items-center p-[1.5vh_1.5vw] bg-white/5 border border-white/10 rounded-xl focus:bg-white/10 focus:border-secondary focus:scale-[1.02] outline-none transition-all cursor-pointer"
                     onClick={() => {
                        setFormQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }))
@@ -726,27 +583,20 @@ function App() {
                       {item.name}
                     </div>
                     <div className="flex items-center gap-[1vw] bg-black/30 p-[0.5vh_1vw] rounded-lg">
-                      <span className="text-secondary text-[1.5vw] opacity-50">◀</span>
                       <span className="text-[1.2vw] font-bold w-[2vw] text-center text-white">{qty}</span>
-                      <span className="text-secondary text-[1.5vw]">▶</span>
                     </div>
                   </div>
                 )
               })}
-              <div className="text-center mt-[2vh] text-[1vw] text-on-surface-variant">
-                Use <strong className="text-secondary">UP/DOWN</strong> to select item, <strong className="text-secondary">LEFT/RIGHT</strong> to adjust quantity.
-              </div>
             </div>
             <div className="p-[2vh_3vw] bg-surface2 border-t border-white/10 flex justify-end gap-[1vw]">
                <button
-                 ref={el => formRefs.current[formItems.length] = el}
                  onClick={() => setSelectedItem(null)}
                  className="px-[2vw] py-[1.2vh] rounded-lg border border-white/10 bg-transparent text-white font-semibold text-[1.1vw] focus:bg-white/10 focus:border-secondary focus:text-secondary outline-none transition-colors"
                >
                  Cancel
                </button>
                <button
-                 ref={el => formRefs.current[formItems.length + 1] = el}
                  onClick={async () => {
                     const requested = Object.entries(formQuantities).filter(([_, q]) => q > 0).map(([id, quantity]) => {
                       const itemDef = formItems.find(i => i.id === id);
@@ -790,7 +640,7 @@ function App() {
   }
 
   const renderSubMenuHorizontalCards = (items: MenuItem[]) => {
-    return items.map((item, idx) => {
+    return items.map((item) => {
         const typeStyles = 
             item.displayType === 'QR_CODE' ? 'text-[#63b3ed] border-[#63b3ed]' :
             item.displayType === 'IMAGE_ONLY' ? 'text-[#9a75ff] border-[#9a75ff]' :
@@ -805,14 +655,12 @@ function App() {
         return (
           <button
             key={item.id}
-            ref={el => { if (el) subMenuRefs.current[idx] = el }}
             onClick={() => {
               setSelectedItem(item);
               trackEvent('ITEM_VIEW', { itemId: item.id, name: item.name });
             }}
-            className="flex-shrink-0 w-[24vw] h-[35vh] rounded-[24px] overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.02] glow-focus outline-none"
+            className="flex-shrink-0 w-[24vw] h-[35vh] rounded-[24px] overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.02] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
           >
-            <img loading="lazy" className="absolute inset-0 w-full h-full object-cover transform-gpu transition-transform duration-1000 group-hover:scale-110" src={item.bgImage} alt={item.name} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10 flex flex-col justify-between p-[1.5vw] text-left">
               <div>
                 <span className={`inline-block px-[0.8vw] py-[0.4vh] text-[0.7vw] font-bold rounded-full tracking-widest flex items-center gap-1 w-fit border bg-black/50 backdrop-blur-md ${typeStyles}`}>
@@ -868,29 +716,9 @@ function App() {
       
       {/* Background Cinematic Image */}
       <div 
-        className="fixed inset-0 z-0"
+        className="fixed inset-0 z-0 bg-gradient-to-br from-slate-900 to-black"
         style={{ display: isPlayingLiveTV ? 'none' : 'block' }}
       >
-        <img loading="lazy"
-          className="w-full h-full object-cover brightness-50 transition-all duration-1000"
-          alt="Luxury hotel lobby at dusk"
-          src={(() => {
-            const serverHost = `http://${window.location.hostname}:3000`;
-            if (appSettings.backgroundImages && appSettings.backgroundImages.length > 0) {
-              if (guestData.tag === 'Honeymoon') {
-                const bg = appSettings.backgroundImages.find((b:any) => b.tag === 'Honeymoon');
-                if (bg) return `${serverHost}${bg.url}`;
-              }
-              if (guestData.tag === 'VIP') {
-                const bg = appSettings.backgroundImages.find((b:any) => b.tag === 'VIP');
-                if (bg) return `${serverHost}${bg.url}`;
-              }
-              const bgDefault = appSettings.backgroundImages.find((b:any) => b.tag === 'Default');
-              if (bgDefault) return `${serverHost}${bgDefault.url}`;
-            }
-            return appSettings.bgImage.startsWith('http') ? appSettings.bgImage : `${serverHost}${appSettings.bgImage}`;
-          })()}
-        />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-surface/40"></div>
       </div>
 
@@ -978,13 +806,9 @@ function App() {
               return <div key={`divider-${index}`} className="w-px bg-white/20 mx-[0.5vw]" style={{ height: '6vh' }}></div>
             }
 
-            const refIndex = index > 4 ? index - 1 : index
-
             return (
               <button
                 key={item.id}
-                tabIndex={activeMenu ? -1 : 0}
-                ref={(el) => { if (el && !activeMenu) navRef.current[refIndex] = el }}
                 onClick={() => {
                   setActiveMenu(item.id!);
                   trackEvent('MENU_CLICK', { menu: item.id });
@@ -1080,10 +904,9 @@ function App() {
                       No channels available at the moment.
                     </div>
                   )}
-                  {activeMenu === 'Channel TV' && liveChannels.map((channel, idx) => (
+                  {activeMenu === 'Channel TV' && liveChannels.map((channel) => (
                     <button
                       key={channel.id}
-                      ref={el => { if (el) subMenuRefs.current[idx] = el }}
                       onClick={() => {
                         const validChannels = liveChannels.filter(c => c.streamUrl);
                         const i = validChannels.findIndex(c => c.id === channel.id);
@@ -1092,9 +915,8 @@ function App() {
                           setIsPlayingLiveTV(true);
                         }
                       }}
-                      className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none"
+                      className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
                     >
-                      <img loading="lazy" className="absolute inset-0 w-full h-full object-cover transform-gpu transition-transform duration-1000 group-hover:scale-105" src={channel.logoUrl || "https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=800&q=80"} />
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
                         <div className={`w-[8vw] h-[8vw] bg-surface-container rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0`}>{channel.name.substring(0,3).toUpperCase()}</div>
                         <div className="flex-1">
@@ -1119,7 +941,7 @@ function App() {
                       }}
                       className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none"
                     >
-                      <img loading="lazy" className="absolute inset-0 w-full h-full object-cover transform-gpu transition-transform duration-1000 group-hover:scale-105" src={app.bgImage} />
+                      <div className={`absolute inset-0 w-full h-full ${app.color} opacity-40 group-hover:opacity-60 transition-opacity duration-300`}></div>
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
                         <div className={`w-[8vw] h-[8vw] ${app.color} rounded-2xl flex items-center justify-center text-white font-bold text-[3vw] shadow-2xl flex-shrink-0`}>{app.icon}</div>
                         <div className="flex-1">

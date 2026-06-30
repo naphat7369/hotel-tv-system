@@ -16,6 +16,7 @@ export interface Channel {
   category: string;
   streamUrl?: string | null;
   logoUrl?: string | null;
+  bgImage?: string | null;
   channelNumber?: number | null;
   isActive: boolean;
   sortOrder?: number | null;
@@ -35,6 +36,17 @@ export interface ServiceItem {
   name: string;
   price: number;
   status: 'Available' | 'Sold Out';
+}
+
+export interface StreamingApp {
+  id: string;
+  name: string;
+  packageName?: string | null;
+  iconUrl?: string | null;
+  bgImage?: string | null;
+  deepLink?: string | null;
+  isActive: boolean;
+  sortOrder: number;
 }
 
 export interface ServiceCategory {
@@ -212,6 +224,17 @@ export const api = {
     return res.json() as Promise<{ url: string }>;
   },
 
+  uploadImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/upload/image`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) throw new Error('Failed to upload image');
+    return res.json() as Promise<{ url: string }>;
+  },
+
   getApps: async () => {
     const res = await fetch(`http://${window.location.hostname}:3000/api/v1/streaming-apps`);
     if (!res.ok) throw new Error('Failed to fetch streaming apps');
@@ -235,6 +258,16 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to delete app');
     return res.json();
+  },
+
+  updateApp: async (id: string, data: Partial<StreamingApp>) => {
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/streaming-apps/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update app');
+    return res.json() as Promise<StreamingApp>;
   },
 
   pushInstallToAll: async (apkUrl: string) => {
@@ -317,11 +350,6 @@ export const api = {
   },
 
   // ── SETTINGS ──
-  getAnalyticsOverview: async () => {
-    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/analytics/overview`);
-    if (!res.ok) throw new Error('Failed to fetch analytics');
-    return res.json();
-  },
 
   getAnalyticsReports: async (days: number | 'all' = 7) => {
     const url = days === 'all' 

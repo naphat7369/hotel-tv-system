@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>5-Star TV Portal - 5 Guest Name Mockups</title>
+  <!-- Google Fonts: Playfair Display, Manrope, Montserrat, Great Vibes for Calligraphy -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Manrope:wght@300;400;500;600;700;800&family=Montserrat:wght@100;200;300;400;500;600;700;800;900&family=Pinyon+Script&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  
+  <style>
+    :root {
+      --color-gold-light: #ffdea5;
+      --color-gold: #e9c176;
+      --color-gold-dark: #b89047;
+      --color-bg-dark: #0a0c0c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Manrope', sans-serif;
+      background-color: var(--color-bg-dark);
+      color: #e2e2e2;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* Cinematic background container */
+    .bg-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background-color: #000;
+    }
+
+    .bg-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      transition: all 0.5s ease;
+    }
+
+    /* Asymmetric dark protective gradient for option 2 positioning */
+    .overlay-gradient {
+      position: absolute;
+      inset: 0;
+      background: 
+        linear-gradient(to right, rgba(10,12,12,0.92) 0%, rgba(10,12,12,0.65) 40%, transparent 80%),
+        linear-gradient(to top, rgba(10,12,12,0.85) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 420px;
+      background: rgba(10, 12, 12, 0.92);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border: 1px solid rgba(233, 193, 118, 0.3);
+      border-top: 2px solid rgba(233, 193, 118, 0.6);
+      border-radius: 20px;
+      padding: 22px;
+      z-index: 100;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(233, 193, 118, 0.05);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      gap: 12px;
+    }
+
+    .controls-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      color: var(--color-gold);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .option-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      color: #fff;
+      padding: 10px 12px;
+      text-align: left;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .option-btn:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(233, 193, 118, 0.5);
+    }
+
+    .option-btn.active {
+      background: rgba(233, 193, 118, 0.12);
+      border-color: var(--color-gold);
+      box-shadow: 0 0 15px rgba(233, 193, 118, 0.1);
+    }
+
+    .option-btn.active .opt-title {
+      color: var(--color-gold);
+    }
+
+    .opt-title {
+      font-weight: 700;
+      font-size: 13.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #fff;
+    }
+
+    .opt-desc {
+      font-size: 11px;
+      color: #b0b0b0;
+      line-height: 1.35;
+    }
+
+    .css-viewer {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 12px;
+      font-family: monospace;
+      font-size: 10.5px;
+      color: #e9c176;
+      max-height: 170px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Portal Container overlay representing TV screen */
+    .portal-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      pointer-events: none;
+      padding: 4vh 4vw;
+      transition: all 0.5s ease;
+    }
+
+    /* Top bar placeholder for realism */
+    .portal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2vh;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: baseline;
+      gap: 15px;
+    }
+
+    .logo-main {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.8vw;
+      color: var(--color-gold);
+      letter-spacing: 0.1em;
+      font-weight: 700;
+    }
+
+    .logo-sub {
+      font-size: 0.8vw;
+      color: var(--color-gold);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 1.1vw;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .header-info span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Bottom Bar Placeholder for realism */
+    .portal-bottom {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5vh;
+    }
+
+    .marquee-bar {
+      width: 100%;
+      height: 5vh;
+      background: rgba(0, 0, 0, 0.4);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      padding: 0 2vw;
+      overflow: hidden;
+    }
+
+    .marquee-text {
+      white-space: nowrap;
+      font-size: 1.1vw;
+      color: #fff;
+    }
+
+    .nav-bar {
+      display: flex;
+      justify-content: center;
+      gap: 1.5vw;
+      padding: 1vh 0;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      padding: 1vh 1.8vw;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      min-width: 8vw;
+    }
+
+    .nav-icon-container {
+      width: 3.5vw;
+      height: 3.5vw;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-icon-container.active {
+      border-color: var(--color-gold);
+    }
+
+    .nav-label {
+      font-size: 0.9vw;
+      color: #fff;
+    }
+
+    .nav-label.active {
+      color: var(--color-gold);
+    }
+
+    /* Layout Welcome Section (Option 2 Positioning) */
+    .welcome-area {
+      flex: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding-bottom: 5vh;
+      padding-left: 1vw;
+      width: 100%;
+    }
+
+    /* --- GUEST CARD (TOP RIGHT - NAME REMOVED) --- */
+    .guest-card-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all 0.5s ease;
+    }
+
+    .avatar-ring {
+      width: 4.2vw;
+      height: 4.2vw;
+      border-radius: 50%;
+      border: 1.5px solid var(--color-gold);
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    .avatar-ring span {
+      color: var(--color-gold);
+      font-size: 2vw;
+    }
+
+    .guest-meta-block {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .guest-loyalty-badge {
+      font-size: 0.7vw;
+      font-weight: 800;
+      letter-spacing: 0.15em;
+      color: #0a0c0c;
+      background: linear-gradient(135deg, #ffdea5 0%, #e9c176 50%, #b89047 100%);
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      box-shadow: 0 4px 10px rgba(233, 193, 118, 0.2);
+    }
+
+    .room-label-header {
+      font-size: 0.95vw;
+      color: #fff;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+      margin-top: 3px;
+      opacity: 0.85;
+    }
+
+    /* --- 5 MOCKUP STYLES FOR CENTRAL WELCOME MESSAGE --- */
+    .welcome-container {
+      text-align: left;
+      z-index: 10;
+      transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+      width: 100%;
+    }
+
+    /* --- OPTION 1: Imperial Frame & Signature Name (Epic Standout) --- */
+    .opt1-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .opt1-container .pre-title {
+      font-size: 1vw;
+      font-weight: 700;
+      color: var(--color-gold);
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .opt1-container .pre-title::after {
+      content: '';
+      flex: 1;
+      max-width: 60px;
+      height: 1px;
+      background: var(--color-gold);
+    }
+    .opt1-container .guest-name-giant {
+      font-family: 'Playfair Display', serif;
+      font-size: 5.8vw;
+      font-weight: 800;
+      line-height: 1.05;
+      background: linear-gradient(to right, #ffffff 10%, #ffdea5 50%, #e9c176 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.9));
+    }
+    .opt1-container .welcome-message {
+      font-size: 1.4vw;
+      color: #d1d5db;
+      max-width: 46vw;
+      font-weight: 300;
+      line-height: 1.6;
+      border-left: 2px solid var(--color-gold);
+      padding-left: 1.2vw;
+    }
+
+    /* --- OPTION 2: Modern Serif Frame & Bracket (Elegant Emblem) --- */
+    .opt2-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .opt2-container .welcome-header {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 200;
+      font-size: 3.5vw;
+      letter-spacing: 0.15em;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .opt2-container .name-bracket-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 16px;
+    }
+    .opt2-container .name-bracket-box::before,
+    .opt2-container .name-bracket-box::after {
+      content: '';
+      width: 20px;
+      height: 3.8vw;
+      border-top: 2px solid var(--color-gold);
+      border-bottom: 2px solid var(--color-gold);
+      transition: all 0.3s;
+    }
+    .opt2-container .name-bracket-box::before { border-left: 2px solid var(--color-gold); }
+    .opt2-container .name-bracket-box::after { border-right: 2px solid var(--color-gold); }
+    
+    .opt2-container .guest-name-giant {
+      font-family: 'Playfair Display', serif;
+      font-size: 4.8vw;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.05em;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.8));
+    }
+    .opt2-container .welcome-message {
+      font-size: 1.35vw;
+      color: rgba(255, 255, 255, 0.8);
+      font-weight: 400;
+      max-width: 48vw;
+      line-height: 1.6;
+    }
+
+    /* --- OPTION 3: Floating Heavy Glass Plate Backdrop (Luxury Card) --- */
+    .opt3-container {
+      background: rgba(10, 12, 12, 0.45);
+      backdrop-filter: blur(35px);
+      -webkit-backdrop-filter: blur(35px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-left: 2px solid rgba(233, 193, 118, 0.35);
+      border-radius: 24px;
+      padding: 4.5vh 3.2vw;
+      max-width: 52vw;
+      box-shadow: 
+        0 25px 60px rgba(0, 0, 0, 0.7),
+        inset 0 0 30px rgba(255, 255, 255, 0.03);
+    }
+    .opt3-container .pre-title {
+      font-size: 0.85vw;
+      font-weight: 800;
+      color: var(--color-gold);
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .opt3-container .pre-title span {
+      font-size: 1.2vw;
+    }
+    .opt3-container .guest-name-giant {
+      font-family: 'Playfair Display', serif;
+      font-size: 4.6vw;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+      margin-bottom: 18px;
+      text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    .opt3-container .welcome-message {
+      font-size: 1.25vw;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.6;
+      font-weight: 400;
+    }
+
+    /* --- OPTION 4: Dual-Tone Contrast (Big Gold Split Line) --- */
+    .opt4-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .opt4-container .welcome-header {
+      font-family: 'Playfair Display', serif;
+      font-size: 4vw;
+      color: #fff;
+      font-style: italic;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+    .opt4-container .guest-name-giant {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 6.2vw;
+      font-weight: 900;
+      letter-spacing: 0.15em;
+      background: linear-gradient(to right, #ffdea5, #e9c176, #b89047);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 12px;
+      line-height: 1.05;
+      text-transform: uppercase;
+      filter: drop-shadow(0 6px 15px rgba(0,0,0,0.9));
+    }
+    .opt4-container .welcome-message {
+      font-size: 1.35vw;
+      color: #d1d5db;
+      max-width: 48vw;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* --- OPTION 5: Royal Signature Script (Calligraphy Highlight) --- */
+    .opt5-container {
+      display: flex;
+      flex-direction: column;
+    }
+    .opt5-container .pre-title {
+      font-size: 0.9vw;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-bottom: 0px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .opt5-container .guest-name-giant {
+      font-family: 'Pinyon Script', cursive;
+      font-size: 8.5vw;
+      font-weight: 400;
+      color: var(--color-gold);
+      line-height: 0.95;
+      margin-bottom: 10px;
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.8));
+    }
+    .opt5-container .welcome-message {
+      font-size: 1.4vw;
+      color: rgba(255, 255, 255, 0.8);
+      max-width: 46vw;
+      font-weight: 300;
+      line-height: 1.6;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 15px;
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #4ade80;
+      color: #121414;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Image with S31 preview -->
+  <div class="bg-container">
+    <img id="bgImg" src="./bg-preview.jpg" onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1920&q=80'" alt="Sunset View" class="bg-image">
+  </div>
+
+  <!-- Ambient dark protective overlay (Option 2 Setup) -->
+  <div class="overlay-gradient"></div>
+
+  <!-- Portal Container overlay representing TV screen -->
+  <div class="portal-overlay" id="portalOverlay">
+    
+    <!-- Top Bar -->
+    <header class="portal-header">
+      <div class="header-logo">
+        <h1 class="logo-main">S31</h1>
+        <p class="logo-sub">SUKUMVIT HOTEL</p>
+      </div>
+      <div class="header-info">
+        <span><span class="material-symbols-outlined">wb_sunny</span> 72°F Sunny</span>
+        <span>·</span>
+        <span><span class="material-symbols-outlined">schedule</span> 05:08 PM</span>
+      </div>
+      
+      <!-- GUEST PORTION - NAME REMOVED, ONLY LOGO & STATUS -->
+      <div class="guest-card-container" id="guestCardContainer">
+        <div class="guest-meta-block">
+          <div class="guest-loyalty-badge" id="loyaltyBadgeText">VIP GOLD MEMBER</div>
+          <div class="room-label-header">Room 1104</div>
+        </div>
+        <div class="avatar-ring">
+          <span class="material-symbols-outlined">crown</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Center/Content Section (Bottom-Left welcome message layout) -->
+    <div class="welcome-area">
+      <!-- Dynamic Welcome Container -->
+      <div class="welcome-container opt1-container" id="welcomeBox">
+        <div class="pre-title">Welcome to S31</div>
+        <h2 class="guest-name-giant" id="guestNameText">Mr. Alexander Mercer</h2>
+        <p class="welcome-message" id="welcomeMsgText">
+          We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+        </p>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="portal-bottom">
+      <div class="marquee-bar">
+        <div class="marquee-text">
+          Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸
+        </div>
+      </div>
+      
+      <!-- Fake Nav Menu for full contextual preview -->
+      <nav class="nav-bar">
+        <div class="nav-item">
+          <div class="nav-icon-container active"><span class="material-symbols-outlined">tv</span></div>
+          <span class="nav-label active">Channel TV</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon-container"><span class="material-symbols-outlined">styler</span></div>
+          <span class="nav-label">Entertainment</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon-container"><span class="material-symbols-outlined">room_service</span></div>
+          <span class="nav-label">Services</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon-container"><span class="material-symbols-outlined">restaurant</span></div>
+          <span class="nav-label">Dining</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon-container"><span class="material-symbols-outlined">mail</span></div>
+          <span class="nav-label">Messages</span>
+        </div>
+        <div class="nav-item">
+          <div class="nav-icon-container"><span class="material-symbols-outlined">explore</span></div>
+          <span class="nav-label">Local Guide</span>
+        </div>
+      </nav>
+    </div>
+
+  </div>
+
+  <!-- Float Interactive controls -->
+  <div class="controls-panel">
+    <div class="controls-title">
+      <span class="material-symbols-outlined" style="font-size: 26px;">editor_choice</span>
+      5 Guest Name Designs
+    </div>
+    
+    <div style="font-size: 13px; color: #ccc; margin-top: -6px; line-height: 1.4;">
+      The top-right guest name has been removed to declutter. Preview 5 luxury styles presenting the guest's name as the main focal point:
+    </div>
+
+    <button class="option-btn active" onclick="switchStyle(1)">
+      <span class="opt-title">👑 Option 1: Imperial Gold Gradient</span>
+      <span class="opt-desc">Serif Playfair style. Gold gradient name (`8vw`), thin left-border welcome quote divider. Very clean, high prestige.</span>
+    </button>
+
+    <button class="option-btn" onclick="switchStyle(2)">
+      <span class="opt-title">⚜️ Option 2: Gold Bracket Frame</span>
+      <span class="opt-desc">Name sits enclosed inside fine gold corner brackets, with a light Montserrat "WELCOME" header above. Classic European luxury.</span>
+    </button>
+
+    <button class="option-btn" onclick="switchStyle(3)">
+      <span class="opt-title">🔮 Option 3: Glass plate Backdrop</span>
+      <span class="opt-desc">The welcome block sits inside a thick glass board (`blur-35px`) with a fine gold border. Creates absolute separation from background details.</span>
+    </button>
+
+    <button class="option-btn" onclick="switchStyle(4)">
+      <span class="opt-title">🚀 Option 4: Contrast Bold Sans</span>
+      <span class="opt-desc">Modern bold Montserrat typography. Massive name (`6.2vw`) with broad spacing, high-end corporate luxury.</span>
+    </button>
+
+    <button class="option-btn" onclick="switchStyle(5)">
+      <span class="opt-title">✒️ Option 5: Royal Signature Script</span>
+      <span class="opt-desc">Stunning calligraphy script (`Pinyon Script`) in rich S31 gold. Extremely premium feel, resembling a handwritten welcome.</span>
+    </button>
+
+    <div style="margin-top: 8px;">
+      <div style="font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 4px; display:flex; justify-content:space-between; align-items:center;">
+        <span>React & CSS Code for App.tsx:</span>
+        <button onclick="copyCSS()" style="background:var(--color-gold); border:none; border-radius:4px; color:#121414; padding:2px 8px; font-size:10px; cursor:pointer; font-weight:bold;">Copy Code</button>
+      </div>
+      <div class="css-viewer" id="cssViewer">... Loading code ...</div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Code copied to clipboard!</div>
+
+  <script>
+    const styleCodes = {
+      1: `/* Option 1: Imperial Gold Gradient (Serif Signature) */
+
+// 1. Top Right Header: Clean Room & Badge (No name)
+<div className="flex items-center gap-[1.5vw] transition-all">
+  <div className="text-right flex flex-col items-end">
+    <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg">
+      <span className="material-symbols-outlined text-[1vw] text-black">star</span>
+      {guestData.tag || 'VIP GOLD MEMBER'}
+    </span>
+    <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
+      Room {roomNumber}
+    </p>
+  </div>
+  <div className="w-[4.2vw] h-[4.2vw] rounded-full border border-[#e9c176] bg-white/5 flex items-center justify-center shadow-lg">
+    <span className="material-symbols-outlined text-[#e9c176]" style={{ fontSize: '2vw' }}>crown</span>
+  </div>
+</div>
+
+// 2. Central Welcome Area (App.tsx L863-877)
+<div className="flex-1 flex flex-col items-start justify-end text-left transition-opacity duration-500 pb-[4vh] z-10">
+  <div className="font-sans text-[1vw] font-bold text-[#e9c176] tracking-[0.3em] uppercase mb-[8px] flex items-center gap-[10px]">
+    Welcome to S31
+    <span className="w-[60px] h-[1px] bg-[#e9c176]" />
+  </div>
+  <h2 className="font-display-lg text-[5.8vw] font-extrabold leading-[1.05] bg-gradient-to-r from-white via-[#ffdea5] to-[#e9c176] bg-clip-text text-transparent mb-[16px] drop-shadow-[0_4px_12px_rgba(0,0,0,0.9)]">
+    {guestData.isCheckedIn && guestData.name ? guestData.name : 'Valued Guest'}
+  </h2>
+  <p className="text-[1.4vw] text-gray-300 max-w-[46vw] font-light leading-relaxed border-l-2 border-[#e9c176] pl-[1.2vw]">
+    We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+  </p>
+</div>`,
+      2: `/* Option 2: Gold Bracket Frame (Classic European Luxury) */
+
+// 1. Top Right Header: Clean Room & Badge (No name)
+<div className="flex items-center gap-[1.5vw]">
+  <div className="text-right flex flex-col items-end">
+    <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg">
+      <span className="material-symbols-outlined text-[1vw] text-black">star</span>
+      {guestData.tag || 'VIP GOLD MEMBER'}
+    </span>
+    <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
+      Room {roomNumber}
+    </p>
+  </div>
+  <div className="w-[4.2vw] h-[4.2vw] rounded-full border border-[#e9c176] bg-white/5 flex items-center justify-center shadow-lg">
+    <span className="material-symbols-outlined text-[#e9c176]" style={{ fontSize: '2vw' }}>crown</span>
+  </div>
+</div>
+
+// 2. Central Welcome Area (App.tsx L863-877)
+<div className="flex-1 flex flex-col items-start justify-end text-left transition-opacity duration-500 pb-[4vh] z-10">
+  <span className="font-sans font-light text-[3.5vw] letter-spacing-[0.15em] text-white mb-[8px] uppercase">
+    WELCOME
+  </span>
+  <div className="inline-flex items-center gap-[15px] mb-[16px]">
+    {/* CSS Corner brackets applied around guest name */}
+    <div className="flex items-center gap-[15px] before:w-[20px] before:h-[3.8vw] before:border-t-2 before:border-l-2 before:border-[#e9c176] after:w-[20px] after:h-[3.8vw] after:border-t-2 after:border-r-2 after:border-[#e9c176]">
+      <h2 className="font-display-lg text-[4.8vw] font-bold text-white tracking-[0.05em] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]">
+        {guestData.isCheckedIn && guestData.name ? guestData.name : 'Valued Guest'}
+      </h2>
+    </div>
+  </div>
+  <p className="text-[1.35vw] text-white/80 max-w-[48vw] font-normal leading-relaxed">
+    We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+  </p>
+</div>`,
+      3: `/* Option 3: Floating Heavy Glass Plate Backdrop (Absolute Isolation) */
+
+// 1. Top Right Header: Clean Room & Badge (No name)
+<div className="flex items-center gap-[1.5vw]">
+  <div className="text-right flex flex-col items-end">
+    <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg">
+      <span className="material-symbols-outlined text-[1vw] text-black">star</span>
+      {guestData.tag || 'VIP GOLD MEMBER'}
+    </span>
+    <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
+      Room {roomNumber}
+    </p>
+  </div>
+  <div className="w-[4.2vw] h-[4.2vw] rounded-full border border-[#e9c176] bg-white/5 flex items-center justify-center shadow-lg">
+    <span className="material-symbols-outlined text-[#e9c176]" style={{ fontSize: '2vw' }}>crown</span>
+  </div>
+</div>
+
+// 2. Central Welcome Area (App.tsx L863-877)
+<div className="flex-1 flex flex-col items-start justify-end text-left transition-opacity duration-500 pb-[4vh] z-10">
+  <div className="bg-black/45 backdrop-blur-[35px] border border-white/80 border-l-2 border-l-[#e9c176] rounded-[24px] p-[4.5vh_3.2vw] max-w-[52vw] shadow-2xl">
+    <div className="text-[0.85vw] font-extrabold text-[#e9c176] tracking-[0.35em] uppercase mb-[12px] flex items-center gap-[8px]">
+      <span className="material-symbols-outlined text-[1.2vw]">star</span>
+      Distinguished Guest
+    </div>
+    <h2 className="font-display-lg text-[4.6vw] font-extrabold text-white leading-[1.1] mb-[18px]">
+      {guestData.isCheckedIn && guestData.name ? guestData.name : 'Valued Guest'}
+    </h2>
+    <p className="text-[1.25vw] text-white/75 leading-relaxed font-normal">
+      We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+    </p>
+  </div>
+</div>`,
+      4: `/* Option 4: Contrast Bold Sans (Modern Ultra-Luxury) */
+
+// 1. Top Right Header: Clean Room & Badge (No name)
+<div className="flex items-center gap-[1.5vw]">
+  <div className="text-right flex flex-col items-end">
+    <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg">
+      <span className="material-symbols-outlined text-[1vw] text-black">star</span>
+      {guestData.tag || 'VIP GOLD MEMBER'}
+    </span>
+    <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
+      Room {roomNumber}
+    </p>
+  </div>
+  <div className="w-[4.2vw] h-[4.2vw] rounded-full border border-[#e9c176] bg-white/5 flex items-center justify-center shadow-lg">
+    <span className="material-symbols-outlined text-[#e9c176]" style={{ fontSize: '2vw' }}>crown</span>
+  </div>
+</div>
+
+// 2. Central Welcome Area (App.tsx L863-877)
+<div className="flex-1 flex flex-col items-start justify-end text-left transition-opacity duration-500 pb-[4vh] z-10">
+  <span className="font-display-lg text-[4vw] text-white italic leading-none mb-[2px]">
+    Welcome,
+  </span>
+  <h2 className="font-sans text-[6.2vw] font-black tracking-[0.15em] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] bg-clip-text text-transparent mb-[12px] leading-[1.05] uppercase drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
+    {guestData.isCheckedIn && guestData.name ? guestData.name : 'Valued Guest'}
+  </h2>
+  <p className="text-[1.35vw] text-gray-300 max-w-[48vw] font-light leading-relaxed">
+    We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+  </p>
+</div>`,
+      5: `/* Option 5: Royal Signature Script (Calligraphy Highlight) */
+
+// 1. Top Right Header: Clean Room & Badge (No name)
+<div className="flex items-center gap-[1.5vw]">
+  <div className="text-right flex flex-col items-end">
+    <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg">
+      <span className="material-symbols-outlined text-[1vw] text-black">star</span>
+      {guestData.tag || 'VIP GOLD MEMBER'}
+    </span>
+    <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
+      Room {roomNumber}
+    </p>
+  </div>
+  <div className="w-[4.2vw] h-[4.2vw] rounded-full border border-[#e9c176] bg-white/5 flex items-center justify-center shadow-lg">
+    <span className="material-symbols-outlined text-[#e9c176]" style={{ fontSize: '2vw' }}>crown</span>
+  </div>
+</div>
+
+// 2. Central Welcome Area (App.tsx L863-877)
+/* Import Pinyon Script font in App.html or index.css first */
+<div className="flex-1 flex flex-col items-start justify-end text-left transition-opacity duration-500 pb-[4vh] z-10">
+  <span className="font-sans font-light text-[0.9vw] text-white tracking-[0.25em] uppercase mb-[0px]">
+    Welcome
+  </span>
+  <h2 className="font-script text-[8.5vw] font-normal text-[#e9c176] leading-[0.95] mb-[10px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]" style={{ fontFamily: "'Pinyon Script', cursive" }}>
+    {guestData.isCheckedIn && guestData.name ? guestData.name : 'Valued Guest'}
+  </h2>
+  <p className="text-[1.4vw] text-white/80 max-w-[46vw] font-light leading-relaxed border-t border-white/10 pt-[15px]">
+    We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+  </p>
+</div>`
+    };
+
+    function switchStyle(styleNum) {
+      // Update buttons active class
+      const btns = document.querySelectorAll('.option-btn');
+      btns.forEach(btn => btn.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+
+      // Update CSS code viewer
+      document.getElementById('cssViewer').textContent = styleCodes[styleNum];
+
+      // Update HTML classes & texts based on design
+      const welcomeBox = document.getElementById('welcomeBox');
+      const title = document.getElementById('guestNameText');
+      const subtitle = document.getElementById('welcomeMsgText');
+
+      // Reset classes
+      welcomeBox.className = 'welcome-container';
+
+      if (styleNum === 1) {
+        welcomeBox.classList.add('opt1-container');
+        welcomeBox.innerHTML = `
+          <div class="pre-title">Welcome to S31</div>
+          <h2 class="guest-name-giant">Mr. Alexander Mercer</h2>
+          <p class="welcome-message">
+            We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+          </p>
+        `;
+      } else if (styleNum === 2) {
+        welcomeBox.classList.add('opt2-container');
+        welcomeBox.innerHTML = `
+          <span class="welcome-header">WELCOME</span>
+          <div class="name-bracket-box">
+            <h2 class="guest-name-giant">Mr. Alexander Mercer</h2>
+          </div>
+          <p class="welcome-message">
+            We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+          </p>
+        `;
+      } else if (styleNum === 3) {
+        welcomeBox.classList.add('opt3-container');
+        welcomeBox.innerHTML = `
+          <div class="pre-title">
+            <span class="material-symbols-outlined">star</span>
+            Distinguished Guest
+          </div>
+          <h2 class="guest-name-giant">Mr. Alexander Mercer</h2>
+          <p class="welcome-message">
+            We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+          </p>
+        `;
+      } else if (styleNum === 4) {
+        welcomeBox.classList.add('opt4-container');
+        welcomeBox.innerHTML = `
+          <span class="welcome-header">Welcome,</span>
+          <h2 class="guest-name-giant">Mr. Alexander Mercer</h2>
+          <p class="welcome-message">
+            We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+          </p>
+        `;
+      } else if (styleNum === 5) {
+        welcomeBox.classList.add('opt5-container');
+        welcomeBox.innerHTML = `
+          <span class="pre-title">Welcome</span>
+          <h2 class="guest-name-giant">Mr. Alexander Mercer</h2>
+          <p class="welcome-message">
+            We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.
+          </p>
+        `;
+      }
+    }
+
+    function copyCSS() {
+      const codeText = document.getElementById('cssViewer').textContent;
+      navigator.clipboard.writeText(codeText).then(() => {
+        const toast = document.getElementById('toast');
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      });
+    }
+
+    // Initialize with style 1 code
+    document.getElementById('cssViewer').textContent = styleCodes[1];
+  </script>
+</body>
+</html>

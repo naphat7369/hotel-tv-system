@@ -22,7 +22,7 @@ router.get('/', async (req: Request, res: Response) => {
 // POST /api/v1/streaming-apps
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { name, packageName, iconUrl, deepLink, isActive, sortOrder } = req.body;
+    const { name, packageName, iconUrl, bgImage, deepLink, isActive, sortOrder } = req.body;
     
     // Auto-increment sortOrder if not provided
     let finalSortOrder = sortOrder;
@@ -37,11 +37,15 @@ router.post('/', async (req: Request, res: Response) => {
         name,
         packageName,
         iconUrl,
+        bgImage,
         deepLink,
         isActive: isActive !== undefined ? isActive : true,
         sortOrder: finalSortOrder
       }
     });
+    // Broadcast change
+    req.app.get('io')?.emit('refresh_streaming_apps', { action: 'created' });
+
     res.status(201).json(app);
   } catch (err) {
     res.status(500).json({ error: 'Failed to create streaming app' });
@@ -57,6 +61,9 @@ router.put('/:id', async (req: Request, res: Response) => {
       where: { id },
       data
     });
+    // Broadcast change
+    req.app.get('io')?.emit('refresh_streaming_apps', { action: 'updated' });
+
     res.json(app);
   } catch (err) {
     res.status(500).json({ error: 'Failed to update streaming app' });
@@ -68,6 +75,9 @@ router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await prisma.streamingApp.delete({ where: { id } });
+    // Broadcast change
+    req.app.get('io')?.emit('refresh_streaming_apps', { action: 'deleted' });
+
     res.json({ message: 'Deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete streaming app' });

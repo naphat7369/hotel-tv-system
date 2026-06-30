@@ -22,6 +22,7 @@ import pmsRoutes from './api/pms.routes';
 import settingsRoutes from './api/settings.routes';
 import streamingAppRoutes from './api/streaming-app.routes';
 import webhookRoutes from './api/webhook.routes';
+import uploadRoutes from './api/upload.routes';
 
 dotenv.config();
 
@@ -67,6 +68,7 @@ app.use('/api/v1/pms', pmsRoutes);
 app.use('/api/v1/webhooks/pms', webhookRoutes);
 app.use('/api/v1/settings', settingsRoutes);
 app.use('/api/v1/streaming-apps', streamingAppRoutes);
+app.use('/api/v1/upload', uploadRoutes);
 
 // Health Check
 app.get('/health', (req: Request, res: Response) => {

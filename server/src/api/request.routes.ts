@@ -11,19 +11,7 @@ export const getRequestStats = () => ({
 });
 
 // In-memory store since Postgres is currently unreachable
-let mockRequests: any[] = [
-  {
-    id: 'req-1',
-    hotelId: 'hotel-1',
-    roomId: 'room-402',
-    requestType: 'HOUSEKEEPING',
-    items: [{ id: 'h1', name: 'Fresh Towel', quantity: 2 }],
-    status: 'PENDING',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    room: { roomNumber: '402' }
-  }
-];
+let mockRequests: any[] = [];
 
 // GET /api/v1/requests - Fetch all guest requests
 router.get('/', (req: Request, res: Response) => {

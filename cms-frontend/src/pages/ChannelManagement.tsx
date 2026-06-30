@@ -59,12 +59,14 @@ function ChannelManagement() {
   const [previewChannel, setPreviewChannel] = useState<Channel | null>(null);
   const [bandwidthStats, setBandwidthStats] = useState<Record<string, number>>({});
   const [formData, setFormData] = useState<Partial<Channel>>({
-    name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true,
+    name: '', category: 'Live TV', streamUrl: '', logoUrl: '', bgImage: '', channelNumber: null, isActive: true,
     inputProtocol: 'UDP', inputIp: '', inputPort: null, inputEth: 'eth1',
     outputProtocol: 'UDP', outputIp: '', outputPort: null, outputEth: 'All'
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bgFileInputRef = useRef<HTMLInputElement>(null);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
 
   const fetchChannels = async () => {
     setLoading(true);
@@ -122,7 +124,7 @@ function ChannelManagement() {
   };
 
   const openAddModal = () => {
-    setFormData({ name: '', category: 'Live TV', streamUrl: '', logoUrl: '', channelNumber: null, isActive: true, inputProtocol: 'UDP', inputIp: '', inputPort: null, inputEth: 'eth1', outputProtocol: 'UDP', outputIp: '', outputPort: null, outputEth: 'All' });
+    setFormData({ name: '', category: 'Live TV', streamUrl: '', logoUrl: '', bgImage: '', channelNumber: null, isActive: true, inputProtocol: 'UDP', inputIp: '', inputPort: null, inputEth: 'eth1', outputProtocol: 'UDP', outputIp: '', outputPort: null, outputEth: 'All' });
     setModalMode('add');
   };
 
@@ -167,7 +169,22 @@ function ChannelManagement() {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
-
+  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploadingBg(true);
+    try {
+      const res = await api.uploadImage(file);
+      setFormData(prev => ({ ...prev, bgImage: res.url }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload background image.');
+    } finally {
+      setUploadingBg(false);
+      if (bgFileInputRef.current) bgFileInputRef.current.value = '';
+    }
+  };
   const inputStyle: React.CSSProperties = {
     width: '100%',
     padding: '8px 10px',
@@ -252,7 +269,7 @@ function ChannelManagement() {
                     </TableCell>
                     <TableCell>
                       {!ch.isActive ? (
-                        <Badge variant="secondary">Disabled</Badge>
+                        <Badge variant="default">Disabled</Badge>
                       ) : (bandwidthStats[ch.id] || 0) > 0 ? (
                         <Badge variant="success">Online</Badge>
                       ) : (
@@ -376,9 +393,9 @@ function ChannelManagement() {
                   <label style={labelStyle}>Logo URL</label>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <input type="url" style={{ ...inputStyle, fontSize: '13px', flex: 1 }}
-                      value={formData.logoUrl || ''}
-                      onChange={e => setFormData({...formData, logoUrl: e.target.value})}
-                      placeholder="https://example.com/logo.png" />
+                       value={formData.logoUrl || ''}
+                       onChange={e => setFormData({...formData, logoUrl: e.target.value})}
+                       placeholder="https://example.com/logo.png" />
                     
                     <input 
                       type="file" 
@@ -399,6 +416,36 @@ function ChannelManagement() {
                       {uploadingLogo ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                     </Button>
                   </div>
+                </div>
+              </div>
+
+              {/* Background Image URL */}
+              <div>
+                <label style={labelStyle}>Background Image</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input type="url" style={{ ...inputStyle, fontSize: '13px', flex: 1 }}
+                     value={formData.bgImage || ''}
+                     onChange={e => setFormData({...formData, bgImage: e.target.value})}
+                     placeholder="e.g. /uploads/images/bg.webp or https://..." />
+                  
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    ref={bgFileInputRef} 
+                    onChange={handleBgUpload} 
+                    style={{ display: 'none' }} 
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon" 
+                    style={{ height: '36px', width: '36px', flexShrink: 0, padding: 0 }}
+                    onClick={() => bgFileInputRef.current?.click()}
+                    disabled={uploadingBg}
+                    title="Upload Background"
+                  >
+                    {uploadingBg ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  </Button>
                 </div>
               </div>
 

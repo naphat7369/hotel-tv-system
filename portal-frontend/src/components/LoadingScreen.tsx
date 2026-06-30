@@ -18,9 +18,13 @@ export default function LoadingScreen({
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-[#050505] font-['Montserrat',sans-serif] text-white">
       {/* Background Gradient or Image */}
-      {bgImage ? (
+      {bgImage && !bgImage.startsWith('bg-') ? (
         <div className="absolute inset-0 z-10">
-          <img src={bgImage} alt="Background" className="w-full h-full object-cover opacity-60" />
+          <img src={bgImage.startsWith('/') ? `http://${window.location.hostname}:3000${bgImage}` : bgImage} alt="Background" className="w-full h-full object-cover opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
+        </div>
+      ) : bgImage && bgImage.startsWith('bg-') ? (
+        <div className={`absolute inset-0 z-10 ${bgImage}`}>
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30"></div>
         </div>
       ) : (

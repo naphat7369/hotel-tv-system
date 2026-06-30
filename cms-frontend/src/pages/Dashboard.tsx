@@ -143,7 +143,7 @@ function Dashboard() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [reports, setReports] = useState<any | null>(null);
   const [reportViewMode, setReportViewMode] = useState<'chart' | 'table'>('chart');
-  const [reportTimeFilter, setReportTimeFilter] = useState<number | 'all'>(7);
+  const [reportTimeFilter, setReportTimeFilter] = useState<number | 'all'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());

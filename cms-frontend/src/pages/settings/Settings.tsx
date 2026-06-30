@@ -27,7 +27,10 @@ export default function Settings() {
       setLoadingTitle(data.loading_title || 'PREPARING YOUR EXPERIENCE');
       setLoadingSubtitle(data.loading_subtitle || 'Establishing secure connection to the hotel network...');
       if (data.loading_bg_image) {
-        setBgImagePreview(`http://${window.location.hostname}:3000${data.loading_bg_image}`);
+        const bgUrl = data.loading_bg_image.startsWith('http') 
+          ? data.loading_bg_image 
+          : `http://${window.location.hostname}:3000${data.loading_bg_image}`;
+        setBgImagePreview(bgUrl);
       }
 
 

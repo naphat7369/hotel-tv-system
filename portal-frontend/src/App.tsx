@@ -11,6 +11,7 @@ export interface BackendChannel {
   category: string | null;
   streamUrl: string | null;
   logoUrl: string | null;
+  bgImage?: string | null;
   isActive: boolean;
   sortOrder: number | null;
 }
@@ -28,24 +29,24 @@ interface MenuItem {
   bgImage?: string
 }
 
-const mockApps = [
-  { id: 1, name: 'Netflix', packageName: 'com.netflix.ninja', icon: 'N', color: 'bg-[#e50914]' },
-  { id: 2, name: 'YouTube', packageName: 'com.google.android.youtube.tv', icon: 'Y', color: 'bg-[#ff0000]' },
-  { id: 3, name: 'Prime Video', packageName: 'com.amazon.amazonvideo.livingroom', icon: 'P', color: 'bg-[#00a8e1]' },
-  { id: 4, name: 'Spotify', packageName: 'com.spotify.tv.android', icon: 'S', color: 'bg-[#1db954]' },
-]
+
 
 
 
 function App() {
   // Use localStorage so the CMS can dynamically rename this device without an Android app
-  const deviceId = localStorage.getItem('device_id') || 'BOX-101-A';
-  const roomNumber = localStorage.getItem('room_number') || 'Unassigned';
+  // Stored in refs to prevent socket useEffect from re-running on every render
+  const deviceIdRef = useRef(localStorage.getItem('device_id') || 'BOX-101-A');
+  const roomNumberRef = useRef(localStorage.getItem('room_number') || 'Unassigned');
+  const deviceId = deviceIdRef.current;
+  const roomNumber = roomNumberRef.current;
+  const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
   const [time, setTime] = useState(new Date())
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
 
   const [appLoading, setAppLoading] = useState(true)
+  const [appsMenu, setAppsMenu] = useState<any[]>([])
   const [appSettings, setAppSettings] = useState({
     hotelName: 'S31 SUKUMVIT HOTEL',
     hotelStars: '★★★★★',
@@ -157,6 +158,17 @@ function App() {
         setDiningMenu(dining);
         setGuideMenu(guide);
 
+        // Fetch streaming apps
+        try {
+          const appsRes = await fetch(`${serverHost}/api/v1/streaming-apps`, { cache: 'no-store' });
+          if (appsRes.ok) {
+            const appsData = await appsRes.json();
+            setAppsMenu(appsData.filter((a: any) => a.isActive));
+          }
+        } catch (e) {
+          console.error('Failed to fetch streaming apps', e);
+        }
+
         // Offline caching
         localStorage.setItem('services_menu_cache', JSON.stringify(services));
         localStorage.setItem('dining_menu_cache', JSON.stringify(dining));
@@ -178,7 +190,8 @@ function App() {
           hotelStars: data.hotel_stars || '★★★★★',
           title: data.loading_title || 'PREPARING YOUR EXPERIENCE',
           subtitle: data.loading_subtitle || 'Establishing secure connection to the hotel network...',
-          bgImage: data.backgroundImages?.[0]?.url || 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
+          // loading_bg_image is from Brand Settings page (separate from Portal bg images)
+          bgImage: data.loading_bg_image || 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
           backgroundImages: data.backgroundImages || [],
           portalMainTitle: data.portal_main_title || 'S31',
           portalSubtitle: data.portal_subtitle || 'Hotel Sukumvit'
@@ -199,12 +212,33 @@ function App() {
     bootApp();
 
     const serverHost = `http://${window.location.hostname}:3000`;
-    const socket = io(serverHost);
+    
+    // Prevent duplicate socket connections if already connected
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+    const socket = io(serverHost, {
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionAttempts: Infinity,
+      timeout: 20000,
+    });
+    socketRef.current = socket;
+    
+    const _deviceId = deviceIdRef.current;
+    const _roomNumber = roomNumberRef.current;
     
     socket.on('connect', () => {
-      console.log(`WebSocket connected, registering device as ${deviceId} for room ${roomNumber}...`);
-      socket.emit('register_device', { deviceId, roomNumber });
+      console.log(`WebSocket connected, registering device as ${_deviceId} for room ${_roomNumber}...`);
+      socket.emit('register_device', { deviceId: _deviceId, roomNumber: _roomNumber });
     });
+
+    // Heartbeat every 30 seconds to keep MDM status Online
+    const heartbeatInterval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit('heartbeat', { deviceId: _deviceId });
+      }
+    }, 30000);
     
     // Listen for MDM commands (like rename, set room, reload, clear cache)
     socket.on('mdm_command', (data: any) => {
@@ -238,6 +272,11 @@ function App() {
 
     socket.on('refresh_channels', () => {
       fetchChannels();
+    });
+
+    socket.on('refresh_streaming_apps', () => {
+      console.log('Received refresh_streaming_apps event, fetching latest apps...');
+      fetchMenuItems();
     });
     
     // Listen for realtime menu changes from CMS
@@ -273,11 +312,16 @@ function App() {
       setInboxMessages([]);
     });
     return () => {
+      clearInterval(heartbeatInterval);
       socket.disconnect();
+      socketRef.current = null;
     };
   }, [fetchChannels, fetchMenuItems, fetchSettings]);
   // Used to prevent double-back button presses when exiting third party apps
   const lastFocusTimeRef = useRef<number>(Date.now());
+  const subMenuRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const alertModalRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const mainMenuRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   // App Wake-up / Visibility Change Recovery Fetch
   const fetchStatus = useCallback(async () => {
@@ -430,6 +474,30 @@ function App() {
     window.addEventListener('keydown', handleKeyDown, { capture: true })
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
   }, [activeMenu, selectedItem, isPlayingLiveTV])
+
+  // Auto-focus the first item in the sub-menu when a menu opens
+  useEffect(() => {
+    if (activeMenu) {
+      setTimeout(() => {
+        const firstFocusable = subMenuRefs.current.find(ref => ref !== null);
+        if (firstFocusable) {
+          firstFocusable.focus();
+        }
+      }, 50);
+    } else {
+      // Clear refs when menu closes so old ones don't linger
+      subMenuRefs.current = [];
+    }
+  }, [activeMenu]);
+
+  // Auto-focus Channel TV on initial load or when returning to main menu
+  useEffect(() => {
+    if (!appLoading && !activeMenu && !selectedItem && !isPlayingLiveTV) {
+      setTimeout(() => {
+        mainMenuRefs.current[0]?.focus();
+      }, 300);
+    }
+  }, [appLoading, activeMenu, selectedItem, isPlayingLiveTV]);
 
   const renderModalContent = () => {
     if (!selectedItem) return null
@@ -640,7 +708,7 @@ function App() {
   }
 
   const renderSubMenuHorizontalCards = (items: MenuItem[]) => {
-    return items.map((item) => {
+    return items.map((item, index) => {
         const typeStyles = 
             item.displayType === 'QR_CODE' ? 'text-[#63b3ed] border-[#63b3ed]' :
             item.displayType === 'IMAGE_ONLY' ? 'text-[#9a75ff] border-[#9a75ff]' :
@@ -655,12 +723,16 @@ function App() {
         return (
           <button
             key={item.id}
+            ref={el => { if (el) subMenuRefs.current[index] = el }}
             onClick={() => {
               setSelectedItem(item);
               trackEvent('ITEM_VIEW', { itemId: item.id, name: item.name });
             }}
             className="flex-shrink-0 w-[24vw] h-[35vh] rounded-[24px] overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.02] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
           >
+            {item.bgImage && (
+              <img src={item.bgImage.startsWith('http') ? item.bgImage : `http://${window.location.hostname}:3000${item.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10 flex flex-col justify-between p-[1.5vw] text-left">
               <div>
                 <span className={`inline-block px-[0.8vw] py-[0.4vh] text-[0.7vw] font-bold rounded-full tracking-widest flex items-center gap-1 w-fit border bg-black/50 backdrop-blur-md ${typeStyles}`}>
@@ -702,6 +774,28 @@ function App() {
     return msg.replace('{name}', guestData.name || 'Valued Guest');
   };
 
+  const getBackgroundImage = () => {
+    const currentTag = guestData.isCheckedIn ? (guestData.tag || 'Default') : 'Default';
+    const bgs = appSettings.backgroundImages || [];
+    
+    // 1. Try to find background for current tag
+    const tagMatch = bgs.find((bg:any) => bg.tag === currentTag);
+    if (tagMatch && tagMatch.url && tagMatch.url.trim() !== '') {
+      return tagMatch.url;
+    }
+    
+    // 2. Fallback to default tag background
+    const defaultMatch = bgs.find((bg:any) => bg.tag === 'Default');
+    if (defaultMatch && defaultMatch.url && defaultMatch.url.trim() !== '') {
+      return defaultMatch.url;
+    }
+    
+    // 3. Ultimate fallback
+    return 'bg-gradient-to-br from-slate-900 to-black';
+  };
+
+  const currentBgImage = getBackgroundImage();
+
   return (
     <div className="font-body-md text-on-surface">
       {appLoading && (
@@ -710,16 +804,21 @@ function App() {
           hotelStars={appSettings.hotelStars}
           title={appSettings.title}
           subtitle={appSettings.subtitle}
-          bgImage={appSettings.bgImage}
+          bgImage={currentBgImage}
         />
       )}
       
       {/* Background Cinematic Image */}
       <div 
-        className="fixed inset-0 z-0 bg-gradient-to-br from-slate-900 to-black"
+        className={`fixed inset-0 z-0 ${currentBgImage.startsWith('bg-') ? currentBgImage : 'bg-black'}`}
         style={{ display: isPlayingLiveTV ? 'none' : 'block' }}
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-surface/40"></div>
+        {!currentBgImage.startsWith('bg-') && (
+          <img src={currentBgImage.startsWith('/') ? `http://${window.location.hostname}:3000${currentBgImage}` : currentBgImage} alt="Background" className="absolute inset-0 w-full h-full object-cover opacity-100" />
+        )}
+        {/* Ambient protective gradient overlays for Option 2: Bottom-Left Layout readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none z-1"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-transparent pointer-events-none z-1"></div>
       </div>
 
       <main 
@@ -752,27 +851,54 @@ function App() {
                </div>
              </div>
 
-              <div className="flex items-center gap-[2vw]">
-                <div className="text-right">
-                  <p className="font-label-sm text-[0.9vw] text-secondary uppercase tracking-widest">{guestData.isCheckedIn ? (guestData.tag || 'Valued Guest') : ''}</p>
-                  <p className="font-label-lg text-[1.2vw] text-on-surface">{guestData.isCheckedIn && guestData.name ? guestData.name : `Room ${roomNumber}`}</p>
+              {/* Style 1: Royal Gold & Champagne Guest Card */}
+              <div className="flex items-center gap-[1.5vw] transition-all">
+                <div className="text-right flex flex-col items-end">
+                  {guestData.isCheckedIn && (
+                    <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg mb-[0.5vh]">
+                      <span className="material-symbols-outlined text-[1vw] text-black">star</span>
+                      {guestData.tag || 'VIP GOLD MEMBER'}
+                    </span>
+                  )}
+                  <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
+                    Room {roomNumber}
+                  </p>
                 </div>
-                <div className="rounded-full border-2 border-secondary overflow-hidden bg-black flex items-center justify-center transition-opacity" style={{ width: '5vw', height: '5vw', opacity: guestData.isCheckedIn ? 1 : 0.3 }}>
-                  <span className="material-symbols-outlined text-white/80" style={{ fontSize: '3vw' }}>person</span>
+                <div className="w-[5vw] h-[5vw] rounded-full border-2 border-[#e9c176] bg-gradient-to-br from-[#e9c176]/20 to-black/80 flex items-center justify-center shadow-[0_0_20px_rgba(233,193,118,0.25)] transition-all" style={{ opacity: guestData.isCheckedIn ? 1 : 0.4 }}>
+                  <span className="material-symbols-outlined text-[#e9c176]" style={{ fontSize: '2.2vw' }}>crown</span>
                 </div>
               </div>
            </header>
 
-           {/* Central Welcome Message */}
+           {/* Central Welcome Message - Option 2: Bottom-Left Layout (Style 1: Royal Gold & Champagne) */}
            <div
-             className="flex-1 flex flex-col items-center justify-center text-center transition-opacity duration-500 mt-[5vh]"
+             className="flex-1 flex flex-col items-start justify-end text-left transition-opacity duration-500 pb-[4vh] z-10"
              style={{ opacity: activeMenu ? 0 : 1 }}
            >
-             <h2 className="font-display-lg text-[6vw] text-white mb-[1.5vh] tracking-widest leading-none drop-shadow-2xl">
-                {guestData.isCheckedIn ? 'WELCOME' : `${appSettings.portalMainTitle || 'S31'} Sukumvit Hotel`}
+             <span className="font-sans font-extralight text-[1.8vw] tracking-[0.25em] text-white/90 mb-[4px] uppercase" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+                {guestData.isCheckedIn ? 'WELCOME' : 'WELCOME TO'}
+             </span>
+             <h2 className="text-[8.5vw] font-normal text-[#e9c176] leading-[0.95] mb-[10px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]" style={{ fontFamily: "'Pinyon Script', cursive", paddingRight: "0.5vw" }}>
+                {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} Sukumvit`}
              </h2>
-             <p className="font-body-lg text-[1.6vw] text-on-surface-variant max-w-[50vw] drop-shadow-md whitespace-pre-line">
-                {getWelcomeMessage()}
+             <p className="font-sans text-[1.4vw] text-white/80 max-w-[46vw] font-light leading-relaxed border-t border-white/10 pt-[15px]">
+                {(() => {
+                  const rawMsg = getWelcomeMessage();
+                  const guestName = guestData.isCheckedIn && guestData.name ? guestData.name : 'Valued Guest';
+                  let subtext = rawMsg;
+                  if (guestData.isCheckedIn && guestData.name) {
+                    // Clean up the text by removing the name and dangling commas
+                    subtext = rawMsg
+                      .replace(guestName, '')
+                      .replace(/Dear\s*,?\s*/i, '')
+                      .replace(/,\s*\./g, '.')
+                      .replace(/\s+,/g, ',')
+                      .replace(/\s{2,}/g, ' ')
+                      .trim();
+                    if (subtext.startsWith(',')) subtext = subtext.substring(1).trim();
+                  }
+                  return subtext || 'We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.';
+                })()}
              </p>
            </div>
         </div>
@@ -809,9 +935,20 @@ function App() {
             return (
               <button
                 key={item.id}
+                ref={el => { if (el) mainMenuRefs.current[index] = el }}
                 onClick={() => {
                   setActiveMenu(item.id!);
                   trackEvent('MENU_CLICK', { menu: item.id });
+                }}
+                onKeyDown={(e) => {
+                  // Implement wrap-around looping for main menu
+                  if (e.key === 'ArrowRight' && index === 6) {
+                    e.preventDefault();
+                    mainMenuRefs.current[0]?.focus();
+                  } else if (e.key === 'ArrowLeft' && index === 0) {
+                    e.preventDefault();
+                    mainMenuRefs.current[6]?.focus();
+                  }
                 }}
                 className="nav-item-glow group relative flex flex-col items-center gap-[0.8vh] transition-all duration-300 rounded-xl hover:bg-white/10 focus:bg-white/10"
                 style={{ padding: '1.5vh 2vw', minWidth: '9vw' }}
@@ -859,6 +996,12 @@ function App() {
             
             <button
               onClick={() => setActiveMenu(null)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+                  e.preventDefault();
+                  subMenuRefs.current[0]?.focus();
+                }
+              }}
               className="w-fit flex items-center gap-[0.8vw] bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 hover:border-secondary hover:text-secondary transition-all mb-[3vh] outline-none focus:border-secondary focus:text-secondary"
               style={{ padding: '1vh 1.5vw' }}
             >
@@ -904,9 +1047,10 @@ function App() {
                       No channels available at the moment.
                     </div>
                   )}
-                  {activeMenu === 'Channel TV' && liveChannels.map((channel) => (
+                  {activeMenu === 'Channel TV' && liveChannels.map((channel, idx) => (
                     <button
                       key={channel.id}
+                      ref={el => { if (el) subMenuRefs.current[idx] = el }}
                       onClick={() => {
                         const validChannels = liveChannels.filter(c => c.streamUrl);
                         const i = validChannels.findIndex(c => c.id === channel.id);
@@ -917,8 +1061,19 @@ function App() {
                       }}
                       className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
                     >
+                      {channel.bgImage ? (
+                        <img src={channel.bgImage.startsWith('http') ? channel.bgImage : `http://${window.location.hostname}:3000${channel.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                      ) : (
+                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
-                        <div className={`w-[8vw] h-[8vw] bg-surface-container rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0`}>{channel.name.substring(0,3).toUpperCase()}</div>
+                        <div className={`w-[8vw] h-[8vw] bg-surface-container rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden`}>
+                          {channel.logoUrl ? (
+                            <img src={channel.logoUrl.startsWith('http') ? channel.logoUrl : `http://${window.location.hostname}:3000${channel.logoUrl}`} alt={channel.name} className="w-full h-full object-contain p-2" />
+                          ) : (
+                            channel.name.substring(0,3).toUpperCase()
+                          )}
+                        </div>
                         <div className="flex-1">
                           <span className="inline-block px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest flex items-center gap-1 w-fit"><span className="material-symbols-outlined" style={{fontSize:'1vw'}}>tv</span> CH {channel.channelNumber !== null && channel.channelNumber < 10 ? '0'+channel.channelNumber : channel.channelNumber || '-'}</span>
                           <h3 className="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">{channel.name}</h3>
@@ -927,12 +1082,25 @@ function App() {
                     </button>
                   ))}
                   
-                  {activeMenu === 'Entertainment' && mockApps.map((app, idx) => (
+                  {activeMenu === 'Entertainment' && appsMenu.length === 0 && (
+                    <div className="col-span-full py-10 text-center text-outline font-label-lg">
+                      No streaming apps available.
+                    </div>
+                  )}
+                  {activeMenu === 'Entertainment' && appsMenu.map((app, idx) => (
                     <button
                       key={app.id}
                       ref={el => { if (el) subMenuRefs.current[idx] = el }}
                       onClick={() => {
-                        if (app.packageName && (window as any).AndroidTV) {
+                        if (app.deepLink && (window as any).AndroidTV) {
+                          // Try launching via deepLink intent or package name
+                          if (app.deepLink.startsWith('intent://') || app.deepLink.includes('://')) {
+                            // Needs native handling for complex intents, but package name works as fallback
+                            (window as any).AndroidTV.launchApp(app.packageName);
+                          } else {
+                            (window as any).AndroidTV.launchApp(app.packageName);
+                          }
+                        } else if (app.packageName && (window as any).AndroidTV) {
                           (window as any).AndroidTV.launchApp(app.packageName);
                         } else {
                           console.log("Would launch:", app.packageName);
@@ -941,11 +1109,22 @@ function App() {
                       }}
                       className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none"
                     >
-                      <div className={`absolute inset-0 w-full h-full ${app.color} opacity-40 group-hover:opacity-60 transition-opacity duration-300`}></div>
+                      {app.bgImage ? (
+                        <img src={app.bgImage.startsWith('http') ? app.bgImage : `http://${window.location.hostname}:3000${app.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                      ) : (
+                        <div className={`absolute inset-0 w-full h-full bg-slate-800 opacity-40 group-hover:opacity-60 transition-opacity duration-300`}></div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
-                        <div className={`w-[8vw] h-[8vw] ${app.color} rounded-2xl flex items-center justify-center text-white font-bold text-[3vw] shadow-2xl flex-shrink-0`}>{app.icon}</div>
+                        <div className={`w-[8vw] h-[8vw] bg-surface-container rounded-2xl flex items-center justify-center text-white font-bold text-[3vw] shadow-2xl flex-shrink-0 overflow-hidden`}>
+                          {app.iconUrl ? (
+                            <img src={app.iconUrl.startsWith('http') ? app.iconUrl : `http://${window.location.hostname}:3000${app.iconUrl}`} alt={app.name} className="w-full h-full object-contain p-2" />
+                          ) : (
+                            app.name.substring(0, 1).toUpperCase()
+                          )}
+                        </div>
                         <div className="flex-1">
                            <h3 className="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">{app.name}</h3>
+                           <p className="text-on-surface-variant text-[1vw] line-clamp-1">{app.packageName}</p>
                         </div>
                       </div>
                     </button>
@@ -962,7 +1141,7 @@ function App() {
                         <div className="flex-1 flex flex-col items-center justify-center opacity-50">
                           <span className="material-symbols-outlined text-white mb-[2vh]" style={{ fontSize: '6vw' }}>inbox_customize</span>
                           <p className="text-white text-[1.5vw] font-light">No new messages</p>
-                          <button ref={el => subMenuRefs.current[0] = el} onClick={() => setActiveMenu(null)} className="rounded-full bg-white/10 px-[3vw] py-[1.5vh] mt-[4vh] focus:border-secondary focus:bg-white/20 outline-none border border-transparent text-white font-bold transition-all hover:bg-white/20">Go Back</button>
+                          <button ref={el => { subMenuRefs.current[0] = el; }} onClick={() => setActiveMenu(null)} className="rounded-full bg-white/10 px-[3vw] py-[1.5vh] mt-[4vh] focus:border-secondary focus:bg-white/20 outline-none border border-transparent text-white font-bold transition-all hover:bg-white/20">Go Back</button>
                         </div>
                       ) : (
                         <div className="flex-1 w-full max-w-3xl overflow-y-auto space-y-[2vh] pr-[2vw]">
@@ -994,7 +1173,7 @@ function App() {
                             </button>
                           ))}
                           <div className="flex justify-center pt-[2vh]">
-                            <button ref={el => subMenuRefs.current[inboxMessages.length] = el} onClick={() => setActiveMenu(null)} className="rounded-full bg-white/10 px-[3vw] py-[1.5vh] focus:border-secondary focus:bg-white/20 outline-none border border-transparent text-white font-bold transition-all hover:bg-white/20">Go Back</button>
+                            <button ref={el => { subMenuRefs.current[inboxMessages.length] = el; }} onClick={() => setActiveMenu(null)} className="rounded-full bg-white/10 px-[3vw] py-[1.5vh] focus:border-secondary focus:bg-white/20 outline-none border border-transparent text-white font-bold transition-all hover:bg-white/20">Go Back</button>
                           </div>
                         </div>
                       )}
@@ -1005,7 +1184,7 @@ function App() {
                     <div className="w-full h-full flex flex-col items-center justify-center opacity-50" style={{ padding: '15vh 0' }}>
                       <span className="material-symbols-outlined text-secondary" style={{ fontSize: '6vw', marginBottom: '2vh' }}>construction</span>
                       <h3 className="font-display-lg text-white" style={{ fontSize: '3vw', marginBottom: '1vh' }}>Under Construction</h3>
-                      <button ref={el => subMenuRefs.current[0] = el} onClick={() => setActiveMenu(null)} className="rounded-full bg-white/10 px-[2vw] py-[1vh] mt-[2vh] focus:border-secondary focus:bg-white/20 outline-none border border-transparent">Go Back</button>
+                      <button ref={el => { subMenuRefs.current[0] = el; }} onClick={() => setActiveMenu(null)} className="rounded-full bg-white/10 px-[2vw] py-[1vh] mt-[2vh] focus:border-secondary focus:bg-white/20 outline-none border border-transparent">Go Back</button>
                     </div>
                   )}
                 </div>
@@ -1065,7 +1244,7 @@ function App() {
             {/* Actions */}
             <div className="flex gap-[1.5vw] w-full justify-center">
                 <button 
-                  ref={el => alertModalRef.current[0] = el}
+                  ref={el => { alertModalRef.current[0] = el; }}
                   onClick={() => {
                     setAlertModal(prev => ({ ...prev, active: false }));
                     setInboxMessages(prev => [{ id: Date.now().toString(), text: alertModal.message, time: new Date() }, ...prev]);
@@ -1075,7 +1254,7 @@ function App() {
                     Remind Later
                 </button>
                 <button 
-                  ref={el => alertModalRef.current[1] = el}
+                  ref={el => { alertModalRef.current[1] = el; }}
                   onClick={() => setAlertModal(prev => ({ ...prev, active: false }))}
                   className="btn-premium w-1/2 py-[1.5vh] rounded-xl font-bold tracking-widest uppercase text-[1vw]"
                 >

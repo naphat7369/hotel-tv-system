@@ -90,6 +90,7 @@ model Channel {
   outputIp       String?  @map("output_ip")
   outputPort     Int?     @map("output_port")
   outputEth      String?  @map("output_eth")
+  bgImage        String?  @map("bg_image")
 
   isActive       Boolean  @default(true) @map("is_active")
   accessLevel    String   @default("all") @map("access_level") 
@@ -108,6 +109,7 @@ model StreamingApp {
   name            String  
   packageName     String? @map("package_name") 
   iconUrl         String? @map("icon_url") 
+  bgImage         String? @map("bg_image")
   deepLink        String? @map("deep_link") 
   autoLogout      Boolean @default(true) @map("auto_logout")
   logoutCommand   String? @map("logout_command") 

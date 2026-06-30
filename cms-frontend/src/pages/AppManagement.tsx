@@ -3,7 +3,8 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { api } from '../lib/api';
-import { RefreshCw, Trash2, Upload, Send } from 'lucide-react';
+import { RefreshCw, Trash2, Upload, Send, Edit2 } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 import type { StreamingApp } from '../lib/api';
 
@@ -13,6 +14,13 @@ function AppManagement() {
   const [uploading, setUploading] = useState(false);
   const [pushing, setPushing] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [editApp, setEditApp] = useState<StreamingApp | null>(null);
+  const [editFormData, setEditFormData] = useState<Partial<StreamingApp>>({});
+  const [uploadingIcon, setUploadingIcon] = useState(false);
+  const [uploadingBg, setUploadingBg] = useState(false);
+  const iconInputRef = useRef<HTMLInputElement>(null);
+  const bgInputRef = useRef<HTMLInputElement>(null);
 
   const fetchApps = async () => {
     setLoading(true);
@@ -56,6 +64,51 @@ function AppManagement() {
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingIcon(true);
+    try {
+      const res = await api.uploadImage(file);
+      setEditFormData(prev => ({ ...prev, iconUrl: res.url }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload icon.');
+    } finally {
+      setUploadingIcon(false);
+      if (iconInputRef.current) iconInputRef.current.value = '';
+    }
+  };
+
+  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingBg(true);
+    try {
+      const res = await api.uploadImage(file);
+      setEditFormData(prev => ({ ...prev, bgImage: res.url }));
+    } catch (err) {
+      console.error(err);
+      alert('Failed to upload background image.');
+    } finally {
+      setUploadingBg(false);
+      if (bgInputRef.current) bgInputRef.current.value = '';
+    }
+  };
+
+  const handleEditSave = async () => {
+    if (!editApp) return;
+    try {
+      await api.updateApp(editApp.id, editFormData);
+      alert('App updated successfully!');
+      setEditApp(null);
+      fetchApps();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update app.');
     }
   };
 
@@ -147,6 +200,17 @@ function AppManagement() {
                     </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setEditApp(app);
+                          setEditFormData({ ...app });
+                        }}
+                        title="Edit App"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button 
                         variant="primary" 
                         size="sm"
                         onClick={() => handlePush(app)}
@@ -172,9 +236,157 @@ function AppManagement() {
         </CardContent>
       </Card>
 
+      {/* Edit App Modal */}
+      {editApp && createPortal(
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 9999,
+          backgroundColor: 'rgba(0,0,0,0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div style={{
+            width: '500px',
+            maxWidth: 'calc(100vw - 32px)',
+            backgroundColor: 'var(--color-surface-container)',
+            border: '1px solid var(--color-outline-variant)',
+            borderRadius: '12px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.6)'
+          }}>
+            {/* Header */}
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--color-outline-variant)', backgroundColor: 'var(--color-surface-container-low)', borderRadius: '12px 12px 0 0' }}>
+              <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--color-on-surface)' }}>
+                ✏️ Edit Streaming App: {editApp.name}
+              </h3>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '75vh', overflowY: 'auto' }}>
+              <div>
+                <label style={labelStyle}>App Name *</label>
+                <input type="text" style={inputStyle}
+                  value={editFormData.name || ''}
+                  onChange={e => setEditFormData({ ...editFormData, name: e.target.value })}
+                  placeholder="e.g. Netflix" />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Package Name *</label>
+                <input type="text" style={inputStyle}
+                  value={editFormData.packageName || ''}
+                  onChange={e => setEditFormData({ ...editFormData, packageName: e.target.value })}
+                  placeholder="e.g. com.netflix.ninja" />
+              </div>
+
+              {/* Icon URL + Upload */}
+              <div>
+                <label style={labelStyle}>Icon URL</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input type="url" style={{ ...inputStyle, fontSize: '13px', flex: 1 }}
+                    value={editFormData.iconUrl || ''}
+                    onChange={e => setEditFormData({ ...editFormData, iconUrl: e.target.value })}
+                    placeholder="https://example.com/icon.png" />
+                  
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    ref={iconInputRef} 
+                    onChange={handleIconUpload} 
+                    style={{ display: 'none' }} 
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon" 
+                    style={{ height: '36px', width: '36px', flexShrink: 0, padding: 0 }}
+                    onClick={() => iconInputRef.current?.click()}
+                    disabled={uploadingIcon}
+                    title="Upload Icon"
+                  >
+                    {uploadingIcon ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Background Image URL + Upload */}
+              <div>
+                <label style={labelStyle}>Background Image</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input type="url" style={{ ...inputStyle, fontSize: '13px', flex: 1 }}
+                    value={editFormData.bgImage || ''}
+                    onChange={e => setEditFormData({ ...editFormData, bgImage: e.target.value })}
+                    placeholder="e.g. /uploads/images/bg.webp" />
+                  
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    ref={bgInputRef} 
+                    onChange={handleBgUpload} 
+                    style={{ display: 'none' }} 
+                  />
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="icon" 
+                    style={{ height: '36px', width: '36px', flexShrink: 0, padding: 0 }}
+                    onClick={() => bgInputRef.current?.click()}
+                    disabled={uploadingBg}
+                    title="Upload Background"
+                  >
+                    {uploadingBg ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Active Checkbox */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input type="checkbox" id="editAppActive"
+                  checked={editFormData.isActive}
+                  onChange={e => setEditFormData({ ...editFormData, isActive: e.target.checked })}
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                <label htmlFor="editAppActive" style={{ ...labelStyle, marginBottom: 0, cursor: 'pointer' }}>
+                  Active (Visible to guests)
+                </label>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', padding: '16px 24px', borderTop: '1px solid var(--color-outline-variant)', borderRadius: '0 0 12px 12px', backgroundColor: 'var(--color-surface-container-low)' }}>
+              <Button variant="ghost" onClick={() => setEditApp(null)}>Cancel</Button>
+              <Button onClick={handleEditSave} disabled={!editFormData.name?.trim() || !editFormData.packageName?.trim()}>
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
 
     </div>
   );
 }
+
+// Inline styles mirroring ChannelManagement.tsx for modal compatibility
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: '13px',
+  fontWeight: 600,
+  marginBottom: '6px',
+  color: 'var(--color-on-surface)'
+};
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  padding: '8px 10px',
+  border: '1px solid var(--color-outline-variant)',
+  borderRadius: '6px',
+  background: 'var(--color-surface-container-high)',
+  color: 'var(--color-on-surface)',
+  fontSize: '14px',
+  boxSizing: 'border-box',
+  outline: 'none'
+};
 
 export default AppManagement;

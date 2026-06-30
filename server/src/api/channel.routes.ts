@@ -84,7 +84,7 @@ router.post('/upload-logo', upload.single('logo'), (req: Request, res: Response)
 router.post('/', async (req: Request, res: Response) => {
   try {
     await ensureHotel();
-    let { name, channelNumber, category, streamUrl, logoUrl, isActive, inputProtocol, inputIp, inputPort, inputEth, outputProtocol, outputIp, outputPort, outputEth } = req.body;
+    let { name, channelNumber, category, streamUrl, logoUrl, bgImage, isActive, inputProtocol, inputIp, inputPort, inputEth, outputProtocol, outputIp, outputPort, outputEth } = req.body;
 
 
 
@@ -99,6 +99,7 @@ router.post('/', async (req: Request, res: Response) => {
         category,
         streamUrl,
         logoUrl,
+        bgImage,
         isActive: isActive !== undefined ? isActive : true,
         sortOrder: count + 1,
         inputProtocol,

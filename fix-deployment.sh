@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "====================================="
-echo "Hotel TV System - Deployment Fixer"
+echo "Hotel TV System - Deployment Fixer v2"
 echo "====================================="
 
 # 1. Pull latest code
@@ -29,6 +29,7 @@ echo "[4/6] Rebuilding Server..."
 cd ~/hotel-tv-system/server
 rm -rf node_modules
 npm install
+npx prisma generate
 npm run build
 
 # 5. Nuke and Recreate PM2 Processes
@@ -36,7 +37,7 @@ echo "[5/6] Recreating PM2 Processes..."
 pm2 delete all
 
 cd ~/hotel-tv-system/server
-pm2 start dist/index.js --name hotel_server
+pm2 start dist/app.js --name hotel_server
 
 cd ~/hotel-tv-system/cms-frontend
 pm2 serve dist 5173 --name cms_frontend --spa

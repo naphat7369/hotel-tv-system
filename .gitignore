@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.env
+uploads/apks/*.apk
+uploads/backgrounds/
+server/dist/
+*.log
+
+# Android
+*.apk
+*.aab
+android-tv-app/.gradle/
+android-tv-app/build/
+android-tv-app/app/build/
+android-tv-app/local.properties

@@ -716,10 +716,10 @@ function App() {
       
       {/* Background Cinematic Image */}
       <div 
-        className="fixed inset-0 z-0 bg-gradient-to-br from-slate-900 to-black"
+        className={`fixed inset-0 z-0 ${appSettings.bgImage.startsWith('bg-') ? appSettings.bgImage : 'bg-gradient-to-br from-slate-900 to-black'}`}
         style={{ display: isPlayingLiveTV ? 'none' : 'block' }}
       >
-        {appSettings.bgImage && (
+        {appSettings.bgImage && !appSettings.bgImage.startsWith('bg-') && (
           <img 
             loading="lazy"
             className="absolute inset-0 w-full h-full object-cover brightness-50 transition-all duration-1000"

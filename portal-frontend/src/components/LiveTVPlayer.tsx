@@ -56,6 +56,7 @@ interface LiveTVPlayerProps {
   channels: Channel[];
   initialChannelIndex: number;
   onExit: () => void;
+  socket?: any;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -349,6 +350,7 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
   channels,
   initialChannelIndex,
   onExit,
+  socket,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialChannelIndex);
   const [showOSD, setShowOSD]           = useState(true);
@@ -497,7 +499,7 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
       setError(`Signal Error: ${errorMsg}`);
       
       // Track playback error
-      trackEvent('PLAYBACK_ERROR', { error: errorMsg });
+      trackEvent('PLAYBACK_ERROR', { error: errorMsg }, undefined, socket);
     };
     window.addEventListener('nativePlayerError', handleNativeError);
     return () => window.removeEventListener('nativePlayerError', handleNativeError);
@@ -518,7 +520,7 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
           channelId: currentChannel.id,
           name: currentChannel.name,
           number: currentChannel.number
-        }, durationSeconds);
+        }, durationSeconds, socket);
       }
     };
   }, [currentChannel]);

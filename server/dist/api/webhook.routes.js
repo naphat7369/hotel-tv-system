@@ -39,12 +39,34 @@ router.post('/checkin', async (req, res) => {
         const payloadGuest = req.body.guestName || req.body.guest;
         const language = req.body.language || req.body.nation;
         const vipStatus = req.body.vipStatus || req.body.vip || req.body.VIP;
+        const gender = req.body.gender || req.body.sex;
+        const title = req.body.title || req.body.salutation || req.body.prefix;
         if (!payloadRoom) {
             return res.status(400).json({ error: 'roomNumber or room is required' });
         }
         // Ensure roomNumber is string for the TV Box deviceId match
         const roomNumber = String(payloadRoom);
-        const guestName = payloadGuest ? String(payloadGuest) : 'Guest';
+        let guestName = payloadGuest ? String(payloadGuest).trim() : 'Guest';
+        // Add title prefix if available and not already present
+        if (guestName !== 'Guest') {
+            let prefix = '';
+            if (title) {
+                prefix = String(title).trim();
+            }
+            else if (gender) {
+                const g = String(gender).toLowerCase();
+                if (g === 'm' || g === 'male')
+                    prefix = 'Mr.';
+                else if (g === 'f' || g === 'female')
+                    prefix = 'Ms.';
+            }
+            if (prefix && !guestName.toLowerCase().startsWith(prefix.toLowerCase().replace('.', ''))) {
+                // Ensure prefix ends with a dot if it's Mr or Ms
+                if ((prefix === 'Mr' || prefix === 'Ms') && !prefix.endsWith('.'))
+                    prefix += '.';
+                guestName = `${prefix} ${guestName}`;
+            }
+        }
         // If this is actually a Check-out payload (service: 'delete'), redirect to checkout logic
         if (req.body.service === 'delete') {
             console.log(`[Webhook] 'delete' service detected in /checkin route. Redirecting to checkout logic for Room: ${roomNumber}`);

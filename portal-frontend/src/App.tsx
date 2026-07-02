@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import LiveTVPlayer from './components/LiveTVPlayer'
 import LoadingScreen from './components/LoadingScreen'
 import { io } from 'socket.io-client'
-import { trackEvent } from './lib/analytics'
+import { trackEvent, setAnalyticsSocket } from './lib/analytics'
 
 export interface BackendChannel {
   id: string;
@@ -231,6 +231,8 @@ function App() {
     socket.on('connect', () => {
       console.log(`WebSocket connected, registering device as ${_deviceId} for room ${_roomNumber}...`);
       socket.emit('register_device', { deviceId: _deviceId, roomNumber: _roomNumber });
+      // Wire analytics to use this WebSocket instead of HTTP fetch
+      setAnalyticsSocket(socket);
     });
 
     // Heartbeat every 30 seconds to keep MDM status Online
@@ -255,7 +257,7 @@ function App() {
         sessionStorage.clear();
         if (savedDeviceId) localStorage.setItem('device_id', savedDeviceId);
         if (savedRoomNumber) localStorage.setItem('room_number', savedRoomNumber);
-        window.location.reload();
+        window.location.href = window.location.origin + window.location.pathname + '?t=' + Date.now();
       }
     });
 
@@ -319,6 +321,8 @@ function App() {
   }, [fetchChannels, fetchMenuItems, fetchSettings]);
   // Used to prevent double-back button presses when exiting third party apps
   const lastFocusTimeRef = useRef<number>(Date.now());
+  const appLaunchTimeRef = useRef<number | null>(null);
+  const currentLaunchedAppRef = useRef<any>(null);
   const subMenuRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const alertModalRef = useRef<(HTMLButtonElement | null)[]>([]);
   const mainMenuRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -370,6 +374,19 @@ function App() {
       console.log('Explicit Android resume detected, updating focus time...');
       lastFocusTimeRef.current = Date.now();
       fetchStatus();
+      
+      // Calculate app watch duration if applicable
+      if (appLaunchTimeRef.current && currentLaunchedAppRef.current) {
+        const durationSeconds = Math.floor((Date.now() - appLaunchTimeRef.current) / 1000);
+        if (durationSeconds > 0) {
+          trackEvent('APP_WATCH_DURATION', { 
+            appName: currentLaunchedAppRef.current.name, 
+            packageName: currentLaunchedAppRef.current.packageName 
+          }, durationSeconds, socketRef.current);
+        }
+        appLaunchTimeRef.current = null;
+        currentLaunchedAppRef.current = null;
+      }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -938,7 +955,7 @@ function App() {
                 ref={el => { if (el) mainMenuRefs.current[index] = el }}
                 onClick={() => {
                   setActiveMenu(item.id!);
-                  trackEvent('MENU_CLICK', { menu: item.id });
+                  trackEvent('MENU_CLICK', { menu: item.id }, undefined, socketRef.current);
                 }}
                 onKeyDown={(e) => {
                   // Implement wrap-around looping for main menu
@@ -1091,21 +1108,24 @@ function App() {
                     <button
                       key={app.id}
                       ref={el => { if (el) subMenuRefs.current[idx] = el }}
-                      onClick={() => {
+                      onClick={async () => {
+                        try {
+                          await trackEvent('APP_OPEN', { appName: app.name, packageName: app.packageName }, undefined, socketRef.current);
+                        } catch (err: any) {
+                          console.error('Failed to track app open event:', err);
+                        }
+                        appLaunchTimeRef.current = Date.now();
+                        currentLaunchedAppRef.current = app;
+                        
                         if (app.deepLink && (window as any).AndroidTV) {
-                          // Try launching via deepLink intent or package name
                           if (app.deepLink.startsWith('intent://') || app.deepLink.includes('://')) {
-                            // Needs native handling for complex intents, but package name works as fallback
                             (window as any).AndroidTV.launchApp(app.packageName);
                           } else {
                             (window as any).AndroidTV.launchApp(app.packageName);
                           }
                         } else if (app.packageName && (window as any).AndroidTV) {
                           (window as any).AndroidTV.launchApp(app.packageName);
-                        } else {
-                          console.log("Would launch:", app.packageName);
                         }
-                        trackEvent('APP_OPEN', { appName: app.name, packageName: app.packageName });
                       }}
                       className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none"
                     >
@@ -1215,6 +1235,7 @@ function App() {
           }))}
           initialChannelIndex={currentChannelIndex}
           onExit={() => setIsPlayingLiveTV(false)}
+          socket={socketRef.current}
         />
       )}
 

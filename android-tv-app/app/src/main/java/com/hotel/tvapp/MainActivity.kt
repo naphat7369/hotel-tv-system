@@ -427,15 +427,11 @@ class MainActivity : Activity() {
 
             KeyEvent.KEYCODE_BACK -> {
                 if (!recordBackClick()) {
-                    // Normal back behavior: webView back or Escape key event
-                    if (webView.canGoBack()) {
-                        webView.goBack()
-                    } else {
-                        webView.evaluateJavascript(
-                            "window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', keyCode: 27}));",
-                            null
-                        )
-                    }
+                    // Normal back behavior: always send Escape key event to SPA
+                    webView.evaluateJavascript(
+                        "window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', keyCode: 27}));",
+                        null
+                    )
                 }
                 true
             }

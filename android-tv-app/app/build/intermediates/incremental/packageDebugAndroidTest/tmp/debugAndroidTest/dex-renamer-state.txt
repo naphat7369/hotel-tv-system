@@ -1,4 +1,0 @@
-#Sat Jun 06 13:56:20 ICT 2026
-base.0=D\:\\Projects\\Hotel-TV\\hotel-tv-system\\android-tv-app\\app\\build\\intermediates\\dex\\debugAndroidTest\\mergeProjectDexDebugAndroidTest\\0\\classes.dex
-path.0=0/classes.dex
-renamed.0=classes.dex

@@ -90,23 +90,31 @@ router.get('/reports', async (req, res) => {
             catch (err) { }
         });
         const topChannels = Object.values(channelStats).sort((a, b) => b.duration - a.duration).slice(0, 5);
-        // Aggregate Apps (count by appName)
-        const appOpens = events.filter(e => e.eventType === 'APP_OPEN');
+        // Aggregate Apps (count by appName and duration by APP_WATCH_DURATION)
         const appStats = {};
-        appOpens.forEach(e => {
-            try {
-                if (e.value) {
-                    const val = JSON.parse(e.value);
-                    if (val.appName) {
-                        appStats[val.appName] = (appStats[val.appName] || 0) + 1;
+        events.forEach(e => {
+            if (e.eventType === 'APP_OPEN' || e.eventType === 'APP_WATCH_DURATION') {
+                try {
+                    if (e.value) {
+                        const val = JSON.parse(e.value);
+                        if (val.appName) {
+                            if (!appStats[val.appName])
+                                appStats[val.appName] = { count: 0, duration: 0 };
+                            if (e.eventType === 'APP_OPEN') {
+                                appStats[val.appName].count += 1;
+                            }
+                            else if (e.eventType === 'APP_WATCH_DURATION' && e.durationSeconds) {
+                                appStats[val.appName].duration += e.durationSeconds;
+                            }
+                        }
                     }
                 }
+                catch (err) { }
             }
-            catch (err) { }
         });
         const topApps = Object.entries(appStats)
-            .map(([name, count]) => ({ name, count }))
-            .sort((a, b) => b.count - a.count)
+            .map(([name, stats]) => ({ name, count: stats.count, duration: stats.duration }))
+            .sort((a, b) => b.duration !== a.duration ? b.duration - a.duration : b.count - a.count)
             .slice(0, 5);
         // Aggregate Menu Clicks
         const menuClicks = events.filter(e => e.eventType === 'MENU_CLICK');
@@ -140,10 +148,21 @@ router.get('/reports', async (req, res) => {
 // POST /api/v1/analytics/events - Record a usage event from device
 router.post('/events', async (req, res) => {
     const { deviceId, eventType, value, durationSeconds, roomId, guestType } = req.body;
+    console.log(`[Analytics] Received event from deviceId=${deviceId}, roomId=${roomId}, type=${eventType}`);
     if (!deviceId || !eventType) {
         return res.status(400).json({ error: 'deviceId and eventType are required' });
     }
     try {
+        let actualRoomId = null;
+        if (roomId) {
+            // The frontend sends the room number (e.g. "2003") as roomId. We must lookup the UUID.
+            const room = await prisma.room.findFirst({
+                where: { roomNumber: roomId, hotelId: MOCK_HOTEL_ID }
+            });
+            if (room) {
+                actualRoomId = room.id;
+            }
+        }
         const newEvent = await prisma.usageEvent.create({
             data: {
                 hotelId: MOCK_HOTEL_ID,
@@ -151,7 +170,7 @@ router.post('/events', async (req, res) => {
                 eventType,
                 value: value ? JSON.stringify(value) : null,
                 durationSeconds: durationSeconds ? parseInt(durationSeconds, 10) : null,
-                roomId: roomId || null,
+                roomId: actualRoomId,
                 guestType: guestType || null,
             }
         });

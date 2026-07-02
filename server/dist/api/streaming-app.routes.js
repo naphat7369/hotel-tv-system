@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 // POST /api/v1/streaming-apps
 router.post('/', async (req, res) => {
     try {
-        const { name, packageName, iconUrl, deepLink, isActive, sortOrder } = req.body;
+        const { name, packageName, iconUrl, bgImage, deepLink, isActive, sortOrder } = req.body;
         // Auto-increment sortOrder if not provided
         let finalSortOrder = sortOrder;
         if (finalSortOrder === undefined || finalSortOrder === null) {
@@ -34,11 +34,14 @@ router.post('/', async (req, res) => {
                 name,
                 packageName,
                 iconUrl,
+                bgImage,
                 deepLink,
                 isActive: isActive !== undefined ? isActive : true,
                 sortOrder: finalSortOrder
             }
         });
+        // Broadcast change
+        req.app.get('io')?.emit('refresh_streaming_apps', { action: 'created' });
         res.status(201).json(app);
     }
     catch (err) {
@@ -54,6 +57,8 @@ router.put('/:id', async (req, res) => {
             where: { id },
             data
         });
+        // Broadcast change
+        req.app.get('io')?.emit('refresh_streaming_apps', { action: 'updated' });
         res.json(app);
     }
     catch (err) {
@@ -65,6 +70,8 @@ router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
         await prisma.streamingApp.delete({ where: { id } });
+        // Broadcast change
+        req.app.get('io')?.emit('refresh_streaming_apps', { action: 'deleted' });
         res.json({ message: 'Deleted successfully' });
     }
     catch (err) {

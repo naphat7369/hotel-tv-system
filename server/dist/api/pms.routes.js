@@ -9,7 +9,27 @@ const prisma = new client_1.PrismaClient();
 // In-memory store (Deprecated: Use Prisma directly for status queries)
 const reservationsByIp = new Map();
 router.post('/checkin', async (req, res) => {
-    const { roomNumber, guestName, guestTag, deviceId, ip } = req.body;
+    const { roomNumber, guestTag, deviceId, ip, gender, title } = req.body;
+    let { guestName } = req.body;
+    if (guestName && typeof guestName === 'string') {
+        guestName = guestName.trim();
+        let prefix = '';
+        if (title) {
+            prefix = String(title).trim();
+        }
+        else if (gender) {
+            const g = String(gender).toLowerCase();
+            if (g === 'm' || g === 'male')
+                prefix = 'Mr.';
+            else if (g === 'f' || g === 'female')
+                prefix = 'Ms.';
+        }
+        if (prefix && !guestName.toLowerCase().startsWith(prefix.toLowerCase().replace('.', ''))) {
+            if ((prefix === 'Mr' || prefix === 'Ms') && !prefix.endsWith('.'))
+                prefix += '.';
+            guestName = `${prefix} ${guestName}`;
+        }
+    }
     console.log(`[PMS] Check-in received for Room ${roomNumber}. Guest: ${guestName}, Tag: ${guestTag}`);
     // 1. Resolve Device ID by Room Number if not provided
     let targetDeviceId = deviceId;

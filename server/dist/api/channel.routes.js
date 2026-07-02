@@ -82,7 +82,7 @@ router.post('/upload-logo', upload.single('logo'), (req, res) => {
 router.post('/', async (req, res) => {
     try {
         await ensureHotel();
-        let { name, channelNumber, category, streamUrl, logoUrl, isActive, inputProtocol, inputIp, inputPort, inputEth, outputProtocol, outputIp, outputPort, outputEth } = req.body;
+        let { name, channelNumber, category, streamUrl, logoUrl, bgImage, isActive, inputProtocol, inputIp, inputPort, inputEth, outputProtocol, outputIp, outputPort, outputEth } = req.body;
         // Auto-increment sortOrder
         const count = await prisma.channel.count({ where: { hotelId: MOCK_HOTEL_ID } });
         const newChannel = await prisma.channel.create({
@@ -93,6 +93,7 @@ router.post('/', async (req, res) => {
                 category,
                 streamUrl,
                 logoUrl,
+                bgImage,
                 isActive: isActive !== undefined ? isActive : true,
                 sortOrder: count + 1,
                 inputProtocol,

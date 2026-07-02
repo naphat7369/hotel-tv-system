@@ -12,7 +12,12 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@fontsource/manrope": "^5.2.8",
+    "@fontsource/montserrat": "^5.2.8",
+    "@fontsource/pinyon-script": "^5.2.8",
+    "@fontsource/playfair-display": "^5.2.8",
     "hls.js": "^1.6.16",
+    "material-symbols": "^0.45.5",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "socket.io-client": "^4.8.3"

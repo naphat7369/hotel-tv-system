@@ -26,6 +26,7 @@ const pms_routes_1 = __importDefault(require("./api/pms.routes"));
 const settings_routes_1 = __importDefault(require("./api/settings.routes"));
 const streaming_app_routes_1 = __importDefault(require("./api/streaming-app.routes"));
 const webhook_routes_1 = __importDefault(require("./api/webhook.routes"));
+const upload_routes_1 = __importDefault(require("./api/upload.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const port = process.env.PORT || 3000;
@@ -63,6 +64,7 @@ app.use('/api/v1/pms', pms_routes_1.default);
 app.use('/api/v1/webhooks/pms', webhook_routes_1.default);
 app.use('/api/v1/settings', settings_routes_1.default);
 app.use('/api/v1/streaming-apps', streaming_app_routes_1.default);
+app.use('/api/v1/upload', upload_routes_1.default);
 // Health Check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', message: 'Hotel TV Server is running' });

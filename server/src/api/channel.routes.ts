@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import dgram from 'dgram';
+import sharp from 'sharp';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -30,20 +31,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `logo-${uniqueSuffix}${ext}`);
-  }
-});
+const storage = multer.memoryStorage();
+
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
   fileFilter: (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
       cb(null, true);
@@ -67,12 +60,22 @@ router.get('/', async (req: Request, res: Response) => {
 });
 
 // POST /api/v1/channels/upload-logo - Upload a channel logo
-router.post('/upload-logo', upload.single('logo'), (req: Request, res: Response) => {
+router.post('/upload-logo', upload.single('logo'), async (req: Request, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
-    const fileUrl = `http://localhost:3000/uploads/logos/${req.file.filename}`;
+    
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const filename = `logo-${uniqueSuffix}.webp`;
+    const outputPath = path.join(uploadDir, filename);
+
+    await sharp(req.file.buffer)
+      .resize({ width: 512, height: 512, fit: sharp.fit.inside, withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toFile(outputPath);
+
+    const fileUrl = `http://localhost:3000/uploads/logos/${filename}`;
     res.status(200).json({ url: fileUrl });
   } catch (error) {
     console.error(error);

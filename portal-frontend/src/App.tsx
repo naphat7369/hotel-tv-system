@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import LiveTVPlayer from './components/LiveTVPlayer'
 import LoadingScreen from './components/LoadingScreen'
+import Clock from './components/Clock'
 import { io } from 'socket.io-client'
 import { trackEvent, setAnalyticsSocket } from './lib/analytics'
 
@@ -42,7 +43,6 @@ function App() {
   const roomNumber = roomNumberRef.current;
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
 
-  const [time, setTime] = useState(new Date())
   const [activeMenu, setActiveMenu] = useState<string | null>(null)
 
   const [appLoading, setAppLoading] = useState(true)
@@ -407,10 +407,6 @@ function App() {
   const [formQuantities, setFormQuantities] = useState<Record<string, number>>({})
   const [showSuccess, setShowSuccess] = useState(false)
 
-  useEffect(() => {
-    const timer = setInterval(() => setTime(new Date()), 60000)
-    return () => clearInterval(timer)
-  }, [])
 
   // ── Analytics: Hardware Metrics Interval ─────────────────────────────
   useEffect(() => {
@@ -863,7 +859,7 @@ function App() {
                  <span className="w-[0.4vw] h-[0.4vw] rounded-full bg-outline-variant"></span>
                  <span className="flex items-center gap-[0.5vw] text-on-surface-variant text-[1.2vw]">
                    <span className="material-symbols-outlined text-secondary" style={{ fontSize: '1.8vw' }}>schedule</span>
-                   {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                   <Clock />
                  </span>
                </div>
              </div>
@@ -895,7 +891,7 @@ function App() {
              <span className="font-sans font-extralight text-[1.8vw] tracking-[0.25em] text-white/90 mb-[4px] uppercase" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 {guestData.isCheckedIn ? 'WELCOME' : 'WELCOME TO'}
              </span>
-             <h2 className="text-[8.5vw] font-normal text-[#e9c176] leading-[0.95] mb-[10px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)]" style={{ fontFamily: "'Pinyon Script', cursive", paddingRight: "0.5vw" }}>
+             <h2 className="text-[7.5vw] font-normal text-[#e9c176] leading-[0.95] mb-[10px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] uppercase" style={{ fontFamily: "'Cinzel', serif" }}>
                 {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} Sukumvit`}
              </h2>
              <p className="font-sans text-[1.4vw] text-white/80 max-w-[46vw] font-light leading-relaxed border-t border-white/10 pt-[15px]">
@@ -922,11 +918,13 @@ function App() {
 
         {/* ─── SCROLLING ANNOUNCEMENT TICKER (MARQUEE) ─── */}
         <div 
-          className={`w-full backdrop-blur-md border-t border-b overflow-hidden flex items-center transition-all duration-500 ${marquee.type === 'alert' ? 'bg-gradient-to-r from-[#1f1104]/80 via-[#45270b]/80 to-[#1f1104]/80 border-[#c9a84c]/30 shadow-[0_0_20px_rgba(201,168,76,0.25)]' : 'bg-black/40 border-white/5'}`}
+          className={`w-full border-t border-b overflow-hidden flex items-center transition-all duration-500 marquee-container ${marquee.type === 'alert' ? 'bg-[#1f1104]/95 border-[#c9a84c]/50 shadow-[0_0_20px_rgba(201,168,76,0.3)]' : 'bg-[#0c0f0f]/95 border-[#e9c176]/20 shadow-[0_0_15px_rgba(0,0,0,0.5)]'}`}
           style={{ height: '6vh', opacity: activeMenu ? 0 : 1 }}
         >
-          <div className={`animate-marquee font-label-lg font-semibold drop-shadow-lg ${marquee.type === 'alert' ? 'text-[#fde68a]' : 'text-white'}`} style={{ fontSize: '1.4vw', letterSpacing: marquee.type === 'alert' ? '0.05em' : 'normal' }}>
-            {marquee.type === 'alert' && <span className="mr-4 material-symbols-outlined align-middle animate-pulse text-[#fbbf24]">campaign</span>}
+          <div className={`animate-marquee font-normal drop-shadow-md ${marquee.type === 'alert' ? 'text-[#fde68a]' : 'text-white/90'}`} style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '1.4vw', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            <span className={`mr-4 material-symbols-outlined align-middle ${marquee.type === 'alert' ? 'animate-pulse text-[#fbbf24]' : 'text-[#e9c176]'}`}>
+              {marquee.type === 'alert' ? 'campaign' : 'info'}
+            </span>
             {marquee.message}
           </div>
         </div>
@@ -1086,7 +1084,7 @@ function App() {
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
                         <div className={`w-[8vw] h-[8vw] bg-surface-container rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden`}>
                           {channel.logoUrl ? (
-                            <img src={channel.logoUrl.startsWith('http') ? channel.logoUrl : `http://${window.location.hostname}:3000${channel.logoUrl}`} alt={channel.name} className="w-full h-full object-contain p-2" />
+                            <img src={channel.logoUrl.startsWith('http') ? channel.logoUrl : `http://${window.location.hostname}:3000${channel.logoUrl}`} alt={channel.name} className="w-full h-full object-cover object-center" />
                           ) : (
                             channel.name.substring(0,3).toUpperCase()
                           )}
@@ -1137,7 +1135,7 @@ function App() {
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
                         <div className={`w-[8vw] h-[8vw] bg-surface-container rounded-2xl flex items-center justify-center text-white font-bold text-[3vw] shadow-2xl flex-shrink-0 overflow-hidden`}>
                           {app.iconUrl ? (
-                            <img src={app.iconUrl.startsWith('http') ? app.iconUrl : `http://${window.location.hostname}:3000${app.iconUrl}`} alt={app.name} className="w-full h-full object-contain p-2" />
+                            <img src={app.iconUrl.startsWith('http') ? app.iconUrl : `http://${window.location.hostname}:3000${app.iconUrl}`} alt={app.name} className="w-full h-full object-cover object-center" />
                           ) : (
                             app.name.substring(0, 1).toUpperCase()
                           )}

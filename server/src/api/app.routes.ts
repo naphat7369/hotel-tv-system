@@ -47,6 +47,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
+  limits: { fileSize: 500 * 1024 * 1024 }, // 500MB limit
   fileFilter: (req, file, cb) => {
     if (path.extname(file.originalname).toLowerCase() !== '.apk') {
       return cb(new Error('Only APK files are allowed!'));

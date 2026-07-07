@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import sharp from 'sharp';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -27,16 +28,7 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, `bg-${uniqueSuffix}${ext}`);
-  }
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
@@ -47,7 +39,11 @@ const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilt
   }
 };
 
-const upload = multer({ storage, fileFilter });
+const upload = multer({ 
+  storage, 
+  fileFilter,
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
 
 // Get settings
 router.get('/', async (req: Request, res: Response) => {
@@ -118,8 +114,17 @@ router.post('/', (req, res, next) => {
 
     // Map uploaded files to respective fields
     if (req.files && Array.isArray(req.files)) {
-      req.files.forEach((file: Express.Multer.File) => {
-        const fileUrl = `/uploads/backgrounds/${file.filename}`;
+      for (const file of req.files) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const filename = `bg-${uniqueSuffix}.webp`;
+        const outputPath = path.join(uploadDir, filename);
+        
+        await sharp(file.buffer)
+          .resize({ width: 1920, height: 1080, fit: sharp.fit.inside, withoutEnlargement: true })
+          .webp({ quality: 80 })
+          .toFile(outputPath);
+          
+        const fileUrl = `/uploads/backgrounds/${filename}`;
         
         if (file.fieldname === 'loading_bg_image') {
           newSettings.loading_bg_image = fileUrl;
@@ -136,7 +141,7 @@ router.post('/', (req, res, next) => {
              newSettings.backgroundImages = [{ tag, url: fileUrl }];
           }
         }
-      });
+      }
     }
 
     const hotelName = req.body.hotel_name || hotel?.name;

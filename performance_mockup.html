@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  body {
+    background: url('https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+    background-size: cover;
+    color: white;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    gap: 80px;
+  }
+  .box {
+    width: 380px;
+    height: 280px;
+    padding: 30px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+  }
+  h2 {
+    margin-top: 0;
+    color: #e9c176;
+  }
+  p {
+    margin: 8px 0;
+    font-size: 16px;
+  }
+
+  /* --- BEFORE (Unoptimized) --- */
+  .before-box {
+    /* 1. Gradient with low opacity relying on blur */
+    background: linear-gradient(135deg, rgba(30, 32, 34, 0.4), rgba(18, 20, 20, 0.2));
+    
+    /* 2. Heavy GPU Blur */
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    
+    /* 3. Multiple Shadows */
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.8), 
+                inset 0 0 20px rgba(233, 193, 118, 0.1),
+                0 0 30px rgba(233, 193, 118, 0.15);
+                
+    border: 1px solid rgba(233, 193, 118, 0.3);
+    border-top: 1px solid rgba(233, 193, 118, 0.7);
+    border-left: 1px solid rgba(233, 193, 118, 0.5);
+    position: relative;
+    overflow: hidden;
+  }
+  .before-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+    transform: skewX(-25deg);
+    
+    /* 4. CPU-heavy layout animation using 'left' */
+    animation: liquid-shine-before 4s infinite;
+    pointer-events: none;
+  }
+  @keyframes liquid-shine-before {
+    0% { left: -150%; }
+    15% { left: 200%; }
+    100% { left: 200%; }
+  }
+
+  /* --- AFTER (Optimized) --- */
+  .after-box {
+    /* 1. Solid opaque color (no blur needed) */
+    background: rgba(22, 24, 25, 0.95);
+    
+    /* 2. Single simple shadow */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    
+    border: 1px solid rgba(233, 193, 118, 0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .after-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.15), transparent);
+    
+    /* 3. Hardware-accelerated transform */
+    transform: translateX(-150%) skewX(-25deg);
+    animation: liquid-shine-after 4s infinite;
+    pointer-events: none;
+    will-change: transform;
+  }
+  @keyframes liquid-shine-after {
+    0% { transform: translateX(-150%) skewX(-25deg); }
+    15% { transform: translateX(300%) skewX(-25deg); }
+    100% { transform: translateX(300%) skewX(-25deg); }
+  }
+</style>
+</head>
+<body>
+  <div class="box before-box">
+    <h2>Before (Heavy)</h2>
+    <p>❌ <code>backdrop-filter: blur(28px)</code></p>
+    <p>❌ 3 Layers of <code>box-shadow</code></p>
+    <p>❌ Animate <code>left: -150%</code></p>
+  </div>
+  <div class="box after-box">
+    <h2>After (Optimized)</h2>
+    <p>✅ Solid <code>rgba(..., 0.95)</code> bg</p>
+    <p>✅ 1 Layer of <code>box-shadow</code></p>
+    <p>✅ Animate <code>transform: translateX</code></p>
+  </div>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import sharp from 'sharp';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -25,17 +26,12 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `menu-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`);
-  },
-});
+const storage = multer.memoryStorage();
+
 
 const upload = multer({
   storage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
   fileFilter: (_req, file, cb) => {
     if (file.mimetype.startsWith('image/')) cb(null, true);
     else cb(new Error('Only image files are allowed'));
@@ -59,13 +55,22 @@ const isScheduleActive = (item: { activeFrom: Date | null; activeUntil: Date | n
 // ──────────────────────────────────────────────────────────────────────────────
 // POST /api/v1/services/upload-image
 // ──────────────────────────────────────────────────────────────────────────────
-router.post('/upload-image', upload.single('image'), (req: Request, res: Response) => {
+router.post('/upload-image', upload.single('image'), async (req: Request, res: Response) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+    
+    const filename = `menu-${Date.now()}-${Math.round(Math.random() * 1e9)}.webp`;
+    const outputPath = path.join(uploadDir, filename);
+
+    await sharp(req.file.buffer)
+      .resize({ width: 1280, height: 720, fit: sharp.fit.inside, withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toFile(outputPath);
+
     // Build an absolute URL using host from request so it works on any IP
     const protocol = req.protocol;
     const host = req.get('host') || `localhost:3000`;
-    const fileUrl = `${protocol}://${host}/uploads/menu-images/${req.file.filename}`;
+    const fileUrl = `${protocol}://${host}/uploads/menu-images/${filename}`;
     res.status(200).json({ url: fileUrl });
   } catch (err) {
     console.error('Upload error:', err);

@@ -95,8 +95,14 @@ class MainActivity : Activity() {
         apkInstaller        = ApkInstaller(this)
 
         if (isDeviceOwner()) {
-            devicePolicyManager.setLockTaskPackages(adminComponentName, arrayOf(packageName))
-            Log.d("KioskMode", "Lock Task package whitelist set.")
+            val allowedPackages = arrayOf(
+                packageName,
+                "com.netflix.ninja",
+                "com.google.android.youtube.tv",
+                "com.amazon.amazonvideo.livingroom"
+            )
+            devicePolicyManager.setLockTaskPackages(adminComponentName, allowedPackages)
+            Log.d("KioskMode", "Lock Task package whitelist set for TV and Streaming Apps.")
         }
 
         // ── MDM WebSocket ────────────────────────────────────────────────

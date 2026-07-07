@@ -443,16 +443,20 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
   // ── Keyboard / D-Pad Navigation ────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape', 'Backspace', 'Enter'].includes(e.key) ||
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape', 'Backspace', 'Enter', 'ChannelUp', 'ChannelDown', 'PageUp', 'PageDown'].includes(e.key) ||
           e.keyCode === 4) {
         e.preventDefault();
       }
 
       switch (e.key) {
         case 'ArrowUp':
+        case 'ChannelUp':
+        case 'PageUp':
           switchChannel('UP');
           break;
         case 'ArrowDown':
+        case 'ChannelDown':
+        case 'PageDown':
           switchChannel('DOWN');
           break;
         case 'ArrowLeft':

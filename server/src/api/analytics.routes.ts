@@ -106,6 +106,9 @@ router.get('/reports', async (req: Request, res: Response) => {
           if (e.value) {
             const val = JSON.parse(e.value);
             if (val.appName) {
+              const isHotelTv = val.packageName === 'com.hotel.tvapp' || val.appName.toLowerCase().includes('hotel tv');
+              if (isHotelTv) return;
+
               if (!appStats[val.appName]) appStats[val.appName] = { count: 0, duration: 0 };
               
               if (e.eventType === 'APP_OPEN') {
@@ -164,6 +167,17 @@ router.post('/events', async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'deviceId and eventType are required' });
   }
 
+  // Do NOT track Hotel TV system itself in app metrics
+  if (eventType === 'APP_OPEN' || eventType === 'APP_WATCH_DURATION') {
+    if (value) {
+      const appName = String(value.appName || '');
+      const pkgName = String(value.packageName || '');
+      if (pkgName === 'com.hotel.tvapp' || appName.toLowerCase().includes('hotel tv')) {
+        return res.status(200).json({ message: 'Ignored Hotel TV system event' });
+      }
+    }
+  }
+
   try {
     let actualRoomId: string | null = null;
     if (roomId) {
@@ -176,10 +190,22 @@ router.post('/events', async (req: Request, res: Response) => {
       }
     }
 
+    // Resolve deviceId (boxSerial like "BOX-101-A") to the Device UUID
+    // The FK on usage_events.device_id references devices.id (UUID), not box_serial
+    let actualDeviceId: string | null = null;
+    if (deviceId) {
+      const device = await prisma.device.findUnique({ where: { boxSerial: deviceId } });
+      if (device) {
+        actualDeviceId = device.id;
+      } else {
+        console.warn(`[Analytics] Device not found for boxSerial=${deviceId}, saving event without device link.`);
+      }
+    }
+
     const newEvent = await prisma.usageEvent.create({
       data: {
         hotelId: MOCK_HOTEL_ID,
-        deviceId,
+        deviceId: actualDeviceId,
         eventType,
         value: value ? JSON.stringify(value) : null,
         durationSeconds: durationSeconds ? parseInt(durationSeconds, 10) : null,

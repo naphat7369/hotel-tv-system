@@ -44,7 +44,16 @@ export const trackEvent = async (
   durationSeconds?: number,
   socket?: any
 ): Promise<void> => {
-  const deviceId = window.localStorage.getItem('deviceId') || window.localStorage.getItem('device_id') || 'BOX-101-A';
+  const getDeviceId = () => {
+    try {
+      if ((window as any).AndroidTVBridge && (window as any).AndroidTVBridge.getDeviceId) {
+        return (window as any).AndroidTVBridge.getDeviceId();
+      }
+    } catch (e) {}
+    return window.localStorage.getItem('deviceId') || window.localStorage.getItem('device_id') || 'BOX-101-A';
+  };
+
+  const deviceId = getDeviceId();
   const roomId = window.localStorage.getItem('roomNumber') || window.localStorage.getItem('room_number') || 'Unassigned';
 
   if (!deviceId) {

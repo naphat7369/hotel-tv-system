@@ -155,6 +155,23 @@ router.post('/checkin', async (req: Request, res: Response) => {
       });
     }
 
+    let checkOutDate: Date | undefined;
+    if (req.body.checkout || req.body.expired) {
+      checkOutDate = new Date(req.body.checkout || req.body.expired);
+    }
+    
+    let checkInDate: Date = new Date();
+    if (req.body.checkin) {
+      checkInDate = new Date(req.body.checkin);
+    }
+
+    // [FIX]: Force any previous 'In-House' reservations for this room to 'Checked-Out' 
+    // to prevent getting stuck on old guests if a checkout webhook was missed.
+    await prisma.reservation.updateMany({
+      where: { roomId: room.id, status: 'In-House' },
+      data: { status: 'Checked-Out', checkOut: new Date() }
+    });
+
     // Create or update the Reservation with the valid room ID
     await prisma.reservation.create({
       data: {
@@ -164,7 +181,8 @@ router.post('/checkin', async (req: Request, res: Response) => {
         guestLanguage: language,
         guestLoyaltyTier: vipStatus,
         status: 'In-House',
-        checkIn: new Date()
+        checkIn: checkInDate,
+        checkOut: checkOutDate
       }
     });
 
@@ -172,14 +190,26 @@ router.post('/checkin', async (req: Request, res: Response) => {
     if (io) {
       // Find the deviceId that matches this room number
       let targetDeviceId: string | null = null;
+      let targetIp: string | null = null;
       for (const [id, device] of connectedDevices.entries()) {
         if (device.roomNumber === String(roomNumber)) {
           targetDeviceId = id;
+          targetIp = device.ipAddress || null;
           break;
         }
       }
 
       if (targetDeviceId) {
+        // Clear apps before showing new guest name to ensure privacy
+        if (targetIp) {
+          try {
+            console.log(`[Webhook] New Check-in! Initiating ADB auto-clear for IP: ${targetIp} to ensure clean state.`);
+            clearGuestApps(targetIp).then(() => {
+              console.log(`[Webhook] Auto-clear finished for ${targetIp}.`);
+            }).catch(err => console.error(`[Webhook Error] Auto-clear failed:`, err));
+          } catch(e) {}
+        }
+        
         io.to(`device_${targetDeviceId}`).emit('guest_update', {
           status: 'checked_in',
           guestName,

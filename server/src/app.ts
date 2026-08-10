@@ -45,6 +45,14 @@ app.use(helmet({ crossOriginResourcePolicy: false })); // Allow cross-origin sta
 app.use(cors());
 app.use(express.json());
 
+// Logger middleware to print incoming payloads
+app.use((req: Request, res: Response, next) => {
+  if (req.method !== 'GET') {
+    console.log(`[API] ${req.method} ${req.originalUrl} | Payload:`, JSON.stringify(req.body));
+  }
+  next();
+});
+
 // Serve Static Files — covers /uploads/logos, /uploads/menu-images, /uploads/apks, etc.
 // CORS is open (helmet crossOriginResourcePolicy: false) so TV portals can load images cross-origin.
 app.use('/uploads', express.static(path.join(__dirname, '../../uploads'), {

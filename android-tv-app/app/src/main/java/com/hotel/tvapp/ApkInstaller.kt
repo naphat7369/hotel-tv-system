@@ -101,11 +101,16 @@ class ApkInstaller(private val context: Context) {
             out.close()
 
             val intent = Intent(context, InstallReceiver::class.java)
+            val flags = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
                 sessionId,
                 intent,
-                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE
+                flags
             )
 
             Log.d("ApkInstaller", "Committing PackageInstaller session...")

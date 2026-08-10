@@ -1,11 +1,12 @@
 package com.hotel.tvapp.network
 
+import android.content.Context
 import android.util.Log
 import io.socket.client.IO
 import io.socket.client.Socket
 import org.json.JSONObject
 
-class WebSocketClient(private val serverUrl: String) {
+class WebSocketClient(private val context: Context, private val serverUrl: String) {
     private var socket: Socket? = null
 
     var onMessageReceived: ((JSONObject) -> Unit)? = null
@@ -23,13 +24,13 @@ class WebSocketClient(private val serverUrl: String) {
                 
                 // Register Device
                 val registerData = JSONObject().apply {
-                    put("deviceId", com.hotel.tvapp.Config.DEVICE_ID)
+                    put("deviceId", com.hotel.tvapp.Config.getDeviceId(context))
                 }
                 socket?.emit("register_device", registerData)
                 
                 // Send heartbeat
                 val heartbeat = JSONObject().apply {
-                    put("deviceId", com.hotel.tvapp.Config.DEVICE_ID)
+                    put("deviceId", com.hotel.tvapp.Config.getDeviceId(context))
                     put("status", "online")
                 }
                 socket?.emit("heartbeat", heartbeat)

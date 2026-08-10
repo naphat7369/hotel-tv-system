@@ -172,10 +172,11 @@ router.get('/status/:ip', async (req: Request, res: Response) => {
 
     if (room) {
       const activeRes = await prisma.reservation.findFirst({
-        where: { roomId: room.id, status: 'In-House' }
+        where: { roomId: room.id, status: 'In-House' },
+        orderBy: { createdAt: 'desc' }
       });
 
-      if (activeRes) {
+      if (activeRes && (!activeRes.checkOut || new Date() < activeRes.checkOut)) {
         return res.json({
           status: 'checked_in',
           guestName: activeRes.guestFirstName,
@@ -186,10 +187,9 @@ router.get('/status/:ip', async (req: Request, res: Response) => {
       // Fallback: If room isn't in DB yet, but reservation was created loosely by webhook
       const activeRes = await prisma.reservation.findFirst({
         where: { status: 'In-House' },
-        orderBy: { checkIn: 'desc' }
+        orderBy: { createdAt: 'desc' }
       });
-      // This fallback isn't perfect if there are many rooms, but handles the missing Room table entry case
-      if (activeRes && activeRes.roomId === null) {
+      if (activeRes && activeRes.roomId === null && (!activeRes.checkOut || new Date() < activeRes.checkOut)) {
         return res.json({
           status: 'checked_in',
           guestName: activeRes.guestFirstName,
@@ -199,12 +199,52 @@ router.get('/status/:ip', async (req: Request, res: Response) => {
     }
   }
 
-  // Default to checked-out if no reservation found
+  // Default to checked-out if no reservation found or reservation expired
   res.json({
     status: 'checked_out',
     guestName: null,
     guestTag: null
   });
+});
+
+// GET /api/v1/pms/room/:roomNumber
+// Fetch current payload/guest status directly by room number (No IP required)
+router.get('/room/:roomNumber', async (req: Request, res: Response) => {
+  const { roomNumber } = req.params;
+
+  try {
+    const room = await prisma.room.findFirst({
+      where: { roomNumber: String(roomNumber) }
+    });
+
+    if (room) {
+      const activeRes = await prisma.reservation.findFirst({
+        where: { roomId: room.id, status: 'In-House' },
+        orderBy: { createdAt: 'desc' }
+      });
+
+      if (activeRes && (!activeRes.checkOut || new Date() < activeRes.checkOut)) {
+        return res.json({
+          roomNumber,
+          status: 'checked_in',
+          guestName: activeRes.guestFirstName,
+          guestTag: activeRes.guestLoyaltyTier,
+          checkIn: activeRes.checkIn,
+          checkOut: activeRes.checkOut,
+          updatedAt: activeRes.updatedAt
+        });
+      }
+    }
+
+    res.json({
+      roomNumber,
+      status: 'checked_out',
+      guestName: null,
+      guestTag: null
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch room status' });
+  }
 });
 
 export default router;

@@ -75,7 +75,7 @@ router.post('/upload-logo', upload.single('logo'), async (req: Request, res: Res
       .webp({ quality: 80 })
       .toFile(outputPath);
 
-    const fileUrl = `http://localhost:3000/uploads/logos/${filename}`;
+    const fileUrl = `/uploads/logos/${filename}`;
     res.status(200).json({ url: fileUrl });
   } catch (error) {
     console.error(error);

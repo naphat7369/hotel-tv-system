@@ -37,8 +37,19 @@ interface MenuItem {
 function App() {
   // Use localStorage so the CMS can dynamically rename this device without an Android app
   // Stored in refs to prevent socket useEffect from re-running on every render
-  const deviceIdRef = useRef(localStorage.getItem('device_id') || 'BOX-101-A');
+  const getDeviceId = () => {
+    try {
+      if ((window as any).AndroidTVBridge && (window as any).AndroidTVBridge.getDeviceId) {
+        return (window as any).AndroidTVBridge.getDeviceId();
+      }
+    } catch (e) {}
+    return localStorage.getItem('device_id') || 'BOX-101-A';
+  };
+  
+  const deviceIdRef = useRef(getDeviceId());
   const roomNumberRef = useRef(localStorage.getItem('room_number') || 'Unassigned');
+  const bootIdRef = useRef<string | null>(null);
+  const pendingReloadRef = useRef(false);
   const deviceId = deviceIdRef.current;
   const roomNumber = roomNumberRef.current;
   const socketRef = useRef<ReturnType<typeof io> | null>(null);
@@ -235,6 +246,25 @@ function App() {
       setAnalyticsSocket(socket);
     });
 
+    socket.on('registered', (data: any) => {
+      if (data.bootId) {
+        if (bootIdRef.current && bootIdRef.current !== data.bootId) {
+          console.log('Server restarted detected (bootId changed).');
+          // Don't reload while user is watching Live TV — defer until they exit
+          pendingReloadRef.current = true;
+          // If not in Live TV mode, reload immediately
+          if (!document.querySelector('[data-live-tv-active]')) {
+            console.log('Not in Live TV — reloading now...');
+            window.location.reload();
+          } else {
+            console.log('User is watching Live TV — deferring reload until exit.');
+          }
+        } else {
+          bootIdRef.current = data.bootId;
+        }
+      }
+    });
+
     // Heartbeat every 30 seconds to keep MDM status Online
     const heartbeatInterval = setInterval(() => {
       if (socket.connected) {
@@ -323,7 +353,7 @@ function App() {
   const lastFocusTimeRef = useRef<number>(Date.now());
   const appLaunchTimeRef = useRef<number | null>(null);
   const currentLaunchedAppRef = useRef<any>(null);
-  const subMenuRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const subMenuRefs = useRef<(HTMLElement | null)[]>([]);
   const alertModalRef = useRef<(HTMLButtonElement | null)[]>([]);
   const mainMenuRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
@@ -342,9 +372,15 @@ function App() {
       if (res.ok) {
         const data = await res.json();
         if (data.status === 'checked_in') {
-          setGuestData({ isCheckedIn: true, name: data.guestName, tag: data.guestTag });
+          setGuestData(prev => {
+            if (prev.isCheckedIn === true && prev.name === data.guestName && prev.tag === data.guestTag) return prev;
+            return { isCheckedIn: true, name: data.guestName, tag: data.guestTag };
+          });
         } else {
-          setGuestData({ isCheckedIn: false, name: null, tag: null });
+          setGuestData(prev => {
+            if (prev.isCheckedIn === false) return prev;
+            return { isCheckedIn: false, name: null, tag: null };
+          });
         }
       }
     } catch (err) {
@@ -375,14 +411,20 @@ function App() {
       lastFocusTimeRef.current = Date.now();
       fetchStatus();
       
-      // Calculate app watch duration if applicable
+      // Calculate app watch duration if applicable (excluding Hotel TV system itself)
       if (appLaunchTimeRef.current && currentLaunchedAppRef.current) {
-        const durationSeconds = Math.floor((Date.now() - appLaunchTimeRef.current) / 1000);
-        if (durationSeconds > 0) {
-          trackEvent('APP_WATCH_DURATION', { 
-            appName: currentLaunchedAppRef.current.name, 
-            packageName: currentLaunchedAppRef.current.packageName 
-          }, durationSeconds, socketRef.current);
+        const appName = currentLaunchedAppRef.current.name || '';
+        const pkgName = currentLaunchedAppRef.current.packageName || '';
+        const isHotelTv = pkgName === 'com.hotel.tvapp' || appName.toLowerCase().includes('hotel tv');
+
+        if (!isHotelTv) {
+          const durationSeconds = Math.floor((Date.now() - appLaunchTimeRef.current) / 1000);
+          if (durationSeconds > 0) {
+            trackEvent('APP_WATCH_DURATION', { 
+              appName: currentLaunchedAppRef.current.name, 
+              packageName: currentLaunchedAppRef.current.packageName 
+            }, durationSeconds, socketRef.current);
+          }
         }
         appLaunchTimeRef.current = null;
         currentLaunchedAppRef.current = null;
@@ -652,21 +694,35 @@ function App() {
               {formItems.map((item) => {
                 const qty = formQuantities[item.id] || 0
                 return (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center p-[1.5vh_1.5vw] bg-white/5 border border-white/10 rounded-xl focus:bg-white/10 focus:border-secondary focus:scale-[1.02] outline-none transition-all cursor-pointer"
-                    onClick={() => {
-                       setFormQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }))
-                    }}
-                  >
-                    <div className="flex items-center gap-[1vw] text-[1.2vw] font-medium text-white">
-                      <span className="material-symbols-outlined text-[1.8vw] text-on-surface-variant">{item.icon}</span>
-                      {item.name}
-                    </div>
-                    <div className="flex items-center gap-[1vw] bg-black/30 p-[0.5vh_1vw] rounded-lg">
+                    <div
+                      key={item.id}
+                      className="flex justify-between items-center p-[1.5vh_1.5vw] bg-white/5 border border-white/10 rounded-xl focus:bg-white/10 focus:border-secondary focus:scale-[1.02] outline-none transition-all cursor-pointer"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowRight') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setFormQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }));
+                        } else if (e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setFormQuantities(prev => ({ ...prev, [item.id]: Math.max(0, (prev[item.id] || 0) - 1) }));
+                        }
+                      }}
+                      onClick={() => {
+                         setFormQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }))
+                      }}
+                    >
+                      <div className="flex items-center gap-[1vw] text-[1.2vw] font-medium text-white">
+                        <span className="material-symbols-outlined text-[1.8vw] text-on-surface-variant">{item.icon}</span>
+                        {item.name}
+                      </div>
+                    <div className="flex items-center gap-[0.5vw] bg-black/30 p-[0.5vh_1vw] rounded-lg">
+                      <span className="w-[2vw] h-[2vw] flex items-center justify-center rounded-full bg-white/5 text-white/50 font-bold text-[1vw]">-</span>
                       <span className="text-[1.2vw] font-bold w-[2vw] text-center text-white">{qty}</span>
+                      <span className="w-[2vw] h-[2vw] flex items-center justify-center rounded-full bg-white/5 text-white/50 font-bold text-[1vw]">+</span>
                     </div>
-                  </div>
+                    </div>
                 )
               })}
             </div>
@@ -891,7 +947,7 @@ function App() {
              <span className="font-sans font-extralight text-[1.8vw] tracking-[0.25em] text-white/90 mb-[4px] uppercase" style={{ fontFamily: "'Montserrat', sans-serif" }}>
                 {guestData.isCheckedIn ? 'WELCOME' : 'WELCOME TO'}
              </span>
-             <h2 className="text-[7.5vw] font-normal text-[#e9c176] leading-[0.95] mb-[10px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] uppercase" style={{ fontFamily: "'Cinzel', serif" }}>
+             <h2 className="text-[5vw] font-normal text-[#e9c176] leading-[1.1] mb-[15px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] uppercase" style={{ fontFamily: "'Cinzel', serif" }}>
                 {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} Sukumvit`}
              </h2>
              <p className="font-sans text-[1.4vw] text-white/80 max-w-[46vw] font-light leading-relaxed border-t border-white/10 pt-[15px]">
@@ -1010,6 +1066,7 @@ function App() {
           <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-md flex flex-col transition-all duration-300" style={{ padding: '6vh 4vw' }}>
             
             <button
+              ref={el => { if (el) subMenuRefs.current[999] = el; }}
               onClick={() => setActiveMenu(null)}
               onKeyDown={(e) => {
                 if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
@@ -1039,8 +1096,11 @@ function App() {
                   </p>
                 </div>
                 <div className="flex gap-[2vw] overflow-x-auto no-scrollbar pb-[5vh] items-stretch flex-1">
+                  {activeMenu === 'Dining' && diningMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No dining options available at the moment.</div>}
                   {activeMenu === 'Dining' && renderSubMenuHorizontalCards(diningMenu)}
+                  {activeMenu === 'Services' && servicesMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No services available at the moment.</div>}
                   {activeMenu === 'Services' && renderSubMenuHorizontalCards(servicesMenu)}
+                  {activeMenu === 'Local Guide' && guideMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No local guides available at the moment.</div>}
                   {activeMenu === 'Local Guide' && renderSubMenuHorizontalCards(guideMenu)}
                 </div>
               </div>
@@ -1082,9 +1142,9 @@ function App() {
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
                       )}
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
-                        <div className={`w-[8vw] h-[8vw] bg-surface-container rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden`}>
+                        <div className={`w-[10vw] h-[6.5vw] bg-surface-container rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]`}>
                           {channel.logoUrl ? (
-                            <img src={channel.logoUrl.startsWith('http') ? channel.logoUrl : `http://${window.location.hostname}:3000${channel.logoUrl}`} alt={channel.name} className="w-full h-full object-cover object-center" />
+                            <img src={channel.logoUrl.startsWith('http') ? channel.logoUrl : `http://${window.location.hostname}:3000${channel.logoUrl}`} alt={channel.name} className="w-full h-full object-contain object-center" />
                           ) : (
                             channel.name.substring(0,3).toUpperCase()
                           )}
@@ -1107,10 +1167,16 @@ function App() {
                       key={app.id}
                       ref={el => { if (el) subMenuRefs.current[idx] = el }}
                       onClick={async () => {
-                        try {
-                          await trackEvent('APP_OPEN', { appName: app.name, packageName: app.packageName }, undefined, socketRef.current);
-                        } catch (err: any) {
-                          console.error('Failed to track app open event:', err);
+                        const appName = app.name || '';
+                        const pkgName = app.packageName || '';
+                        const isHotelTv = pkgName === 'com.hotel.tvapp' || appName.toLowerCase().includes('hotel tv');
+
+                        if (!isHotelTv) {
+                          try {
+                            await trackEvent('APP_OPEN', { appName: app.name, packageName: app.packageName }, undefined, socketRef.current);
+                          } catch (err: any) {
+                            console.error('Failed to track app open event:', err);
+                          }
                         }
                         appLaunchTimeRef.current = Date.now();
                         currentLaunchedAppRef.current = app;
@@ -1133,16 +1199,15 @@ function App() {
                         <div className={`absolute inset-0 w-full h-full bg-slate-800 opacity-40 group-hover:opacity-60 transition-opacity duration-300`}></div>
                       )}
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
-                        <div className={`w-[8vw] h-[8vw] bg-surface-container rounded-2xl flex items-center justify-center text-white font-bold text-[3vw] shadow-2xl flex-shrink-0 overflow-hidden`}>
+                        <div className={`w-[12vw] h-[7vw] bg-surface-container rounded-2xl flex items-center justify-center text-white font-bold text-[2.5vw] shadow-2xl flex-shrink-0 overflow-hidden p-[1vw]`}>
                           {app.iconUrl ? (
-                            <img src={app.iconUrl.startsWith('http') ? app.iconUrl : `http://${window.location.hostname}:3000${app.iconUrl}`} alt={app.name} className="w-full h-full object-cover object-center" />
+                            <img src={app.iconUrl.startsWith('http') ? app.iconUrl : `http://${window.location.hostname}:3000${app.iconUrl}`} alt={app.name} className="w-full h-full object-contain object-center" />
                           ) : (
                             app.name.substring(0, 1).toUpperCase()
                           )}
                         </div>
                         <div className="flex-1">
                            <h3 className="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">{app.name}</h3>
-                           <p className="text-on-surface-variant text-[1vw] line-clamp-1">{app.packageName}</p>
                         </div>
                       </div>
                     </button>
@@ -1222,6 +1287,7 @@ function App() {
 
       {/* ── Live TV Player Overlay ── */}
       {isPlayingLiveTV && (
+        <div data-live-tv-active>
         <LiveTVPlayer
           channels={liveChannels.filter(c => c.streamUrl).map(c => ({
             id: c.id,
@@ -1232,9 +1298,17 @@ function App() {
             category: c.category ?? 'Live TV',
           }))}
           initialChannelIndex={currentChannelIndex}
-          onExit={() => setIsPlayingLiveTV(false)}
+          onExit={() => {
+            setIsPlayingLiveTV(false);
+            // If a server restart was detected while watching TV, reload now
+            if (pendingReloadRef.current) {
+              console.log('Deferred reload triggered — server had restarted during TV viewing.');
+              window.location.reload();
+            }
+          }}
           socket={socketRef.current}
         />
+        </div>
       )}
 
       {/* ── Alert Modal Overlay ── */}

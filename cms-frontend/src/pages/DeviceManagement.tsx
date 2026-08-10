@@ -15,6 +15,7 @@ interface Device {
 export const DeviceManagement = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
 
   useEffect(() => {
     // Connect to WebSocket server to receive real-time device updates
@@ -52,7 +53,8 @@ export const DeviceManagement = () => {
       if (response.ok) {
         // Success
       } else {
-        alert('Failed to send command');
+        const errorData = await response.json().catch(() => ({}));
+        alert(errorData.error || 'Failed to send command');
       }
     } catch (err) {
       console.error(err);
@@ -62,60 +64,96 @@ export const DeviceManagement = () => {
     }
   };
 
-  const handleCheckIn = async (device: Device) => {
-    const guestName = prompt('Enter Guest Name:', 'John Doe');
-    if (!guestName) return;
-    
-    const tag = prompt('Enter Guest Tag (Default, VIP, Honeymoon):', 'VIP');
-    if (!tag) return;
+  const handleBulkCommand = async (command: string, labelName: string) => {
+    const onlineDevices = devices.filter(d => d.isOnline);
+    if (onlineDevices.length === 0) {
+      alert('No online devices connected to send command.');
+      return;
+    }
 
+    if (!confirm(`Are you sure you want to send "${labelName}" to ALL ${onlineDevices.length} online devices?`)) {
+      return;
+    }
+
+    setActionLoading(`bulk-${command}`);
     try {
-      const backendUrl = `http://${window.location.hostname}:3000`;
-      const res = await fetch(`${backendUrl}/api/v1/pms/checkin`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomNumber: device.roomNumber || '101',
-          guestName: guestName,
-          guestTag: tag,
-          deviceId: device.deviceId,
-          ip: device.ipAddress
-        })
-      });
-      if (res.ok) alert('Mock Check-in sent!');
-      else alert('Check-in failed');
-    } catch (e) {
-      alert('Network error');
+      await Promise.all(
+        onlineDevices.map(d => sendCommand(d.deviceId, command))
+      );
+      alert(`Sent "${labelName}" to ${onlineDevices.length} devices.`);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const handleCheckOut = async (device: Device) => {
-    if (!confirm('Simulate Check-out?')) return;
-    try {
-      const backendUrl = `http://${window.location.hostname}:3000`;
-      const res = await fetch(`${backendUrl}/api/v1/pms/checkout`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          roomNumber: device.roomNumber || '101',
-          deviceId: device.deviceId,
-          ip: device.ipAddress
-        })
-      });
-      if (res.ok) alert('Mock Check-out sent!');
-      else alert('Check-out failed');
-    } catch (e) {
-      alert('Network error');
-    }
-  };
+  // Filter devices based on search term
+  const filteredDevices = devices.filter(device => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase().trim();
+    return (
+      (device.roomNumber && device.roomNumber.toLowerCase().includes(term)) ||
+      (device.deviceId && device.deviceId.toLowerCase().includes(term)) ||
+      (device.deviceName && device.deviceName.toLowerCase().includes(term)) ||
+      (device.ipAddress && device.ipAddress.toLowerCase().includes(term)) ||
+      (device.macAddress && device.macAddress.toLowerCase().includes(term))
+    );
+  });
+
+  const onlineCount = devices.filter(d => d.isOnline).length;
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-on-surface">Device Management (MDM)</h1>
-        <p className="mt-2 text-sm text-on-surface-variant">Remote control and monitor Hotel TVs across the network.</p>
+      {/* Header */}
+      <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-on-surface">Device Management (MDM)</h1>
+          <p className="mt-1 text-sm text-on-surface-variant">
+            Remote control and monitor Hotel TVs across the network. (Online: <span className="font-semibold text-green-600">{onlineCount}</span> / Total: {devices.length})
+          </p>
+        </div>
+
+        {/* Global Bulk Action Buttons */}
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => handleBulkCommand('reload_portal', 'Reload UI Total')}
+            disabled={onlineCount === 0 || actionLoading === 'bulk-reload_portal'}
+            className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm shadow-sm disabled:opacity-50 transition-colors flex items-center gap-2"
+          >
+            <span>🔄 Reload UI Total</span>
+          </button>
+          <button
+            onClick={() => handleBulkCommand('clear_cache', 'Clear Cache Total')}
+            disabled={onlineCount === 0 || actionLoading === 'bulk-clear_cache'}
+            className="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm shadow-sm disabled:opacity-50 transition-colors flex items-center gap-2"
+          >
+            <span>🧹 Clear Cache Total</span>
+          </button>
+        </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-6 bg-white p-4 rounded-xl shadow ring-1 ring-black ring-opacity-5 flex items-center gap-3">
+        <span className="text-gray-400 text-lg">🔍</span>
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search by Room Number, Box Serial, Device Name, IP, or MAC..."
+          className="w-full bg-transparent border-none outline-none text-sm text-gray-900 placeholder-gray-400 focus:ring-0"
+        />
+        {searchTerm && (
+          <button
+            onClick={() => setSearchTerm('')}
+            className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 bg-gray-100 rounded-md"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Device Table */}
       <div className="bg-white rounded-xl shadow ring-1 ring-black ring-opacity-5 overflow-hidden">
         <table className="min-w-full divide-y divide-gray-300">
           <thead className="bg-gray-50">
@@ -127,11 +165,13 @@ export const DeviceManagement = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {devices.length === 0 ? (
+            {filteredDevices.length === 0 ? (
               <tr>
-                <td colSpan={4} className="py-8 text-center text-gray-500">No devices connected yet.</td>
+                <td colSpan={4} className="py-8 text-center text-gray-500">
+                  {searchTerm ? `No devices matching "${searchTerm}"` : 'No devices connected yet.'}
+                </td>
               </tr>
-            ) : devices.map((device) => (
+            ) : filteredDevices.map((device) => (
               <tr key={device.deviceId}>
                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                   <div className="flex items-center gap-2">
@@ -163,7 +203,6 @@ export const DeviceManagement = () => {
                       <div className="flex items-center gap-1">
                         Signal: 
                         <div className="w-16 h-2 bg-gray-200 rounded overflow-hidden">
-                          {/* Very rough RSSI calculation: -100 is 0%, -50 is 100% */}
                           <div 
                             className={`h-full ${device.wifiSignal && device.wifiSignal > -70 ? 'bg-green-500' : 'bg-yellow-500'}`} 
                             style={{ width: `${Math.max(0, Math.min(100, (device.wifiSignal || -100) + 100))}%` }} 
@@ -177,7 +216,7 @@ export const DeviceManagement = () => {
                   )}
                 </td>
                 <td className="whitespace-nowrap px-3 py-4 text-sm">
-                  <div className="flex flex-wrap gap-2 max-w-[400px]">
+                  <div className="flex flex-wrap gap-2 max-w-[420px]">
                     <button 
                       onClick={() => sendCommand(device.deviceId, 'get_network_status')}
                       disabled={!device.isOnline}
@@ -212,7 +251,7 @@ export const DeviceManagement = () => {
                     </button>
                     <button 
                       onClick={() => {
-                        const newName = prompt('Enter new Cast/Device Name:', device.deviceId);
+                        const newName = prompt('Enter new Cast/Device Name:', device.deviceName || device.deviceId);
                         if (newName) {
                           sendCommand(device.deviceId, 'set_device_name', { name: newName });
                         }
@@ -237,20 +276,18 @@ export const DeviceManagement = () => {
                       🔑 Set Room
                     </button>
 
-                    <div className="w-full h-px bg-gray-100 my-1" /> {/* Divider */}
-
-
-                    {/* <button 
+                    <button 
                       onClick={() => {
-                        if(confirm('Are you sure you want to reboot this device?')) {
-                          sendCommand(device.deviceId, 'reboot')
+                        if (confirm(`Are you sure you want to reboot device ${device.roomNumber ? `Room ${device.roomNumber}` : device.deviceId}?`)) {
+                          sendCommand(device.deviceId, 'reboot');
                         }
                       }}
                       disabled={!device.isOnline}
-                      className="px-3 py-1.5 rounded-md bg-red-50 text-red-700 hover:bg-red-100 font-medium text-xs disabled:opacity-50 transition-colors ml-auto"
+                      className="px-3 py-1.5 rounded-md bg-red-50 text-red-700 hover:bg-red-100 font-medium text-xs disabled:opacity-50 transition-colors"
+                      title="Reboot TV Device"
                     >
-                      Reboot
-                    </button> */}
+                      🔌 Reboot
+                    </button>
                   </div>
                 </td>
               </tr>

@@ -22,6 +22,79 @@ function getLocalIpAddress() {
 export const initCronJobs = (io: Server) => {
   console.log('[Cron] Initializing automated tasks...');
 
+  // 1-Minute Auto-Sweep Task: Check for expired reservations and force check-out
+  cron.schedule('* * * * *', async () => {
+    try {
+      const { PrismaClient } = require('@prisma/client');
+      const { clearGuestApps } = require('./adb.service');
+      const { connectedDevices } = require('../websocket/socket');
+      
+      const prisma = new PrismaClient();
+      const now = new Date();
+      
+      // Find all In-House reservations where checkOut time has passed
+      const expiredReservations = await prisma.reservation.findMany({
+        where: {
+          status: 'In-House',
+          checkOut: {
+            lt: now
+          }
+        },
+        include: { room: true }
+      });
+      
+      for (const res of expiredReservations) {
+        // Double check: ensure no newer check-in exists for this room
+        const newerRes = await prisma.reservation.findFirst({
+          where: {
+            roomId: res.roomId,
+            checkIn: { gt: res.checkIn },
+            status: 'In-House'
+          }
+        });
+        
+        if (!newerRes) {
+          console.log(`[Cron Auto-Sweep] Room ${res.room.roomNumber} expired. Forcing check-out...`);
+          
+          // 1. Update Database
+          await prisma.reservation.update({
+            where: { id: res.id },
+            data: { status: 'Checked-Out' }
+          });
+          
+          // 2. Find Device & Trigger Clear
+          let targetDeviceId: string | null = null;
+          let targetIp: string | null = null;
+          for (const [id, device] of connectedDevices.entries()) {
+            if (device.roomNumber === String(res.room.roomNumber)) {
+              targetDeviceId = id;
+              targetIp = device.ipAddress || null;
+              break;
+            }
+          }
+          
+          if (targetDeviceId) {
+            io.to(`device_${targetDeviceId}`).emit('guest_update', {
+              status: 'checked_out',
+              guestName: null,
+              guestTag: null
+            });
+            console.log(`[Cron Auto-Sweep] Sent checked_out to TV ${res.room.roomNumber}`);
+            
+            if (targetIp) {
+              console.log(`[Cron Auto-Sweep] Initiating ADB clear for IP: ${targetIp}`);
+              clearGuestApps(targetIp).catch((err: any) => console.error(`[Cron Auto-Sweep] Clear failed:`, err));
+            }
+          }
+        }
+      }
+      
+      await prisma.$disconnect();
+    } catch (err) {
+      console.error('[Cron Auto-Sweep] Error:', err);
+    }
+  });
+
   // 2:00 AM Task: Placeholder for fetching/downloading APKs
   // "0 2 * * *" means every day at 2:00 AM
   cron.schedule('0 2 * * *', async () => {

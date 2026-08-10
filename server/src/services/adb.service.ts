@@ -121,8 +121,19 @@ export const rebootDevice = async (ip: string): Promise<void> => {
   console.log(`[ADB] Triggering reboot for ${ip}...`);
   try {
     await connectAdb(ip);
-    await execPromise(`${ADB_PATH} -s ${ip}:5555 shell svc power reboot`, { timeout: 5000 });
-    console.log(`[ADB] Reboot command sent to ${ip} successfully.`);
+    
+    // Method 1: Direct ADB daemon reboot (Bypasses 'Not device owner' permission checks in Android)
+    try {
+      await execPromise(`${ADB_PATH} -s ${ip}:5555 reboot`, { timeout: 5000 });
+      console.log(`[ADB] Direct ADB reboot command sent to ${ip} successfully.`);
+      return;
+    } catch (e) {
+      console.warn(`[ADB Warning] Direct ADB reboot failed on ${ip}, trying fallback shell reboot...`);
+    }
+
+    // Method 2: Fallback shell reboot
+    await execPromise(`${ADB_PATH} -s ${ip}:5555 shell reboot`, { timeout: 5000 });
+    console.log(`[ADB] Fallback shell reboot sent to ${ip} successfully.`);
   } catch (error) {
     console.error(`[ADB Error] Failed to reboot ${ip}:`, error);
   }

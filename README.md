@@ -48,6 +48,14 @@ The admin portal for the hotel IT team and reception.
    ```bash
    cd server
    npm install
+   
+   # Setup environment variables
+   cp .env.example .env # Create and configure your .env file
+   
+   # Initialize the database
+   npx prisma db push
+   
+   # Start the server
    npm run dev
    ```
 

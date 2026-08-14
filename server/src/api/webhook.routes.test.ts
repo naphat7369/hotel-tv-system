@@ -14,8 +14,10 @@ const mPrismaClient = vi.hoisted(() => ({
   },
   reservation: {
     create: vi.fn(),
+    findFirst: vi.fn(),
     findMany: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
   }
 }));
 
@@ -76,6 +78,7 @@ describe('Webhook Routes', () => {
     // Mock DB responses
     (prisma.hotel.findFirst as any).mockResolvedValue({ id: 'hotel-123' });
     (prisma.room.findFirst as any).mockResolvedValue({ id: 'room-123' });
+    (prisma.reservation.findFirst as any).mockResolvedValue(null);
     (prisma.reservation.create as any).mockResolvedValue({});
 
     const res = await request(app)

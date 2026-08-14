@@ -2,7 +2,6 @@ import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { connectedDevices } from '../websocket/socket';
 import { clearGuestApps } from '../services/adb.service';
-import axios from 'axios';
 import fs from 'fs';
 import path from 'path';
 
@@ -124,12 +123,6 @@ router.post('/checkin', async (req: Request, res: Response) => {
         }
       }
 
-      // Forward to WiFi
-      try {
-        const wifiApiUrl = process.env.PMS_API_URL || 'http://192.168.0.251:8012';
-        await axios.post(`${wifiApiUrl}/wifi-auth/create`, req.body, { headers: { 'Content-Type': 'application/json' } });
-      } catch (e: any) {}
-
       return res.status(200).json({ message: 'Check-out (via delete service) processed successfully' });
     }
 
@@ -165,26 +158,40 @@ router.post('/checkin', async (req: Request, res: Response) => {
       checkInDate = new Date(req.body.checkin);
     }
 
-    // [FIX]: Force any previous 'In-House' reservations for this room to 'Checked-Out' 
-    // to prevent getting stuck on old guests if a checkout webhook was missed.
-    await prisma.reservation.updateMany({
+    const reservationData = {
+      hotelId: hotel.id,
+      roomId: room.id,
+      guestFirstName: guestName,
+      guestLanguage: language,
+      guestLoyaltyTier: vipStatus,
+      status: 'In-House',
+      checkIn: checkInDate,
+      checkOut: checkOutDate
+    };
+    const activeReservation = await prisma.reservation.findFirst({
       where: { roomId: room.id, status: 'In-House' },
-      data: { status: 'Checked-Out', checkOut: new Date() }
+      orderBy: { createdAt: 'desc' }
     });
 
-    // Create or update the Reservation with the valid room ID
-    await prisma.reservation.create({
-      data: {
-        hotelId: hotel.id,
-        roomId: room.id,
-        guestFirstName: guestName, // Just using first name field for the full name from mock
-        guestLanguage: language,
-        guestLoyaltyTier: vipStatus,
-        status: 'In-House',
-        checkIn: checkInDate,
-        checkOut: checkOutDate
-      }
-    });
+    if (activeReservation) {
+      await prisma.reservation.update({
+        where: { id: activeReservation.id },
+        data: reservationData
+      });
+    } else {
+      await prisma.reservation.create({
+        data: {
+          hotelId: hotel.id,
+          roomId: room.id,
+          guestFirstName: guestName,
+          guestLanguage: language,
+          guestLoyaltyTier: vipStatus,
+          status: 'In-House',
+          checkIn: checkInDate,
+          checkOut: checkOutDate
+        }
+      });
+    }
 
     const io = req.app.get('io');
     if (io) {
@@ -219,19 +226,6 @@ router.post('/checkin', async (req: Request, res: Response) => {
       } else {
         console.log(`[Webhook Warning] TV for room ${roomNumber} is currently offline. Screen will update when it wakes up.`);
       }
-    }
-
-    // Forward the exact same payload to the original FastAPI WiFi system!
-    // This allows the HMS to point to our Node.js server, and we act as a middleman.
-    try {
-      const wifiApiUrl = process.env.PMS_API_URL || 'http://192.168.0.251:8012';
-      console.log(`[Webhook] Forwarding payload to WiFi system: ${wifiApiUrl}/wifi-auth/create`);
-      await axios.post(`${wifiApiUrl}/wifi-auth/create`, req.body, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-      console.log(`[Webhook] Successfully forwarded to WiFi system!`);
-    } catch (forwardError: any) {
-      console.error(`[Webhook Warning] Failed to forward to WiFi system:`, forwardError.message);
     }
 
     res.status(200).json({ message: 'Check-in processed successfully' });
@@ -316,12 +310,6 @@ router.post('/checkout', async (req: Request, res: Response) => {
         console.log(`[Webhook Warning] TV for room ${roomNumber} is currently offline. Screen will update when it wakes up.`);
       }
     }
-
-    // Forward the payload to WiFi
-    try {
-      const wifiApiUrl = process.env.PMS_API_URL || 'http://192.168.0.251:8012';
-      await axios.post(`${wifiApiUrl}/wifi-auth/create`, req.body, { headers: { 'Content-Type': 'application/json' } });
-    } catch (e: any) {}
 
     res.status(200).json({ message: 'Check-out processed successfully' });
   } catch (error) {

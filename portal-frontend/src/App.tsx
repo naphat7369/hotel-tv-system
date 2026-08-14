@@ -28,6 +28,7 @@ interface MenuItem {
   displayType: DisplayType
   displayContent: string
   bgImage?: string
+  enabled?: boolean
 }
 
 
@@ -59,14 +60,17 @@ function App() {
   const [appLoading, setAppLoading] = useState(true)
   const [appsMenu, setAppsMenu] = useState<any[]>([])
   const [appSettings, setAppSettings] = useState({
-    hotelName: 'S31 SUKUMVIT HOTEL',
+    hotelName: 'S31 SUKHUMVIT HOTEL',
     hotelStars: '★★★★★',
     title: 'PREPARING YOUR EXPERIENCE',
     subtitle: 'Establishing secure connection to the hotel network...',
     bgImage: 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
     backgroundImages: [] as { tag: string, url: string, message?: string }[],
     portalMainTitle: 'S31',
-    portalSubtitle: 'Hotel Sukumvit'
+    portalSubtitle: 'Hotel Sukhumvit',
+    portalWelcomeText: 'WELCOME TO',
+    marqueeMessage: 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸',
+    guestServicesEnabled: { services: true, dining: true, localGuide: true }
   })
 
   // Dynamic menu items from CMS with localStorage offline caching fallback
@@ -98,7 +102,7 @@ function App() {
   
   // Marquee State
   const [marquee, setMarquee] = useState({
-    message: 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸',
+    message: '',
     type: 'default'
   });
 
@@ -159,6 +163,7 @@ function App() {
           displayType: item.displayType as DisplayType,
           displayContent: item.displayContent,
           bgImage: item.bgImage,
+          enabled: item.enabled !== false,
         });
         
         const services = data.filter((i: any) => i.section === 'services').map(toMenuItem);
@@ -197,7 +202,7 @@ function App() {
       if (res.ok) {
         const data = await res.json();
         setAppSettings({
-          hotelName: data.hotel_name || 'S31 SUKUMVIT HOTEL',
+          hotelName: data.hotel_name || 'S31 SUKHUMVIT HOTEL',
           hotelStars: data.hotel_stars || '★★★★★',
           title: data.loading_title || 'PREPARING YOUR EXPERIENCE',
           subtitle: data.loading_subtitle || 'Establishing secure connection to the hotel network...',
@@ -205,7 +210,10 @@ function App() {
           bgImage: data.loading_bg_image || 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
           backgroundImages: data.backgroundImages || [],
           portalMainTitle: data.portal_main_title || 'S31',
-          portalSubtitle: data.portal_subtitle || 'Hotel Sukumvit'
+          portalSubtitle: data.portal_subtitle || 'Hotel Sukhumvit',
+          portalWelcomeText: data.portal_welcome_text || 'WELCOME TO',
+          marqueeMessage: data.marquee_message || 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸',
+          guestServicesEnabled: data.guestServicesEnabled || { services: true, dining: true, localGuide: true }
         });
       }
     } catch (e) {
@@ -328,7 +336,7 @@ function App() {
       }
     });
     socket.on('hide_marquee', () => {
-      setMarquee({ message: 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸', type: 'default' });
+      setMarquee({ message: '', type: 'default' });
     });
     socket.on('show_modal', (data: any) => {
       if (data && data.message) {
@@ -339,7 +347,7 @@ function App() {
       setAlertModal({ active: false, message: '' });
     });
     socket.on('hide_broadcast', () => {
-      setMarquee({ message: 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸', type: 'default' });
+      setMarquee({ message: '', type: 'default' });
       setAlertModal({ active: false, message: '' });
       setInboxMessages([]);
     });
@@ -504,6 +512,11 @@ function App() {
           e.preventDefault();
           return;
         }
+        if (alertModal.active) {
+          setAlertModal({ active: false, message: '' });
+          e.preventDefault();
+          return;
+        }
         if (selectedItem) {
           setSelectedItem(null)
           setShowSuccess(false)
@@ -528,7 +541,18 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown, { capture: true })
     return () => window.removeEventListener('keydown', handleKeyDown, { capture: true })
-  }, [activeMenu, selectedItem, isPlayingLiveTV])
+  }, [activeMenu, selectedItem, isPlayingLiveTV, alertModal.active])
+
+  // Auto-focus Dismiss button on alert modal
+  useEffect(() => {
+    if (alertModal.active) {
+      setTimeout(() => {
+        if (alertModalRef.current[1]) {
+          alertModalRef.current[1]?.focus();
+        }
+      }, 50);
+    }
+  }, [alertModal.active]);
 
   // Auto-focus the first item in the sub-menu when a menu opens
   useEffect(() => {
@@ -794,6 +818,10 @@ function App() {
             key={item.id}
             ref={el => { if (el) subMenuRefs.current[index] = el }}
             onClick={() => {
+              if (item.enabled === false) {
+                setAlertModal({ active: true, message: 'บริการนี้ปิดชั่วคราว (Service temporarily unavailable)' });
+                return;
+              }
               setSelectedItem(item);
               trackEvent('ITEM_VIEW', { itemId: item.id, name: item.name });
             }}
@@ -926,7 +954,7 @@ function App() {
                   {guestData.isCheckedIn && (
                     <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg mb-[0.5vh]">
                       <span className="material-symbols-outlined text-[1vw] text-black">star</span>
-                      {guestData.tag || 'VIP GOLD MEMBER'}
+                      {(!guestData.tag || String(guestData.tag).trim().toLowerCase() === 'null') ? 'Valued Guest' : `Gold Member ${guestData.tag}`}
                     </span>
                   )}
                   <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
@@ -945,10 +973,10 @@ function App() {
              style={{ opacity: activeMenu ? 0 : 1 }}
            >
              <span className="font-sans font-extralight text-[1.8vw] tracking-[0.25em] text-white/90 mb-[4px] uppercase" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                {guestData.isCheckedIn ? 'WELCOME' : 'WELCOME TO'}
+                {guestData.isCheckedIn ? 'WELCOME' : (appSettings.portalWelcomeText || 'WELCOME TO')}
              </span>
              <h2 className="text-[5vw] font-normal text-[#e9c176] leading-[1.1] mb-[15px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] uppercase" style={{ fontFamily: "'Cinzel', serif" }}>
-                {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} Sukumvit`}
+                {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} ${appSettings.portalSubtitle || 'SUKHUMVIT'}`}
              </h2>
              <p className="font-sans text-[1.4vw] text-white/80 max-w-[46vw] font-light leading-relaxed border-t border-white/10 pt-[15px]">
                 {(() => {
@@ -981,7 +1009,7 @@ function App() {
             <span className={`mr-4 material-symbols-outlined align-middle ${marquee.type === 'alert' ? 'animate-pulse text-[#fbbf24]' : 'text-[#e9c176]'}`}>
               {marquee.type === 'alert' ? 'campaign' : 'info'}
             </span>
-            {marquee.message}
+            {marquee.type === 'default' && !marquee.message ? (appSettings.marqueeMessage || 'Welcome to S31 Hotel Sukhumvit!') : marquee.message}
           </div>
         </div>
 
@@ -1084,7 +1112,17 @@ function App() {
             {['Services', 'Dining', 'Local Guide'].includes(activeMenu) ? (
               // --- HORIZONTAL LAYOUT ---
               <div className="flex flex-col flex-1 min-h-0">
-                <div className="mb-[4vh] flex-none">
+                {((activeMenu === 'Services' && !appSettings.guestServicesEnabled.services) ||
+                  (activeMenu === 'Dining' && !appSettings.guestServicesEnabled.dining) ||
+                  (activeMenu === 'Local Guide' && !appSettings.guestServicesEnabled.localGuide)) ? (
+                  <div className="flex flex-col items-center justify-center h-full text-center">
+                    <span className="material-symbols-outlined text-[8vw] text-white/50 mb-4">build</span>
+                    <h2 className="text-[3vw] font-bold text-white mb-2">กำลังปรับปรุงระบบ</h2>
+                    <p className="text-[1.5vw] text-white/70">ขออภัยในความไม่สะดวก หมวดหมู่นี้ปิดปรับปรุงชั่วคราว</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="mb-[4vh] flex-none">
                   <h2 className="font-display-lg text-[4vw] mb-4 text-white leading-tight">
                     {activeMenu === 'Services' ? 'Hotel Services' : activeMenu}
                   </h2>
@@ -1103,7 +1141,9 @@ function App() {
                   {activeMenu === 'Local Guide' && guideMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No local guides available at the moment.</div>}
                   {activeMenu === 'Local Guide' && renderSubMenuHorizontalCards(guideMenu)}
                 </div>
-              </div>
+              </>
+                )}
+                </div>
             ) : (
               // --- VERTICAL LAYOUT ---
               <div className="flex flex-1 min-h-0 gap-[4vw]">
@@ -1115,7 +1155,7 @@ function App() {
                   </p>
                 </div>
 
-                <div className="w-[65%] flex flex-col gap-[2vh] overflow-y-auto no-scrollbar pb-[10vh] items-center px-[1vw]">
+                <div className="w-[65%] flex flex-col gap-[2vh] overflow-y-auto no-scrollbar pb-[10vh] items-center px-[1vw] snap-y snap-mandatory">
                   {/* Live TV Channels */}
                   {activeMenu === 'Channel TV' && liveChannels.length === 0 && (
                     <div className="col-span-full py-10 text-center text-outline font-label-lg">
@@ -1134,7 +1174,7 @@ function App() {
                           setIsPlayingLiveTV(true);
                         }
                       }}
-                      className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
+                      className="snap-center flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
                     >
                       {channel.bgImage ? (
                         <img src={channel.bgImage.startsWith('http') ? channel.bgImage : `http://${window.location.hostname}:3000${channel.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
@@ -1142,11 +1182,11 @@ function App() {
                         <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
                       )}
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
-                        <div className={`w-[10vw] h-[6.5vw] bg-surface-container rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]`}>
+                        <div className={`w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]`}>
                           {channel.logoUrl ? (
                             <img src={channel.logoUrl.startsWith('http') ? channel.logoUrl : `http://${window.location.hostname}:3000${channel.logoUrl}`} alt={channel.name} className="w-full h-full object-contain object-center" />
                           ) : (
-                            channel.name.substring(0,3).toUpperCase()
+                            <div className="text-black">{channel.name.substring(0,3).toUpperCase()}</div>
                           )}
                         </div>
                         <div className="flex-1">
@@ -1191,7 +1231,7 @@ function App() {
                           (window as any).AndroidTV.launchApp(app.packageName);
                         }
                       }}
-                      className="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none"
+                      className="snap-center flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none"
                     >
                       {app.bgImage ? (
                         <img src={app.bgImage.startsWith('http') ? app.bgImage : `http://${window.location.hostname}:3000${app.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:opacity-60 transition-opacity duration-300" />

@@ -211,6 +211,57 @@ function GuestServices() {
     }
   };
 
+  const [uploadingIcon, setUploadingIcon] = useState<'item' | 'category' | null>(null);
+  const iconInputRef = useRef<HTMLInputElement>(null);
+
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validation
+    if (file.size > 200 * 1024) {
+      alert('File size must be less than 200KB');
+      return;
+    }
+    const validTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
+    if (!validTypes.includes(file.type)) {
+      alert('Only PNG, JPG, WebP, and SVG files are allowed');
+      return;
+    }
+
+    try {
+      if (uploadingIcon === 'category') {
+        setCategoryForm(prev => ({ ...prev, icon: 'Uploading...' }));
+        const { url } = await api.uploadImage(file);
+        setCategoryForm(prev => ({ ...prev, icon: url }));
+      } else if (uploadingIcon === 'item') {
+        setForm(prev => ({ ...prev, icon: 'Uploading...' }));
+        const { url } = await api.uploadImage(file);
+        setForm(prev => ({ ...prev, icon: url }));
+      }
+    } catch {
+      alert('Upload failed');
+    } finally {
+      setUploadingIcon(null);
+      if (iconInputRef.current) iconInputRef.current.value = '';
+    }
+  };
+
+  const RenderIcon = ({ icon, disabled = false, className = '' }: { icon: string; disabled?: boolean; className?: string }) => {
+    if (!icon) return null;
+    const isImage = icon.startsWith('http') || icon.startsWith('/uploads/');
+    if (isImage) {
+      const src = icon.startsWith('http') ? icon : `http://${window.location.hostname}:3000${icon}`;
+      const filterClass = disabled ? 'grayscale opacity-50' : '';
+      return <img src={src} alt="Icon" className={`object-contain ${filterClass} ${className}`} />;
+    }
+    if (icon.startsWith('<svg')) {
+      const filterClass = disabled ? 'grayscale opacity-50' : '';
+      return <span className={`${filterClass} ${className}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} dangerouslySetInnerHTML={{ __html: icon }} />;
+    }
+    return <span className={`${/^[a-z_]+$/.test(icon) ? "material-symbols-outlined" : ""} ${className}`}>{icon}</span>;
+  };
+
   const displayTypeInfo = (type: string) =>
     DISPLAY_TYPES.find(d => d.value === type) ?? DISPLAY_TYPES[0];
 
@@ -246,6 +297,7 @@ function GuestServices() {
 
   return (
     <div className="space-y-6">
+      <input type="file" ref={iconInputRef} className="hidden" accept="image/png, image/jpeg, image/webp, image/gif, image/svg+xml" onChange={handleIconUpload} />
       {/* Header */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -278,7 +330,7 @@ function GuestServices() {
                   : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
               }`}
             >
-              <span>{display.icon}</span>
+              <RenderIcon icon={display.icon} />
               {display.label}
             </button>
           );
@@ -325,8 +377,10 @@ function GuestServices() {
       {loading && items.length === 0 ? (
         <div className="py-16 text-center text-on-surface-variant">Loading...</div>
       ) : sectionItems.length === 0 ? (
-        <div className="py-16 text-center border-2 border-dashed border-outline-variant rounded-xl">
-          <div className="text-4xl mb-3">{SECTIONS.find(s => s.key === activeSection)?.icon}</div>
+          <div className="py-16 text-center border-2 border-dashed border-outline-variant rounded-xl">
+          <div className="text-4xl mb-3">
+            <RenderIcon icon={SECTIONS.find(s => s.key === activeSection)?.icon || ""} />
+          </div>
           <p className="text-on-surface-variant font-medium">No items yet</p>
           <Button onClick={openAdd} className="mt-4"><Plus className="w-4 h-4 mr-1" />Add First Item</Button>
         </div>
@@ -337,7 +391,6 @@ function GuestServices() {
             return (
               <div key={item.id} className={`group relative bg-surface-container-lowest rounded-xl border overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 ${item.enabled === false ? "border-red-900/50 grayscale opacity-80" : "border-outline-variant"}`}>
                 {item.enabled === false && <div className="absolute top-2 left-2 z-30 bg-red-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md uppercase tracking-wide">ปิดใช้งาน</div>}
-                {/* Image area */}
                 <div className="relative h-40 overflow-hidden">
                   {item.bgImage ? (
                     <img
@@ -347,15 +400,15 @@ function GuestServices() {
                     />
                   ) : (
                     <div className={`w-full h-full flex items-center justify-center text-4xl ${item.color || 'bg-surface-container'}`}>
-                      {item.icon || '🎯'}
+                      <RenderIcon icon={item.icon || '🎯'} />
                     </div>
                   )}
                   {/* Gradient overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  {/* Icon + name overlay */}
-                  <div className="absolute bottom-0 left-0 p-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl drop-shadow-lg">{item.icon}</span>
+                    {/* Icon + name overlay */}
+                    <div className="absolute bottom-0 left-0 p-3">
+                      <div className="flex items-center gap-2">
+                      <RenderIcon icon={item.icon} className="text-2xl drop-shadow-lg" />
                       <span className="text-white font-bold text-sm drop-shadow-lg line-clamp-1">{item.name}</span>
                     </div>
                     {item.subtitle && (
@@ -624,9 +677,21 @@ function GuestServices() {
                   </div>
                   
                   <div className="flex flex-col gap-2 mb-5">
-                    <label className="font-semibold text-[0.875rem] text-white flex items-center gap-2">
-                      Emoji Icon 
-                      <span className="font-mono text-[0.65rem] bg-[#5fd4f0]/10 text-[#5fd4f0] px-2 py-0.5 rounded tracking-wide">Optional flair</span>
+                    <label className="font-semibold text-[0.875rem] text-white flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        Icon (Emoji or Image URL)
+                        <span className="font-mono text-[0.65rem] bg-[#5fd4f0]/10 text-[#5fd4f0] px-2 py-0.5 rounded tracking-wide">Optional</span>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setUploadingIcon('item');
+                          iconInputRef.current?.click();
+                        }}
+                        className="text-xs text-[#5fd4f0] hover:underline"
+                      >
+                        Upload Image
+                      </button>
                     </label>
                     <div className="flex gap-3 flex-wrap">
                       {COMMON_EMOJIS.map(emoji => (
@@ -1014,13 +1079,26 @@ function GuestServices() {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="font-semibold text-[0.875rem] text-white">Icon (Emoji)</label>
-                <input
-                  type="text"
-                  value={categoryForm.icon}
-                  onChange={e => setCategoryForm(p => ({ ...p, icon: e.target.value }))}
-                  className="w-full bg-[#131f2b] border border-[#1e2d3d] text-white p-3 rounded-lg focus:border-[#5fd4f0] outline-none"
-                />
+                <label className="font-semibold text-[0.875rem] text-white flex items-center justify-between">
+                  <span>Icon (Emoji or Image URL)</span>
+                  <button 
+                    onClick={() => {
+                      setUploadingIcon('category');
+                      iconInputRef.current?.click();
+                    }}
+                    className="text-xs text-[#5fd4f0] hover:underline"
+                  >
+                    Upload Image
+                  </button>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={categoryForm.icon}
+                    onChange={e => setCategoryForm(p => ({ ...p, icon: e.target.value }))}
+                    className="w-full bg-[#131f2b] border border-[#1e2d3d] text-white p-3 rounded-lg focus:border-[#5fd4f0] outline-none"
+                  />
+                </div>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="font-semibold text-[0.875rem] text-white">Description</label>

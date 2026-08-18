@@ -34,13 +34,24 @@ router.post('/image', upload.single('image'), async (req: Request, res: Response
     }
 
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+
+    if (req.file.mimetype === 'image/svg+xml') {
+      // For SVG: Do not process with sharp, just save the file directly
+      // SVG files are vectors and converting to WebP loses scalability
+      const filename = `img-${uniqueSuffix}.svg`;
+      const outputPath = path.join(uploadDir, filename);
+      fs.writeFileSync(outputPath, req.file.buffer);
+      const fileUrl = `/uploads/images/${filename}`;
+      return res.status(200).json({ url: fileUrl });
+    }
+
     const filename = `img-${uniqueSuffix}.webp`;
     const outputPath = path.join(uploadDir, filename);
 
     // Process image with Sharp
     // 1. Resize to max 1920x1080 (maintaining aspect ratio, but avoiding massive files)
     // 2. Convert to WebP for optimization
-    await sharp(req.file.buffer)
+    await sharp(req.file.buffer, { animated: true })
       .resize({
         width: 1920,
         height: 1080,

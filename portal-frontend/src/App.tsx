@@ -59,6 +59,19 @@ export interface AppSettings {
   guestMenuCategories?: GuestMenuCategories;
 }
 
+const RenderIcon = ({ icon, className = '', style }: { icon: string; className?: string, style?: React.CSSProperties }) => {
+  if (!icon) return null;
+  const isImage = icon.startsWith('http') || icon.startsWith('/uploads/');
+  if (isImage) {
+    const src = icon.startsWith('http') ? icon : `http://${window.location.hostname}:3000${icon}`;
+    return <img src={src} alt="Icon" className={`object-contain ${className}`} style={{ ...style, width: '1em', height: '1em' }} />;
+  }
+  if (icon.startsWith('<svg')) {
+    return <span className={className} style={{ ...style, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} dangerouslySetInnerHTML={{ __html: icon }} />;
+  }
+  return <span className={`${/^[a-z_]+$/.test(icon) ? "material-symbols-outlined" : ""} ${className}`} style={style}>{icon}</span>;
+};
+
 function App() {
   // Use localStorage so the CMS can dynamically rename this device without an Android app
   // Stored in refs to prevent socket useEffect from re-running on every render
@@ -67,10 +80,10 @@ function App() {
       if ((window as any).AndroidTVBridge && (window as any).AndroidTVBridge.getDeviceId) {
         return (window as any).AndroidTVBridge.getDeviceId();
       }
-    } catch (e) {}
+    } catch (e) { }
     return localStorage.getItem('device_id') || 'BOX-101-A';
   };
-  
+
   const deviceIdRef = useRef(getDeviceId());
   const roomNumberRef = useRef(localStorage.getItem('room_number') || 'Unassigned');
   const bootIdRef = useRef<string | null>(null);
@@ -111,7 +124,7 @@ function App() {
     return cached ? JSON.parse(cached) : [];
   })
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null)
-  
+
   // Live TV State
   const [isPlayingLiveTV, setIsPlayingLiveTV] = useState(false)
   const [currentChannelIndex, setCurrentChannelIndex] = useState(0)
@@ -123,7 +136,7 @@ function App() {
     tag: null
   });
 
-  
+
   // Marquee State
   const [marquee, setMarquee] = useState({
     message: '',
@@ -135,10 +148,10 @@ function App() {
     active: false,
     message: ''
   });
-  
+
   // Inbox Messages State
-  const [inboxMessages, setInboxMessages] = useState<{id: string, text: string, time: Date}[]>([]);
-  
+  const [inboxMessages, setInboxMessages] = useState<{ id: string, text: string, time: Date }[]>([]);
+
   // Dynamic Channels State
   const [liveChannels, setLiveChannels] = useState<BackendChannel[]>(() => {
     const cached = localStorage.getItem('channels_cache');
@@ -189,7 +202,7 @@ function App() {
           bgImage: item.bgImage,
           enabled: item.enabled !== false,
         });
-        
+
         const services = data.filter((i: any) => i.section === 'services').map(toMenuItem);
         const dining = data.filter((i: any) => i.section === 'dining').map(toMenuItem);
         const guide = data.filter((i: any) => i.section === 'local_guide').map(toMenuItem);
@@ -256,7 +269,7 @@ function App() {
     bootApp();
 
     const serverHost = `http://${window.location.hostname}:3000`;
-    
+
     // Prevent duplicate socket connections if already connected
     if (socketRef.current) {
       socketRef.current.disconnect();
@@ -268,10 +281,10 @@ function App() {
       timeout: 20000,
     });
     socketRef.current = socket;
-    
+
     const _deviceId = deviceIdRef.current;
     const _roomNumber = roomNumberRef.current;
-    
+
     socket.on('connect', () => {
       console.log(`WebSocket connected, registering device as ${_deviceId} for room ${_roomNumber}...`);
       socket.emit('register_device', { deviceId: _deviceId, roomNumber: _roomNumber });
@@ -304,7 +317,7 @@ function App() {
         socket.emit('heartbeat', { deviceId: _deviceId });
       }
     }, 30000);
-    
+
     // Listen for MDM commands (like rename, set room, reload, clear cache)
     socket.on('mdm_command', (data: any) => {
       console.log('Received MDM command:', data);
@@ -343,13 +356,13 @@ function App() {
       console.log('Received refresh_streaming_apps event, fetching latest apps...');
       fetchMenuItems();
     });
-    
+
     // Listen for realtime menu changes from CMS
     socket.on('refresh_guest_menu', (data: any) => {
       console.log('Received refresh_guest_menu:', data);
       fetchMenuItems();
     });
-    
+
     // Listen for realtime settings changes from CMS
     socket.on('refresh_settings', () => {
       console.log('Received refresh_settings');
@@ -432,7 +445,7 @@ function App() {
         fetchStatus();
       }
     };
-    
+
     const handleFocus = () => {
       console.log('Window focused, fetching latest PMS status...');
       lastFocusTimeRef.current = Date.now();
@@ -443,7 +456,7 @@ function App() {
       console.log('Explicit Android resume detected, updating focus time...');
       lastFocusTimeRef.current = Date.now();
       fetchStatus();
-      
+
       // Calculate app watch duration if applicable (excluding Hotel TV system itself)
       if (appLaunchTimeRef.current && currentLaunchedAppRef.current) {
         const appName = currentLaunchedAppRef.current.name || '';
@@ -453,9 +466,9 @@ function App() {
         if (!isHotelTv) {
           const durationSeconds = Math.floor((Date.now() - appLaunchTimeRef.current) / 1000);
           if (durationSeconds > 0) {
-            trackEvent('APP_WATCH_DURATION', { 
-              appName: currentLaunchedAppRef.current.name, 
-              packageName: currentLaunchedAppRef.current.packageName 
+            trackEvent('APP_WATCH_DURATION', {
+              appName: currentLaunchedAppRef.current.name,
+              packageName: currentLaunchedAppRef.current.packageName
             }, durationSeconds, socketRef.current);
           }
         }
@@ -623,11 +636,11 @@ function App() {
             </button>
           </div>
         )
-      
+
       case 'QR_CODE':
         return (
           <div className="relative flex w-[82vw] rounded-[20px] overflow-hidden shadow-2xl bg-surface">
-             <button
+            <button
               onClick={() => setSelectedItem(null)}
               className="absolute top-[2vh] right-[2vw] z-50 w-[3.5vw] h-[3.5vw] rounded-full border border-white/20 bg-black/50 flex items-center justify-center text-white focus:bg-white/20 focus:border-secondary focus:text-secondary outline-none transition-all"
             >
@@ -654,12 +667,12 @@ function App() {
             </div>
           </div>
         )
-      
+
       case 'TEXT_INFO':
         const infoData = JSON.parse(selectedItem.displayContent)
         return (
           <div className="w-[55vw] rounded-[20px] bg-surface overflow-hidden shadow-2xl relative">
-             <button
+            <button
               onClick={() => setSelectedItem(null)}
               className="absolute top-[2vh] right-[2vw] z-50 w-[3.5vw] h-[3.5vw] rounded-full border border-white/20 bg-black/50 flex items-center justify-center text-white focus:bg-white/20 focus:border-secondary focus:text-secondary outline-none transition-all"
             >
@@ -667,7 +680,7 @@ function App() {
             </button>
             <div className="p-[3vh_3vw] bg-surface2 border-b border-white/10 flex items-center gap-[1.5vw]">
               <div className={`w-[5vw] h-[5vw] rounded-2xl flex items-center justify-center ${selectedItem.color} text-[2.2vw] shadow-lg`}>
-                {selectedItem.icon}
+                <RenderIcon icon={selectedItem.icon} />
               </div>
               <div>
                 <h3 className="font-display-lg text-[2.5vw] text-white leading-none">{selectedItem.name}</h3>
@@ -686,16 +699,16 @@ function App() {
               ))}
             </div>
             <div className="p-[2vh_3vw] bg-surface2 flex justify-end">
-               <button
-                 onClick={() => setSelectedItem(null)}
-                 className="px-[2vw] py-[1.2vh] rounded-lg border border-white/10 bg-white/5 text-white font-semibold text-[1.1vw] focus:bg-white/10 focus:border-secondary focus:text-secondary outline-none transition-colors"
-               >
-                 Close
-               </button>
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="px-[2vw] py-[1.2vh] rounded-lg border border-white/10 bg-white/5 text-white font-semibold text-[1.1vw] focus:bg-white/10 focus:border-secondary focus:text-secondary outline-none transition-colors"
+              >
+                Close
+              </button>
             </div>
           </div>
         )
-      
+
       case 'SERVICE_REQUEST':
         if (showSuccess) {
           return (
@@ -732,7 +745,7 @@ function App() {
             </button>
             <div className="p-[3vh_3vw] bg-surface2 border-b border-white/10 flex items-center gap-[1.5vw]">
               <div className={`w-[5vw] h-[5vw] rounded-2xl flex items-center justify-center ${selectedItem.color} text-[2.2vw] shadow-lg`}>
-                {selectedItem.icon}
+                <RenderIcon icon={selectedItem.icon} />
               </div>
               <div>
                 <h3 className="font-display-lg text-[2.5vw] text-white leading-none">{selectedItem.name}</h3>
@@ -743,82 +756,82 @@ function App() {
               {formItems.map((item) => {
                 const qty = formQuantities[item.id] || 0
                 return (
-                    <div
-                      key={item.id}
-                      className="flex justify-between items-center p-[1.5vh_1.5vw] bg-white/5 border border-white/10 rounded-xl focus:bg-white/10 focus:border-secondary focus:scale-[1.02] outline-none transition-all cursor-pointer"
-                      tabIndex={0}
-                      onKeyDown={(e) => {
-                        if (e.key === 'ArrowRight') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setFormQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }));
-                        } else if (e.key === 'ArrowLeft') {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setFormQuantities(prev => ({ ...prev, [item.id]: Math.max(0, (prev[item.id] || 0) - 1) }));
-                        }
-                      }}
-                      onClick={() => {
-                         setFormQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }))
-                      }}
-                    >
-                      <div className="flex items-center gap-[1vw] text-[1.2vw] font-medium text-white">
-                        <span className="material-symbols-outlined text-[1.8vw] text-on-surface-variant">{item.icon}</span>
-                        {item.name}
-                      </div>
+                  <div
+                    key={item.id}
+                    className="flex justify-between items-center p-[1.5vh_1.5vw] bg-white/5 border border-white/10 rounded-xl focus:bg-white/10 focus:border-secondary focus:scale-[1.02] outline-none transition-all cursor-pointer"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFormQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }));
+                      } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setFormQuantities(prev => ({ ...prev, [item.id]: Math.max(0, (prev[item.id] || 0) - 1) }));
+                      }
+                    }}
+                    onClick={() => {
+                      setFormQuantities(prev => ({ ...prev, [item.id]: (prev[item.id] || 0) + 1 }))
+                    }}
+                  >
+                    <div className="flex items-center gap-[1vw] text-[1.2vw] font-medium text-white">
+                      <RenderIcon icon={item.icon} className="text-[1.8vw] text-on-surface-variant" />
+                      {item.name}
+                    </div>
                     <div className="flex items-center gap-[0.5vw] bg-black/30 p-[0.5vh_1vw] rounded-lg">
                       <span className="w-[2vw] h-[2vw] flex items-center justify-center rounded-full bg-white/5 text-white/50 font-bold text-[1vw]">-</span>
                       <span className="text-[1.2vw] font-bold w-[2vw] text-center text-white">{qty}</span>
                       <span className="w-[2vw] h-[2vw] flex items-center justify-center rounded-full bg-white/5 text-white/50 font-bold text-[1vw]">+</span>
                     </div>
-                    </div>
+                  </div>
                 )
               })}
             </div>
             <div className="p-[2vh_3vw] bg-surface2 border-t border-white/10 flex justify-end gap-[1vw]">
-               <button
-                 onClick={() => setSelectedItem(null)}
-                 className="px-[2vw] py-[1.2vh] rounded-lg border border-white/10 bg-transparent text-white font-semibold text-[1.1vw] focus:bg-white/10 focus:border-secondary focus:text-secondary outline-none transition-colors"
-               >
-                 Cancel
-               </button>
-               <button
-                 onClick={async () => {
-                    const requested = Object.entries(formQuantities).filter(([_, q]) => q > 0).map(([id, quantity]) => {
-                      const itemDef = formItems.find(i => i.id === id);
-                      return { id, name: itemDef?.name, quantity };
-                    })
-                    
-                    if (requested.length === 0) return alert("Please select at least one item.")
-                    
-                    try {
-                      const backendUrl = `http://${window.location.hostname}:3000/api/v1/requests`;
-                      const response = await fetch(backendUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          hotelId: 'hotel-1',
-                          roomId: `room-${roomNumber}`,
-                          requestType: 'HOUSEKEEPING',
-                          items: requested
-                        })
+              <button
+                onClick={() => setSelectedItem(null)}
+                className="px-[2vw] py-[1.2vh] rounded-lg border border-white/10 bg-transparent text-white font-semibold text-[1.1vw] focus:bg-white/10 focus:border-secondary focus:text-secondary outline-none transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  const requested = Object.entries(formQuantities).filter(([_, q]) => q > 0).map(([id, quantity]) => {
+                    const itemDef = formItems.find(i => i.id === id);
+                    return { id, name: itemDef?.name, quantity };
+                  })
+
+                  if (requested.length === 0) return alert("Please select at least one item.")
+
+                  try {
+                    const backendUrl = `http://${window.location.hostname}:3000/api/v1/requests`;
+                    const response = await fetch(backendUrl, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        hotelId: 'hotel-1',
+                        roomId: `room-${roomNumber}`,
+                        requestType: 'HOUSEKEEPING',
+                        items: requested
                       })
-                      
-                      if (response.ok) {
-                        setShowSuccess(true)
-                        trackEvent('ORDER_SUBMITTED', { items: requested })
-                      } else {
-                        alert("Failed to submit request. Please call the front desk.")
-                      }
-                    } catch (e) {
-                      console.error("Error submitting request:", e)
-                      alert("Network error. Please try again.")
+                    })
+
+                    if (response.ok) {
+                      setShowSuccess(true)
+                      trackEvent('ORDER_SUBMITTED', { items: requested })
+                    } else {
+                      alert("Failed to submit request. Please call the front desk.")
                     }
-                 }}
-                 className="flex items-center gap-[0.5vw] px-[2vw] py-[1.2vh] rounded-lg bg-secondary text-on-secondary font-bold text-[1.1vw] focus:ring-4 focus:ring-secondary/50 outline-none transition-all hover:bg-opacity-90"
-               >
-                 <span className="material-symbols-outlined">send</span> Submit
-               </button>
+                  } catch (e) {
+                    console.error("Error submitting request:", e)
+                    alert("Network error. Please try again.")
+                  }
+                }}
+                className="flex items-center gap-[0.5vw] px-[2vw] py-[1.2vh] rounded-lg bg-secondary text-on-secondary font-bold text-[1.1vw] focus:ring-4 focus:ring-secondary/50 outline-none transition-all hover:bg-opacity-90"
+              >
+                <span className="material-symbols-outlined">send</span> Submit
+              </button>
             </div>
           </div>
         )
@@ -827,47 +840,47 @@ function App() {
 
   const renderSubMenuHorizontalCards = (items: MenuItem[]) => {
     return items.map((item, index) => {
-        const typeStyles = 
-            item.displayType === 'QR_CODE' ? 'text-[#63b3ed] border-[#63b3ed]' :
-            item.displayType === 'IMAGE_ONLY' ? 'text-[#9a75ff] border-[#9a75ff]' :
+      const typeStyles =
+        item.displayType === 'QR_CODE' ? 'text-[#63b3ed] border-[#63b3ed]' :
+          item.displayType === 'IMAGE_ONLY' ? 'text-[#9a75ff] border-[#9a75ff]' :
             item.displayType === 'TEXT_INFO' ? 'text-secondary border-secondary' :
-            'text-[#ed8936] border-[#ed8936]';
-            
-        const iconName = 
-            item.displayType === 'QR_CODE' ? 'qr_code' :
-            item.displayType === 'IMAGE_ONLY' ? 'image' :
+              'text-[#ed8936] border-[#ed8936]';
+
+      const iconName =
+        item.displayType === 'QR_CODE' ? 'qr_code' :
+          item.displayType === 'IMAGE_ONLY' ? 'image' :
             item.displayType === 'TEXT_INFO' ? 'info' : 'checklist';
 
-        return (
-          <button
-            key={item.id}
-            ref={el => { if (el) subMenuRefs.current[index] = el }}
-            onClick={() => {
-              if (item.enabled === false) {
-                setAlertModal({ active: true, message: 'บริการนี้ปิดชั่วคราว (Service temporarily unavailable)' });
-                return;
-              }
-              setSelectedItem(item);
-              trackEvent('ITEM_VIEW', { itemId: item.id, name: item.name });
-            }}
-            className="flex-shrink-0 w-[24vw] h-[35vh] rounded-[24px] overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.02] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
-          >
-            {item.bgImage && (
-              <img src={item.bgImage.startsWith('http') ? item.bgImage : `http://${window.location.hostname}:3000${item.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10 flex flex-col justify-between p-[1.5vw] text-left">
-              <div>
-                <span className={`inline-block px-[0.8vw] py-[0.4vh] text-[0.7vw] font-bold rounded-full tracking-widest flex items-center gap-1 w-fit border bg-black/50 backdrop-blur-md ${typeStyles}`}>
-                  <span className="material-symbols-outlined" style={{ fontSize: '1vw' }}>{iconName}</span> {item.displayType.replace('_', ' ')}
-                </span>
-              </div>
-              <div className="transform translate-y-[1vh] group-hover:translate-y-0 transition-transform duration-300">
-                <h3 className="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white drop-shadow-lg">{item.name}</h3>
-                {item.subtitle && <p className="text-on-surface-variant text-[1vw] line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{item.subtitle}</p>}
-              </div>
+      return (
+        <button
+          key={item.id}
+          ref={el => { if (el) subMenuRefs.current[index] = el }}
+          onClick={() => {
+            if (item.enabled === false) {
+              setAlertModal({ active: true, message: 'บริการนี้ปิดชั่วคราว (Service temporarily unavailable)' });
+              return;
+            }
+            setSelectedItem(item);
+            trackEvent('ITEM_VIEW', { itemId: item.id, name: item.name });
+          }}
+          className="flex-shrink-0 w-[24vw] h-[35vh] rounded-[24px] overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.02] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
+        >
+          {item.bgImage && (
+            <img src={item.bgImage.startsWith('http') ? item.bgImage : `http://${window.location.hostname}:3000${item.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-300" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10 flex flex-col justify-between p-[1.5vw] text-left">
+            <div>
+              <span className={`inline-block px-[0.8vw] py-[0.4vh] text-[0.7vw] font-bold rounded-full tracking-widest flex items-center gap-1 w-fit border bg-black/50 backdrop-blur-md ${typeStyles}`}>
+                <span className="material-symbols-outlined" style={{ fontSize: '1vw' }}>{iconName}</span> {item.displayType.replace('_', ' ')}
+              </span>
             </div>
-          </button>
-        )
+            <div className="transform translate-y-[1vh] group-hover:translate-y-0 transition-transform duration-300">
+              <h3 className="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white drop-shadow-lg">{item.name}</h3>
+              {item.subtitle && <p className="text-on-surface-variant text-[1vw] line-clamp-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">{item.subtitle}</p>}
+            </div>
+          </div>
+        </button>
+      )
     })
   }
 
@@ -876,14 +889,14 @@ function App() {
     const currentTag = guestData.isCheckedIn ? (guestData.tag || 'Default') : 'Default';
     const bgs = appSettings.backgroundImages || [];
     let msg = '';
-    
+
     // 1. Try to find message for current tag
-    const tagMatch = bgs.find((bg:any) => bg.tag === currentTag);
+    const tagMatch = bgs.find((bg: any) => bg.tag === currentTag);
     if (tagMatch && tagMatch.message && tagMatch.message.trim() !== '') {
       msg = tagMatch.message;
     } else {
       // 2. Fallback to default tag message
-      const defaultMatch = bgs.find((bg:any) => bg.tag === 'Default');
+      const defaultMatch = bgs.find((bg: any) => bg.tag === 'Default');
       if (defaultMatch && defaultMatch.message && defaultMatch.message.trim() !== '') {
         msg = defaultMatch.message;
       } else {
@@ -891,7 +904,7 @@ function App() {
         msg = guestData.isCheckedIn ? 'Experience unparalleled luxury tailored specifically for your stay, {name}.' : 'Please check in at the front desk to begin your luxurious stay.';
       }
     }
-    
+
     // Replace {name} placeholder
     return msg.replace('{name}', guestData.name || 'Valued Guest');
   };
@@ -899,19 +912,19 @@ function App() {
   const getBackgroundImage = () => {
     const currentTag = guestData.isCheckedIn ? (guestData.tag || 'Default') : 'Default';
     const bgs = appSettings.backgroundImages || [];
-    
+
     // 1. Try to find background for current tag
-    const tagMatch = bgs.find((bg:any) => bg.tag === currentTag);
+    const tagMatch = bgs.find((bg: any) => bg.tag === currentTag);
     if (tagMatch && tagMatch.url && tagMatch.url.trim() !== '') {
       return tagMatch.url;
     }
-    
+
     // 2. Fallback to default tag background
-    const defaultMatch = bgs.find((bg:any) => bg.tag === 'Default');
+    const defaultMatch = bgs.find((bg: any) => bg.tag === 'Default');
     if (defaultMatch && defaultMatch.url && defaultMatch.url.trim() !== '') {
       return defaultMatch.url;
     }
-    
+
     // 3. Ultimate fallback
     return 'bg-gradient-to-br from-slate-900 to-black';
   };
@@ -921,7 +934,7 @@ function App() {
   return (
     <div className="font-body-md text-on-surface">
       {appLoading && (
-        <LoadingScreen 
+        <LoadingScreen
           hotelName={appSettings.hotelName}
           hotelStars={appSettings.hotelStars}
           title={appSettings.title}
@@ -929,9 +942,9 @@ function App() {
           bgImage={currentBgImage}
         />
       )}
-      
+
       {/* Background Cinematic Image */}
-      <div 
+      <div
         className={`fixed inset-0 z-0 ${currentBgImage.startsWith('bg-') ? currentBgImage : 'bg-black'}`}
         style={{ display: isPlayingLiveTV ? 'none' : 'block' }}
       >
@@ -943,90 +956,90 @@ function App() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/45 to-transparent pointer-events-none z-1"></div>
       </div>
 
-      <main 
+      <main
         className="fixed inset-0 w-full h-full flex flex-col z-10 overflow-hidden"
         style={{ display: isPlayingLiveTV ? 'none' : 'flex' }}
       >
-        
+
         {/* Safe Area Container */}
         <div className="flex flex-col flex-1 px-[4vw] py-[3vh]">
-           {/* Top App Bar */}
-           <header
-             className="flex justify-between items-start transition-opacity duration-500"
-             style={{ opacity: activeMenu ? 0 : 1 }}
-           >
-             <div className="flex flex-col gap-[0.5vh]">
-               <div className="flex items-baseline gap-[1.5vw] mb-[0.5vh]">
-                 <h1 className="font-display-lg text-[3.5vw] text-secondary tracking-widest leading-none">{appSettings.portalMainTitle ? appSettings.portalMainTitle.toUpperCase() : 'LUXE'}</h1>
-                 <p className="font-label-sm text-[0.9vw] text-secondary tracking-[0.2em] uppercase opacity-70">{appSettings.portalSubtitle || 'Concierge'}</p>
-               </div>
-               <div className="flex items-center gap-[2vw]">
-                 <span className="flex items-center gap-[0.5vw] text-on-surface-variant text-[1.2vw]">
-                   <span className="material-symbols-outlined text-secondary" style={{ fontSize: '1.8vw' }}>wb_sunny</span>
-                   72°F Sunny
-                 </span>
-                 <span className="w-[0.4vw] h-[0.4vw] rounded-full bg-outline-variant"></span>
-                 <span className="flex items-center gap-[0.5vw] text-on-surface-variant text-[1.2vw]">
-                   <span className="material-symbols-outlined text-secondary" style={{ fontSize: '1.8vw' }}>schedule</span>
-                   <Clock />
-                 </span>
-               </div>
-             </div>
-
-              {/* Style 1: Royal Gold & Champagne Guest Card */}
-              <div className="flex items-center gap-[1.5vw] transition-all">
-                <div className="text-right flex flex-col items-end">
-                  {guestData.isCheckedIn && (
-                    <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg mb-[0.5vh]">
-                      <span className="material-symbols-outlined text-[1vw] text-black">star</span>
-                      {(!guestData.tag || String(guestData.tag).trim().toLowerCase() === 'null') ? 'Valued Guest' : `Gold Member ${guestData.tag}`}
-                    </span>
-                  )}
-                  <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
-                    Room {roomNumber}
-                  </p>
-                </div>
-                <div className="w-[5vw] h-[5vw] rounded-full border-2 border-[#e9c176] bg-gradient-to-br from-[#e9c176]/20 to-black/80 flex items-center justify-center shadow-[0_0_20px_rgba(233,193,118,0.25)] transition-all" style={{ opacity: guestData.isCheckedIn ? 1 : 0.4 }}>
-                  <span className="material-symbols-outlined text-[#e9c176]" style={{ fontSize: '2.2vw' }}>crown</span>
-                </div>
+          {/* Top App Bar */}
+          <header
+            className="flex justify-between items-start transition-opacity duration-500"
+            style={{ opacity: activeMenu ? 0 : 1 }}
+          >
+            <div className="flex flex-col gap-[0.5vh]">
+              <div className="flex items-baseline gap-[1.5vw] mb-[0.5vh]">
+                <h1 className="font-display-lg text-[3.5vw] text-secondary tracking-widest leading-none">{appSettings.portalMainTitle ? appSettings.portalMainTitle.toUpperCase() : 'LUXE'}</h1>
+                <p className="font-label-sm text-[0.9vw] text-secondary tracking-[0.2em] uppercase opacity-70">{appSettings.portalSubtitle || 'Concierge'}</p>
               </div>
-           </header>
+              <div className="flex items-center gap-[2vw]">
+                <span className="flex items-center gap-[0.5vw] text-on-surface-variant text-[1.2vw]">
+                  <span className="material-symbols-outlined text-secondary" style={{ fontSize: '1.8vw' }}>wb_sunny</span>
+                  72°F Sunny
+                </span>
+                <span className="w-[0.4vw] h-[0.4vw] rounded-full bg-outline-variant"></span>
+                <span className="flex items-center gap-[0.5vw] text-on-surface-variant text-[1.2vw]">
+                  <span className="material-symbols-outlined text-secondary" style={{ fontSize: '1.8vw' }}>schedule</span>
+                  <Clock />
+                </span>
+              </div>
+            </div>
 
-           {/* Central Welcome Message - Option 2: Bottom-Left Layout (Style 1: Royal Gold & Champagne) */}
-           <div
-             className="flex-1 flex flex-col items-start justify-end text-left transition-opacity duration-500 pb-[4vh] z-10"
-             style={{ opacity: activeMenu ? 0 : 1 }}
-           >
-             <span className="font-sans font-extralight text-[1.8vw] tracking-[0.25em] text-white/90 mb-[4px] uppercase" style={{ fontFamily: "'Montserrat', sans-serif" }}>
-                {guestData.isCheckedIn ? 'WELCOME' : (appSettings.portalWelcomeText || 'WELCOME TO')}
-             </span>
-             <h2 className="text-[5vw] font-normal text-[#e9c176] leading-[1.1] mb-[15px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] uppercase" style={{ fontFamily: "'Cinzel', serif" }}>
-                {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} ${appSettings.portalSubtitle || 'SUKHUMVIT'}`}
-             </h2>
-             <p className="font-sans text-[1.4vw] text-white/80 max-w-[46vw] font-light leading-relaxed border-t border-white/10 pt-[15px]">
-                {(() => {
-                  const rawMsg = getWelcomeMessage();
-                  const guestName = guestData.isCheckedIn && guestData.name ? guestData.name : 'Valued Guest';
-                  let subtext = rawMsg;
-                  if (guestData.isCheckedIn && guestData.name) {
-                    // Clean up the text by removing the name and dangling commas
-                    subtext = rawMsg
-                      .replace(guestName, '')
-                      .replace(/Dear\s*,?\s*/i, '')
-                      .replace(/,\s*\./g, '.')
-                      .replace(/\s+,/g, ',')
-                      .replace(/\s{2,}/g, ' ')
-                      .trim();
-                    if (subtext.startsWith(',')) subtext = subtext.substring(1).trim();
-                  }
-                  return subtext || 'We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.';
-                })()}
-             </p>
-           </div>
+            {/* Style 1: Royal Gold & Champagne Guest Card */}
+            <div className="flex items-center gap-[1.5vw] transition-all">
+              <div className="text-right flex flex-col items-end">
+                {guestData.isCheckedIn && (
+                  <span className="inline-flex items-center gap-[0.3vw] px-[0.8vw] py-[0.3vh] text-[0.75vw] font-extrabold tracking-widest text-[#0a0c0c] bg-gradient-to-r from-[#ffdea5] via-[#e9c176] to-[#b89047] rounded-md uppercase shadow-lg mb-[0.5vh]">
+                    <span className="material-symbols-outlined text-[1vw] text-black">star</span>
+                    {(!guestData.tag || String(guestData.tag).trim().toLowerCase() === 'null') ? 'Valued Guest' : `Gold Member ${guestData.tag}`}
+                  </span>
+                )}
+                <p className="font-sans text-[0.95vw] text-white/80 font-normal tracking-[0.05em] mt-[0.5vh]">
+                  Room {roomNumber}
+                </p>
+              </div>
+              <div className="w-[5vw] h-[5vw] rounded-full border-2 border-[#e9c176] bg-gradient-to-br from-[#e9c176]/20 to-black/80 flex items-center justify-center shadow-[0_0_20px_rgba(233,193,118,0.25)] transition-all" style={{ opacity: guestData.isCheckedIn ? 1 : 0.4 }}>
+                <span className="material-symbols-outlined text-[#e9c176]" style={{ fontSize: '2.2vw' }}>crown</span>
+              </div>
+            </div>
+          </header>
+
+          {/* Central Welcome Message - Option 2: Bottom-Left Layout (Style 1: Royal Gold & Champagne) */}
+          <div
+            className="flex-1 flex flex-col items-start justify-end text-left transition-opacity duration-500 pb-[4vh] z-10"
+            style={{ opacity: activeMenu ? 0 : 1 }}
+          >
+            <span className="font-sans font-extralight text-[1.8vw] tracking-[0.25em] text-white/90 mb-[4px] uppercase" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+              {guestData.isCheckedIn ? 'WELCOME' : (appSettings.portalWelcomeText || 'WELCOME TO')}
+            </span>
+            <h2 className="text-[5vw] font-normal text-[#e9c176] leading-[1.1] mb-[15px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] uppercase" style={{ fontFamily: "'Cinzel', serif" }}>
+              {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} ${appSettings.portalSubtitle || 'SUKHUMVIT'}`}
+            </h2>
+            <p className="font-sans text-[1.4vw] text-white/80 max-w-[46vw] font-light leading-relaxed border-t border-white/10 pt-[15px]">
+              {(() => {
+                const rawMsg = getWelcomeMessage();
+                const guestName = guestData.isCheckedIn && guestData.name ? guestData.name : 'Valued Guest';
+                let subtext = rawMsg;
+                if (guestData.isCheckedIn && guestData.name) {
+                  // Clean up the text by removing the name and dangling commas
+                  subtext = rawMsg
+                    .replace(guestName, '')
+                    .replace(/Dear\s*,?\s*/i, '')
+                    .replace(/,\s*\./g, '.')
+                    .replace(/\s+,/g, ',')
+                    .replace(/\s{2,}/g, ' ')
+                    .trim();
+                  if (subtext.startsWith(',')) subtext = subtext.substring(1).trim();
+                }
+                return subtext || 'We are deeply honored by your presence. Experience unparalleled luxury tailored specifically for your stay.';
+              })()}
+            </p>
+          </div>
         </div>
 
         {/* ─── SCROLLING ANNOUNCEMENT TICKER (MARQUEE) ─── */}
-        <div 
+        <div
           className={`w-full border-t border-b overflow-hidden flex items-center transition-all duration-500 marquee-container ${marquee.type === 'alert' ? 'bg-[#1f1104]/95 border-[#c9a84c]/50 shadow-[0_0_20px_rgba(201,168,76,0.3)]' : 'bg-[#0c0f0f]/95 border-[#e9c176]/20 shadow-[0_0_15px_rgba(0,0,0,0.5)]'}`}
           style={{ height: '6vh', opacity: activeMenu ? 0 : 1 }}
         >
@@ -1045,7 +1058,7 @@ function App() {
         >
           {[
             { id: 'Channel TV', icon: 'tv', label: 'Channel TV' },
-            { id: 'Entertainment', icon: 'styler', label: 'Entertainment' },
+            { id: 'Entertainment', icon: '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 -960 960 960" width="1em" fill="currentColor"><path d="m490-439 212-141-212-141v282Zm193 241h123q0 21-15.5 35.5T753-146L213-81q-25 3-44.5-11.5T146-132L82-630q-3-25 12.07-44.96Q109.14-694.93 134-698l64-7v61l-57 6 65 498 477-58Zm-365-60q-24 0-42-18t-18-42v-502q0-24 18-42t42-18h502q24 0 42 18t18 42v502q0 24-18 42t-42 18H318Zm0-60h502v-502H318v502Zm251-251ZM206-140Z"/></svg>', label: 'Entertainment' },
             { id: 'Services', icon: appSettings.guestMenuCategories?.services?.icon || 'room_service', label: appSettings.guestMenuCategories?.services?.label || 'Services' },
             { id: 'Dining', icon: appSettings.guestMenuCategories?.dining?.icon || 'restaurant', label: appSettings.guestMenuCategories?.dining?.label || 'Dining' },
             { divider: true },
@@ -1081,7 +1094,7 @@ function App() {
                   className={`flex items-center justify-center rounded-full border border-white/20 group-hover:border-secondary group-hover:text-secondary group-focus:border-secondary group-focus:text-secondary transition-colors ${item.id === 'Local Guide' ? 'border-secondary text-secondary' : 'text-white'}`}
                   style={{ width: '5vw', height: '5vw' }}
                 >
-                  <span className={/^[a-z_]+$/.test(item.icon!) ? "material-symbols-outlined" : ""} style={{ fontSize: '2.2vw', lineHeight: 1 }}>{item.icon}</span>
+                  <RenderIcon icon={item.icon!} style={{ fontSize: '2.2vw', lineHeight: 1 }} />
                 </div>
                 <span
                   className={`font-label-lg transition-colors whitespace-nowrap ${item.id === 'Local Guide' ? 'text-secondary' : 'text-white group-hover:text-secondary group-focus:text-secondary'}`}
@@ -1090,9 +1103,9 @@ function App() {
                   {item.label}
                 </span>
                 {item.badge && (
-                   <div className={`absolute flex items-center justify-center top-[1vh] right-[1vw] font-bold ${item.id === 'Messages' ? 'bg-red-600 text-white rounded-full w-[1.2vw] h-[1.2vw] -mt-[0.5vh] -mr-[0.5vw]' : 'bg-secondary text-black rounded-md px-[0.4vw] py-[0.1vh]'}`} style={{ fontSize: item.id === 'Messages' ? '0.7vw' : '0.7vw', letterSpacing: item.id === 'Messages' ? '0' : '0.05em' }}>
-                      {item.badge}
-                   </div>
+                  <div className={`absolute flex items-center justify-center top-[1vh] right-[1vw] font-bold ${item.id === 'Messages' ? 'bg-red-600 text-white rounded-full w-[1.2vw] h-[1.2vw] -mt-[0.5vh] -mr-[0.5vw]' : 'bg-secondary text-black rounded-md px-[0.4vw] py-[0.1vh]'}`} style={{ fontSize: item.id === 'Messages' ? '0.7vw' : '0.7vw', letterSpacing: item.id === 'Messages' ? '0' : '0.05em' }}>
+                    {item.badge}
+                  </div>
                 )}
               </button>
             )
@@ -1117,7 +1130,7 @@ function App() {
         {/* ── Sub-menu Overlay ── */}
         {activeMenu && (
           <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-md flex flex-col transition-all duration-300" style={{ padding: '6vh 4vw' }}>
-            
+
             <button
               ref={el => { if (el) subMenuRefs.current[999] = el; }}
               onClick={() => setActiveMenu(null)}
@@ -1148,29 +1161,29 @@ function App() {
                 ) : (
                   <>
                     <div className="mb-[4vh] flex-none">
-                  <h2 className="font-display-lg text-[4vw] mb-4 text-white leading-tight">
-                    {activeMenu === 'Services' ? (appSettings.guestMenuCategories?.services?.label || 'Hotel Services') :
-                     activeMenu === 'Dining' ? (appSettings.guestMenuCategories?.dining?.label || 'Dining') :
-                     (appSettings.guestMenuCategories?.localGuide?.label || 'Local Guide')}
-                  </h2>
-                  <div className="w-[6vw] h-1 bg-secondary mb-[2vh]"></div>
-                  <p className="text-[1.4vw] text-outline leading-relaxed max-w-[60%]">
-                    {activeMenu === 'Services' ? (appSettings.guestMenuCategories?.services?.desc || 'Curated experiences designed for your absolute comfort. From world-class spa treatments to hospitality services.') : 
-                     activeMenu === 'Dining' ? (appSettings.guestMenuCategories?.dining?.desc || 'Explore our signature dining options, from in-room delivery to Michelin-starred restaurants.') :
-                     (appSettings.guestMenuCategories?.localGuide?.desc || 'Discover the best local attractions, shopping, and transit options around the hotel.')}
-                  </p>
-                </div>
-                <div className="flex gap-[2vw] overflow-x-auto no-scrollbar pb-[5vh] items-stretch flex-1">
-                  {activeMenu === 'Dining' && diningMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No dining options available at the moment.</div>}
-                  {activeMenu === 'Dining' && renderSubMenuHorizontalCards(diningMenu)}
-                  {activeMenu === 'Services' && servicesMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No services available at the moment.</div>}
-                  {activeMenu === 'Services' && renderSubMenuHorizontalCards(servicesMenu)}
-                  {activeMenu === 'Local Guide' && guideMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No local guides available at the moment.</div>}
-                  {activeMenu === 'Local Guide' && renderSubMenuHorizontalCards(guideMenu)}
-                </div>
-              </>
+                      <h2 className="font-display-lg text-[4vw] mb-4 text-white leading-tight">
+                        {activeMenu === 'Services' ? (appSettings.guestMenuCategories?.services?.label || 'Hotel Services') :
+                          activeMenu === 'Dining' ? (appSettings.guestMenuCategories?.dining?.label || 'Dining') :
+                            (appSettings.guestMenuCategories?.localGuide?.label || 'Local Guide')}
+                      </h2>
+                      <div className="w-[6vw] h-1 bg-secondary mb-[2vh]"></div>
+                      <p className="text-[1.4vw] text-outline leading-relaxed max-w-[60%]">
+                        {activeMenu === 'Services' ? (appSettings.guestMenuCategories?.services?.desc || 'Curated experiences designed for your absolute comfort. From world-class spa treatments to hospitality services.') :
+                          activeMenu === 'Dining' ? (appSettings.guestMenuCategories?.dining?.desc || 'Explore our signature dining options, from in-room delivery to Michelin-starred restaurants.') :
+                            (appSettings.guestMenuCategories?.localGuide?.desc || 'Discover the best local attractions, shopping, and transit options around the hotel.')}
+                      </p>
+                    </div>
+                    <div className="flex gap-[2vw] overflow-x-auto no-scrollbar pb-[5vh] items-stretch flex-1">
+                      {activeMenu === 'Dining' && diningMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No dining options available at the moment.</div>}
+                      {activeMenu === 'Dining' && renderSubMenuHorizontalCards(diningMenu)}
+                      {activeMenu === 'Services' && servicesMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No services available at the moment.</div>}
+                      {activeMenu === 'Services' && renderSubMenuHorizontalCards(servicesMenu)}
+                      {activeMenu === 'Local Guide' && guideMenu.length === 0 && <div tabIndex={0} ref={el => { if (el) subMenuRefs.current[0] = el; }} className="py-[4vh] text-center text-outline font-label-lg w-[30vw] focus:text-white focus:bg-white/10 outline-none rounded-2xl transition-all">No local guides available at the moment.</div>}
+                      {activeMenu === 'Local Guide' && renderSubMenuHorizontalCards(guideMenu)}
+                    </div>
+                  </>
                 )}
-                </div>
+              </div>
             ) : (
               // --- VERTICAL LAYOUT ---
               <div className="flex flex-1 min-h-0 gap-[4vw]">
@@ -1178,7 +1191,7 @@ function App() {
                   <h2 className="font-display-lg text-[4vw] mb-4 text-white leading-tight">{activeMenu}</h2>
                   <div className="w-[6vw] h-1 bg-secondary mb-[2vh]"></div>
                   <p className="text-[1.4vw] text-outline leading-relaxed">
-                     Select an option to view details or press BACK to return to the home screen.
+                    Select an option to view details or press BACK to return to the home screen.
                   </p>
                 </div>
 
@@ -1213,17 +1226,17 @@ function App() {
                           {channel.logoUrl ? (
                             <img src={channel.logoUrl.startsWith('http') ? channel.logoUrl : `http://${window.location.hostname}:3000${channel.logoUrl}`} alt={channel.name} className="w-full h-full object-contain object-center" />
                           ) : (
-                            <div className="text-black">{channel.name.substring(0,3).toUpperCase()}</div>
+                            <div className="text-black">{channel.name.substring(0, 3).toUpperCase()}</div>
                           )}
                         </div>
                         <div className="flex-1">
-                          <span className="inline-block px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest flex items-center gap-1 w-fit"><span className="material-symbols-outlined" style={{fontSize:'1vw'}}>tv</span> CH {channel.channelNumber !== null && channel.channelNumber < 10 ? '0'+channel.channelNumber : channel.channelNumber || '-'}</span>
+                          <span className="inline-block px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest flex items-center gap-1 w-fit"><span className="material-symbols-outlined" style={{ fontSize: '1vw' }}>tv</span> CH {channel.channelNumber !== null && channel.channelNumber < 10 ? '0' + channel.channelNumber : channel.channelNumber || '-'}</span>
                           <h3 className="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">{channel.name}</h3>
                         </div>
                       </div>
                     </button>
                   ))}
-                  
+
                   {activeMenu === 'Entertainment' && appsMenu.length === 0 && (
                     <div className="col-span-full py-10 text-center text-outline font-label-lg">
                       No streaming apps available.
@@ -1247,7 +1260,7 @@ function App() {
                         }
                         appLaunchTimeRef.current = Date.now();
                         currentLaunchedAppRef.current = app;
-                        
+
                         if (app.deepLink && (window as any).AndroidTV) {
                           if (app.deepLink.startsWith('intent://') || app.deepLink.includes('://')) {
                             (window as any).AndroidTV.launchApp(app.packageName);
@@ -1274,7 +1287,7 @@ function App() {
                           )}
                         </div>
                         <div className="flex-1">
-                           <h3 className="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">{app.name}</h3>
+                          <h3 className="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">{app.name}</h3>
                         </div>
                       </div>
                     </button>
@@ -1286,7 +1299,7 @@ function App() {
                         <span className="material-symbols-outlined text-secondary" style={{ fontSize: '3.5vw' }}>mail</span>
                         Inbox Messages
                       </h2>
-                      
+
                       {inboxMessages.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center opacity-50">
                           <span className="material-symbols-outlined text-white mb-[2vh]" style={{ fontSize: '6vw' }}>inbox_customize</span>
@@ -1296,7 +1309,7 @@ function App() {
                       ) : (
                         <div className="flex-1 w-full max-w-3xl overflow-y-auto space-y-[2vh] pr-[2vw]">
                           {inboxMessages.map((msg, idx) => (
-                            <button 
+                            <button
                               key={msg.id}
                               ref={el => { if (el) subMenuRefs.current[idx] = el }}
                               onClick={() => {
@@ -1309,8 +1322,8 @@ function App() {
                             >
                               <div className="flex-1">
                                 <div className="text-secondary text-[1vw] mb-[1vh] font-bold tracking-widest uppercase flex items-center gap-[0.5vw]">
-                                    <span className="material-symbols-outlined" style={{ fontSize: '1.2vw' }}>schedule</span>
-                                    {msg.time.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                  <span className="material-symbols-outlined" style={{ fontSize: '1.2vw' }}>schedule</span>
+                                  {msg.time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </div>
                                 <p className="text-white text-[1.5vw] font-light leading-relaxed">{msg.text}</p>
                               </div>
@@ -1346,7 +1359,7 @@ function App() {
         {/* ── Modal Overlay ── */}
         {selectedItem && (
           <div className="absolute inset-0 z-50 bg-black/85 backdrop-blur-xl flex items-center justify-center animate-in fade-in duration-300">
-             {renderModalContent()}
+            {renderModalContent()}
           </div>
         )}
 
@@ -1355,26 +1368,26 @@ function App() {
       {/* ── Live TV Player Overlay ── */}
       {isPlayingLiveTV && (
         <div data-live-tv-active>
-        <LiveTVPlayer
-          channels={liveChannels.filter(c => c.streamUrl).map(c => ({
-            id: c.id,
-            name: c.name,
-            number: c.channelNumber || 0,
-            streamUrl: c.streamUrl!,
-            logoUrl: c.logoUrl,
-            category: c.category ?? 'Live TV',
-          }))}
-          initialChannelIndex={currentChannelIndex}
-          onExit={() => {
-            setIsPlayingLiveTV(false);
-            // If a server restart was detected while watching TV, reload now
-            if (pendingReloadRef.current) {
-              console.log('Deferred reload triggered — server had restarted during TV viewing.');
-              window.location.reload();
-            }
-          }}
-          socket={socketRef.current}
-        />
+          <LiveTVPlayer
+            channels={liveChannels.filter(c => c.streamUrl).map(c => ({
+              id: c.id,
+              name: c.name,
+              number: c.channelNumber || 0,
+              streamUrl: c.streamUrl!,
+              logoUrl: c.logoUrl,
+              category: c.category ?? 'Live TV',
+            }))}
+            initialChannelIndex={currentChannelIndex}
+            onExit={() => {
+              setIsPlayingLiveTV(false);
+              // If a server restart was detected while watching TV, reload now
+              if (pendingReloadRef.current) {
+                console.log('Deferred reload triggered — server had restarted during TV viewing.');
+                window.location.reload();
+              }
+            }}
+            socket={socketRef.current}
+          />
         </div>
       )}
 
@@ -1382,7 +1395,7 @@ function App() {
       {alertModal.active && (
         <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-[4px] flex justify-center items-center p-8 animate-in fade-in duration-300">
           <div className="liquid-glass w-[40vw] max-w-2xl rounded-[28px] p-[6vh_3vw] text-center animate-in zoom-in-95 duration-500 shadow-[0_0_50px_rgba(0,0,0,0.8)] pointer-events-auto">
-            
+
             {/* Premium Icon/Badge */}
             <div className="mx-auto w-[6vw] h-[6vw] rounded-full border border-[#e9c176]/40 bg-[#e9c176]/5 flex items-center justify-center mb-[3vh] shadow-[0_0_20px_rgba(233,193,118,0.15)] relative">
               <div className="absolute inset-0 rounded-full border border-[#e9c176]/20 animate-ping" style={{ animationDuration: '3s' }}></div>
@@ -1398,28 +1411,28 @@ function App() {
 
             {/* Message Content */}
             <p className="text-gray-300 font-light text-[1.2vw] tracking-[0.03em] leading-relaxed mb-[4vh] opacity-90 whitespace-pre-wrap">
-                {alertModal.message}
+              {alertModal.message}
             </p>
 
             {/* Actions */}
             <div className="flex gap-[1.5vw] w-full justify-center">
-                <button 
-                  ref={el => { alertModalRef.current[0] = el; }}
-                  onClick={() => {
-                    setAlertModal(prev => ({ ...prev, active: false }));
-                    setInboxMessages(prev => [{ id: Date.now().toString(), text: alertModal.message, time: new Date() }, ...prev]);
-                  }}
-                  className="btn-ghost w-1/2 py-[1.5vh] rounded-xl font-bold tracking-widest uppercase text-[1vw]"
-                >
-                    Remind Later
-                </button>
-                <button 
-                  ref={el => { alertModalRef.current[1] = el; }}
-                  onClick={() => setAlertModal(prev => ({ ...prev, active: false }))}
-                  className="btn-premium w-1/2 py-[1.5vh] rounded-xl font-bold tracking-widest uppercase text-[1vw]"
-                >
-                    Dismiss
-                </button>
+              <button
+                ref={el => { alertModalRef.current[0] = el; }}
+                onClick={() => {
+                  setAlertModal(prev => ({ ...prev, active: false }));
+                  setInboxMessages(prev => [{ id: Date.now().toString(), text: alertModal.message, time: new Date() }, ...prev]);
+                }}
+                className="btn-ghost w-1/2 py-[1.5vh] rounded-xl font-bold tracking-widest uppercase text-[1vw]"
+              >
+                Remind Later
+              </button>
+              <button
+                ref={el => { alertModalRef.current[1] = el; }}
+                onClick={() => setAlertModal(prev => ({ ...prev, active: false }))}
+                className="btn-premium w-1/2 py-[1.5vh] rounded-xl font-bold tracking-widest uppercase text-[1vw]"
+              >
+                Dismiss
+              </button>
             </div>
           </div>
         </div>

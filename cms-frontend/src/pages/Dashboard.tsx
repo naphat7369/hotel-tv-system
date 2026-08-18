@@ -507,6 +507,8 @@ function Dashboard() {
                         <Tooltip 
                           cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                           contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px' }}
+                          itemStyle={{ color: '#e4e4e7' }}
+                          labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                         />
                         <Bar dataKey="count" radius={[0, 4, 4, 0]}>
                           {reports.topApps.map((entry: any, index: number) => (
@@ -554,6 +556,8 @@ function Dashboard() {
                         <Tooltip 
                           cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                           contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px' }}
+                          itemStyle={{ color: '#e4e4e7' }}
+                          labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                         />
                         <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                           {reports.topMenus.map((entry: any, index: number) => (
@@ -601,8 +605,14 @@ function Dashboard() {
                         <Tooltip 
                           cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                           contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px' }}
+                          itemStyle={{ color: '#e4e4e7' }}
+                          labelStyle={{ color: '#ffffff', fontWeight: 'bold' }}
                         />
-                        <Bar dataKey="minutes" fill="#eab308" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="minutes" radius={[4, 4, 0, 0]} minPointSize={5}>
+                          {reports.topChannels.map((entry: any, index: number) => (
+                            <Cell key={`cell-${index}`} fill={['#eab308', '#f97316', '#ef4444', '#8b5cf6', '#3b82f6'][index % 5]} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (

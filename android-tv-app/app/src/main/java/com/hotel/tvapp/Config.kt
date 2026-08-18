@@ -8,7 +8,7 @@ object Config {
     const val PREFS_NAME        = "hotel_tv_config"
     const val KEY_SERVER_IP     = "server_ip"
     const val KEY_DEVICE_ID     = "device_id"
-    const val DEFAULT_SERVER_IP = "10.0.101.253"
+    const val DEFAULT_SERVER_IP = "10.0.101.200"
 
     // ── Device Identity ──────────────────────────────────────────────────────
     /**

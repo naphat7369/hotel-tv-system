@@ -99,6 +99,36 @@ router.post('/', (req, res, next) => {
       portal_subtitle: req.body.portal_subtitle || currentSettings.portal_subtitle || 'Concierge'
     };
 
+    if (req.body.guestServicesEnabled) {
+      try {
+        const parsedGSE = JSON.parse(req.body.guestServicesEnabled);
+        const currentGSE = currentSettings.guestServicesEnabled || { services: true, dining: true, localGuide: true };
+        newSettings.guestServicesEnabled = {
+          services: typeof parsedGSE.services === 'boolean' ? parsedGSE.services : currentGSE.services,
+          dining: typeof parsedGSE.dining === 'boolean' ? parsedGSE.dining : currentGSE.dining,
+          localGuide: typeof parsedGSE.localGuide === 'boolean' ? parsedGSE.localGuide : currentGSE.localGuide,
+        };
+      } catch (err) {
+        console.error('Failed to parse guestServicesEnabled field', err);
+      }
+    }
+
+    if (req.body.guestMenuCategories) {
+      try {
+        const parsedCategories = JSON.parse(req.body.guestMenuCategories);
+        const currentCategories = currentSettings.guestMenuCategories || {};
+        newSettings.guestMenuCategories = {
+          ...currentCategories,
+          ...parsedCategories
+        };
+      } catch (err) {
+        console.error('Failed to parse guestMenuCategories field', err);
+      }
+    }
+
+    console.log('req.body:', req.body);
+    console.log('newSettings:', newSettings);
+
     // Handle parsed background images list if present
     if (req.body.backgroundImages) {
       try {

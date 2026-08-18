@@ -129,8 +129,12 @@ router.post('/menu-items', async (req: Request, res: Response) => {
     const {
       section, name, subtitle, icon, color,
       displayType, displayContent, bgImage,
-      activeFrom, activeUntil,
+      activeFrom, activeUntil, enabled,
     } = req.body;
+
+    if (enabled !== undefined && typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'enabled must be a boolean' });
+    }
 
     if (!section || !name || !displayType || !displayContent) {
       return res.status(400).json({
@@ -154,6 +158,7 @@ router.post('/menu-items', async (req: Request, res: Response) => {
         displayContent,
         bgImage: bgImage ?? null,
         sortOrder: count,
+        enabled: enabled ?? true,
         activeFrom: activeFrom ? new Date(activeFrom) : null,
         activeUntil: activeUntil ? new Date(activeUntil) : null,
       },
@@ -179,8 +184,12 @@ router.put('/menu-items/:id', async (req: Request, res: Response) => {
       name, subtitle, icon, color,
       displayType, displayContent, bgImage,
       isActive, sortOrder,
-      activeFrom, activeUntil,
+      activeFrom, activeUntil, enabled,
     } = req.body;
+
+    if (enabled !== undefined && typeof enabled !== 'boolean') {
+      return res.status(400).json({ error: 'enabled must be a boolean' });
+    }
 
     const updated = await prisma.guestMenuItem.update({
       where: { id },
@@ -193,6 +202,7 @@ router.put('/menu-items/:id', async (req: Request, res: Response) => {
         ...(displayContent !== undefined && { displayContent }),
         ...(bgImage !== undefined    && { bgImage }),
         ...(isActive !== undefined   && { isActive }),
+        ...(enabled !== undefined    && { enabled }),
         ...(sortOrder !== undefined  && { sortOrder: Number(sortOrder) }),
         // scheduling — explicit null clears the field
         ...(activeFrom !== undefined  && { activeFrom: activeFrom ? new Date(activeFrom) : null }),

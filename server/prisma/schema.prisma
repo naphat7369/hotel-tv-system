@@ -248,6 +248,7 @@ model GuestMenuItem {
   bgImage        String?   @map("bg_image")
   sortOrder      Int       @default(0) @map("sort_order")
   isActive       Boolean   @default(true) @map("is_active")
+  enabled        Boolean   @default(true)
   activeFrom     DateTime? @map("active_from")   // null = always active
   activeUntil    DateTime? @map("active_until")  // null = no expiry
   createdAt      DateTime  @default(now()) @map("created_at")

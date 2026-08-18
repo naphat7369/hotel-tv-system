@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Badge } from '../components/ui/Badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/Table';
 import { api, type Channel } from '../lib/api';
-import { RefreshCw, Trash2, Power, Edit2, Play, Upload, MonitorPlay } from 'lucide-react';
+import { RefreshCw, Trash2, Power, Edit2, Play, Upload } from 'lucide-react';
 import { io } from 'socket.io-client';
 import Hls from 'hls.js';
 
@@ -227,6 +227,7 @@ function ChannelManagement() {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-16">CH</TableHead>
+                <TableHead className="w-16">Logo</TableHead>
                 <TableHead>Channel Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Input</TableHead>
@@ -239,16 +240,25 @@ function ChannelManagement() {
             <TableBody>
               {loading && channels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-on-surface-variant">Loading channels...</TableCell>
+                  <TableCell colSpan={9} className="text-center py-8 text-on-surface-variant">Loading channels...</TableCell>
                 </TableRow>
               ) : channels.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-on-surface-variant">No channels found.</TableCell>
+                  <TableCell colSpan={9} className="text-center py-8 text-on-surface-variant">No channels found.</TableCell>
                 </TableRow>
               ) : (
                 channels.map((ch) => (
                   <TableRow key={ch.id} className={processingId === ch.id ? 'opacity-50 pointer-events-none' : ''}>
                     <TableCell className="font-mono text-on-surface-variant">{ch.channelNumber || '-'}</TableCell>
+                    <TableCell>
+                      {ch.logoUrl ? (
+                        <div className="bg-white rounded p-1 inline-block">
+                          <img src={ch.logoUrl.startsWith('http') ? ch.logoUrl : `http://${window.location.hostname}:3000${ch.logoUrl}`} alt={ch.name} className="h-8 w-8 object-contain" />
+                        </div>
+                      ) : (
+                        <span className="text-xs text-on-surface-variant italic">No Logo</span>
+                      )}
+                    </TableCell>
                     <TableCell className="font-bold">
                       {ch.name}
                       {ch.streamUrl && <Play className="w-3 h-3 inline-block ml-2 text-primary" />}
@@ -310,9 +320,6 @@ function ChannelManagement() {
                       })()}
                     </TableCell>
                     <TableCell className="text-right space-x-2">
-                      <Button variant="ghost" size="sm" onClick={() => { setPreviewChannel(ch); setModalMode('preview'); }} title="Preview">
-                        <MonitorPlay className="w-4 h-4 text-secondary" />
-                      </Button>
                       <Button variant="ghost" size="sm" onClick={() => openEditModal(ch)} title="Edit">
                         <Edit2 className="w-4 h-4" />
                       </Button>

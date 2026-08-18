@@ -32,8 +32,32 @@ interface MenuItem {
 }
 
 
+interface CategoryConfig {
+  label: string;
+  icon: string;
+  desc?: string;
+}
 
+interface GuestMenuCategories {
+  services?: CategoryConfig;
+  dining?: CategoryConfig;
+  localGuide?: CategoryConfig;
+}
 
+export interface AppSettings {
+  hotelName: string;
+  hotelStars: string;
+  title: string;
+  subtitle: string;
+  bgImage: string;
+  backgroundImages: { tag: string; url: string; message?: string }[];
+  portalMainTitle: string;
+  portalSubtitle: string;
+  portalWelcomeText: string;
+  marqueeMessage: string;
+  guestServicesEnabled: { services: boolean; dining: boolean; localGuide: boolean };
+  guestMenuCategories?: GuestMenuCategories;
+}
 
 function App() {
   // Use localStorage so the CMS can dynamically rename this device without an Android app
@@ -59,7 +83,7 @@ function App() {
 
   const [appLoading, setAppLoading] = useState(true)
   const [appsMenu, setAppsMenu] = useState<any[]>([])
-  const [appSettings, setAppSettings] = useState({
+  const [appSettings, setAppSettings] = useState<AppSettings>({
     hotelName: 'S31 SUKHUMVIT HOTEL',
     hotelStars: '★★★★★',
     title: 'PREPARING YOUR EXPERIENCE',
@@ -213,7 +237,8 @@ function App() {
           portalSubtitle: data.portal_subtitle || 'Hotel Sukhumvit',
           portalWelcomeText: data.portal_welcome_text || 'WELCOME TO',
           marqueeMessage: data.marquee_message || 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸',
-          guestServicesEnabled: data.guestServicesEnabled || { services: true, dining: true, localGuide: true }
+          guestServicesEnabled: data.guestServicesEnabled || { services: true, dining: true, localGuide: true },
+          guestMenuCategories: data.guestMenuCategories || {}
         });
       }
     } catch (e) {
@@ -1021,11 +1046,11 @@ function App() {
           {[
             { id: 'Channel TV', icon: 'tv', label: 'Channel TV' },
             { id: 'Entertainment', icon: 'styler', label: 'Entertainment' },
-            { id: 'Services', icon: 'room_service', label: 'Services' },
-            { id: 'Dining', icon: 'restaurant', label: 'Dining' },
+            { id: 'Services', icon: appSettings.guestMenuCategories?.services?.icon || 'room_service', label: appSettings.guestMenuCategories?.services?.label || 'Services' },
+            { id: 'Dining', icon: appSettings.guestMenuCategories?.dining?.icon || 'restaurant', label: appSettings.guestMenuCategories?.dining?.label || 'Dining' },
             { divider: true },
             { id: 'Messages', icon: 'mail', label: 'Messages', badge: inboxMessages.length > 0 ? String(inboxMessages.length) : undefined },
-            { id: 'Local Guide', icon: 'explore', label: 'Local Guide', badge: 'NEW' }
+            { id: 'Local Guide', icon: appSettings.guestMenuCategories?.localGuide?.icon || 'explore', label: appSettings.guestMenuCategories?.localGuide?.label || 'Local Guide', badge: 'NEW' }
           ].map((item, index) => {
             if (item.divider) {
               return <div key={`divider-${index}`} className="w-px bg-white/20 mx-[0.5vw]" style={{ height: '6vh' }}></div>
@@ -1056,7 +1081,7 @@ function App() {
                   className={`flex items-center justify-center rounded-full border border-white/20 group-hover:border-secondary group-hover:text-secondary group-focus:border-secondary group-focus:text-secondary transition-colors ${item.id === 'Local Guide' ? 'border-secondary text-secondary' : 'text-white'}`}
                   style={{ width: '5vw', height: '5vw' }}
                 >
-                  <span className="material-symbols-outlined" style={{ fontSize: '2.2vw' }}>{item.icon}</span>
+                  <span className={/^[a-z_]+$/.test(item.icon!) ? "material-symbols-outlined" : ""} style={{ fontSize: '2.2vw', lineHeight: 1 }}>{item.icon}</span>
                 </div>
                 <span
                   className={`font-label-lg transition-colors whitespace-nowrap ${item.id === 'Local Guide' ? 'text-secondary' : 'text-white group-hover:text-secondary group-focus:text-secondary'}`}
@@ -1124,13 +1149,15 @@ function App() {
                   <>
                     <div className="mb-[4vh] flex-none">
                   <h2 className="font-display-lg text-[4vw] mb-4 text-white leading-tight">
-                    {activeMenu === 'Services' ? 'Hotel Services' : activeMenu}
+                    {activeMenu === 'Services' ? (appSettings.guestMenuCategories?.services?.label || 'Hotel Services') :
+                     activeMenu === 'Dining' ? (appSettings.guestMenuCategories?.dining?.label || 'Dining') :
+                     (appSettings.guestMenuCategories?.localGuide?.label || 'Local Guide')}
                   </h2>
                   <div className="w-[6vw] h-1 bg-secondary mb-[2vh]"></div>
                   <p className="text-[1.4vw] text-outline leading-relaxed max-w-[60%]">
-                    {activeMenu === 'Services' ? 'Curated experiences designed for your absolute comfort. From world-class spa treatments to hospitality services.' : 
-                     activeMenu === 'Dining' ? 'Explore our signature dining options, from in-room delivery to Michelin-starred restaurants.' :
-                     'Discover the best local attractions, shopping, and transit options around the hotel.'}
+                    {activeMenu === 'Services' ? (appSettings.guestMenuCategories?.services?.desc || 'Curated experiences designed for your absolute comfort. From world-class spa treatments to hospitality services.') : 
+                     activeMenu === 'Dining' ? (appSettings.guestMenuCategories?.dining?.desc || 'Explore our signature dining options, from in-room delivery to Michelin-starred restaurants.') :
+                     (appSettings.guestMenuCategories?.localGuide?.desc || 'Discover the best local attractions, shopping, and transit options around the hotel.')}
                   </p>
                 </div>
                 <div className="flex gap-[2vw] overflow-x-auto no-scrollbar pb-[5vh] items-stretch flex-1">

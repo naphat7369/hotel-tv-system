@@ -19,6 +19,7 @@ export interface Channel {
   bgImage?: string | null;
   channelNumber?: number | null;
   isActive: boolean;
+  enabled?: boolean;
   sortOrder?: number | null;
   inputProtocol?: string | null;
   inputIp?: string | null;
@@ -46,6 +47,7 @@ export interface StreamingApp {
   bgImage?: string | null;
   deepLink?: string | null;
   isActive: boolean;
+  enabled?: boolean;
   sortOrder: number;
 }
 
@@ -71,6 +73,7 @@ export interface GuestMenuItem {
   bgImage?: string | null;
   sortOrder: number;
   isActive: boolean;
+  enabled?: boolean;
   activeFrom?: string | null;
   activeUntil?: string | null;
   createdAt?: string;

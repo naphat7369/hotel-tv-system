@@ -303,7 +303,9 @@ function ChannelListOverlay({
 
               {/* Logo */}
               {ch.logoUrl ? (
-                <img src={ch.logoUrl} alt={ch.name} style={{ width:'2.8vw', height:'2.8vw', objectFit:'contain', borderRadius:'8px', background:'rgba(255,255,255,0.06)', padding:'3px', flexShrink:0, border: isFocused ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.04)', filter: isFocused ? 'brightness(1.1)' : 'brightness(0.85)', transition:'all 0.18s ease' }} />
+                <div style={{ width: '2.8vw', height: '2.8vw', borderRadius: '8px', background: '#ffffff', padding: '3px', flexShrink: 0, border: isFocused ? '1px solid rgba(255,255,255,0.15)' : '1px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src={ch.logoUrl.startsWith('http') ? ch.logoUrl : `http://${window.location.hostname}:3000${ch.logoUrl}`} alt={ch.name} style={{ width: '100%', height: '100%', objectFit: 'contain', filter: isFocused ? 'brightness(1.1)' : 'brightness(0.85)', transition: 'all 0.18s ease' }} />
+                </div>
               ) : (
                 <div style={{ width:'2.8vw', height:'2.8vw', background: isFocused ? 'linear-gradient(135deg,#6366f1,#0ea5e9)' : 'rgba(255,255,255,0.06)', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:'0.75vw', color:'#fff', flexShrink:0, border: isFocused ? 'none' : '1px solid rgba(255,255,255,0.06)' }}>
                   {ch.name.substring(0,2).toUpperCase()}
@@ -660,17 +662,22 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5vw' }}>
           {currentChannel?.logoUrl ? (
-            <img
-              src={currentChannel.logoUrl}
-              alt={currentChannel.name}
-              style={{
+            <div style={{
                 width: '4vw', height: '4vw',
-                objectFit: 'contain',
                 borderRadius: '8px',
-                background: 'rgba(255,255,255,0.1)',
+                background: '#ffffff',
                 padding: '4px',
-              }}
-            />
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+            }}>
+              <img
+                src={currentChannel.logoUrl.startsWith('http') ? currentChannel.logoUrl : `http://${window.location.hostname}:3000${currentChannel.logoUrl}`}
+                alt={currentChannel.name}
+                style={{
+                  width: '100%', height: '100%',
+                  objectFit: 'contain',
+                }}
+              />
+            </div>
           ) : (
             <div style={{
               width: '4vw', height: '4vw',

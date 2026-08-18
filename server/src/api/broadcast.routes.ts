@@ -140,7 +140,7 @@ router.delete('/active/:id', async (req: Request, res: Response) => {
 // Send or Schedule a broadcast message
 router.post('/send', async (req: Request, res: Response) => {
   try {
-    const { type, message, target, targetRoom, targetFloor, startTime, endTime } = req.body;
+    const { type, speed, message, target, targetRoom, targetFloor, startTime, endTime } = req.body;
     
     if (!message) {
       return res.status(400).json({ error: 'Message content is required' });
@@ -203,6 +203,7 @@ router.post('/send', async (req: Request, res: Response) => {
           id: activeBroadcast.id,
           message,
           type,
+          speed,
           targetDeviceIds: target === 'all' ? null : deviceIds
         });
       }

@@ -18,7 +18,8 @@ export default function PortalSettings() {
   const [portalSubtitle, setPortalSubtitle] = useState('Concierge');
   
   const [portalWelcomeText, setPortalWelcomeText] = useState('WELCOME TO');
-  const [marqueeMessage, setMarqueeMessage] = useState('Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸');
+  const [marqueeSpeed, setMarqueeSpeed] = useState(25);
+  const [marqueeMessage, setMarqueeMessage] = useState('S31 SUKHUMVIT HOTEL');
   
   const [backgroundImages, setBackgroundImages] = useState<BackgroundImage[]>([]);
 
@@ -33,7 +34,8 @@ export default function PortalSettings() {
       setPortalMainTitle(data.portal_main_title || 'LUXE');
       setPortalSubtitle(data.portal_subtitle || 'Concierge');
       setPortalWelcomeText(data.portal_welcome_text || 'WELCOME TO');
-      setMarqueeMessage(data.marquee_message || 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸');
+      setMarqueeSpeed(data.marquee_speed || 25);
+      setMarqueeMessage(data.marquee_message !== undefined && data.marquee_message !== null ? data.marquee_message : 'S31 SUKHUMVIT HOTEL');
 
       const defaultMessages: Record<string, string> = {
         'Default': 'Welcome to a sanctuary of elegance, {name}. We wish you a truly exceptional stay.',
@@ -68,6 +70,7 @@ export default function PortalSettings() {
       formData.append('portal_main_title', portalMainTitle);
       formData.append('portal_subtitle', portalSubtitle);
       formData.append('portal_welcome_text', portalWelcomeText);
+      formData.append('marquee_speed', marqueeSpeed.toString());
       formData.append('marquee_message', marqueeMessage);
       
       const bgData = backgroundImages.map(bg => ({ tag: bg.tag, url: bg.url, message: bg.message || '' }));
@@ -119,23 +122,23 @@ export default function PortalSettings() {
         
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-on-surface-variant mb-2">Main Title (e.g. LUXE)</label>
+            <label className="block text-sm font-medium text-on-surface-variant mb-2">Main Title (e.g. S31)</label>
             <input
               type="text"
               value={portalMainTitle}
               onChange={e => setPortalMainTitle(e.target.value)}
               className="w-full bg-surface border border-outline rounded-lg px-4 py-2.5 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-              placeholder="e.g. LUXE"
+              placeholder="e.g. S31"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-on-surface-variant mb-2">Subtitle (e.g. Concierge)</label>
+            <label className="block text-sm font-medium text-on-surface-variant mb-2">Subtitle (e.g. SUKHUMVIT HOTEL)</label>
             <input
               type="text"
               value={portalSubtitle}
               onChange={e => setPortalSubtitle(e.target.value)}
               className="w-full bg-surface border border-outline rounded-lg px-4 py-2.5 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-              placeholder="e.g. Concierge"
+              placeholder="e.g. SUKHUMVIT HOTEL"
             />
           </div>
         </div>
@@ -148,16 +151,6 @@ export default function PortalSettings() {
               onChange={e => setPortalWelcomeText(e.target.value)}
               className="w-full bg-surface border border-outline rounded-lg px-4 py-2.5 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
               placeholder="e.g. WELCOME TO"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-on-surface-variant mb-2">Marquee Text (Scrolling News)</label>
-            <input
-              type="text"
-              value={marqueeMessage}
-              onChange={e => setMarqueeMessage(e.target.value)}
-              className="w-full bg-surface border border-outline rounded-lg px-4 py-2.5 text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
-              placeholder="e.g. Welcome to S31..."
             />
           </div>
         </div>

@@ -429,6 +429,22 @@ function ChannelManagement() {
               {/* Background Image URL */}
               <div>
                 <label style={labelStyle}>Background Image</label>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+                  <select 
+                    style={{ ...inputStyle, fontSize: '13px', flex: 1 }}
+                    value={['/channel-bg-9.jpg', '/channel-bg-10.jpg'].includes(formData.bgImage || '') ? formData.bgImage : (formData.bgImage ? 'custom' : '')}
+                    onChange={(e) => {
+                      if (e.target.value !== 'custom') {
+                        setFormData({...formData, bgImage: e.target.value});
+                      }
+                    }}
+                  >
+                    <option value="">Default (Global Background)</option>
+                    <option value="/channel-bg-9.jpg">Pattern 9: Midnight Silk & Gold Sand</option>
+                    <option value="/channel-bg-10.jpg">Pattern 10: Charcoal Silk & Gold Sand</option>
+                    <option value="custom">Custom URL / Upload</option>
+                  </select>
+                </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input type="url" style={{ ...inputStyle, fontSize: '13px', flex: 1 }}
                      value={formData.bgImage || ''}

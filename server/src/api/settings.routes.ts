@@ -96,7 +96,9 @@ router.post('/', (req, res, next) => {
       loading_title: req.body.loading_title || currentSettings.loading_title || 'PREPARING YOUR EXPERIENCE',
       loading_subtitle: req.body.loading_subtitle || currentSettings.loading_subtitle || 'Establishing secure connection to the hotel network...',
       portal_main_title: req.body.portal_main_title || currentSettings.portal_main_title || 'LUXE',
-      portal_subtitle: req.body.portal_subtitle || currentSettings.portal_subtitle || 'Concierge'
+      portal_subtitle: req.body.portal_subtitle || currentSettings.portal_subtitle || 'Concierge',
+      marquee_message: req.body.marquee_message !== undefined ? req.body.marquee_message : currentSettings.marquee_message,
+      marquee_speed: req.body.marquee_speed ? parseInt(req.body.marquee_speed) : currentSettings.marquee_speed || 25
     };
 
     if (req.body.guestServicesEnabled) {

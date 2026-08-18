@@ -104,9 +104,10 @@ function App() {
     bgImage: 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
     backgroundImages: [] as { tag: string, url: string, message?: string }[],
     portalMainTitle: 'S31',
-    portalSubtitle: 'Hotel Sukhumvit',
+    portalSubtitle: 'SUKHUMVIT HOTEL',
     portalWelcomeText: 'WELCOME TO',
-    marqueeMessage: 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸',
+    marqueeMessage: 'WELCOME TO S31 SUKHUMVIT HOTEL. EXPERIENCE UNPARALLELED LUXURY AND WORLD-CLASS SERVICE IN THE HEART OF BANGKOK.',
+    marqueeSpeed: 25,
     guestServicesEnabled: { services: true, dining: true, localGuide: true }
   })
 
@@ -140,7 +141,8 @@ function App() {
   // Marquee State
   const [marquee, setMarquee] = useState({
     message: '',
-    type: 'default'
+    type: 'default',
+    speed: 25
   });
 
   // Alert Modal State
@@ -247,9 +249,10 @@ function App() {
           bgImage: data.loading_bg_image || 'bg-gradient-to-br from-[#1a2a4a] to-[#2a3a6a]',
           backgroundImages: data.backgroundImages || [],
           portalMainTitle: data.portal_main_title || 'S31',
-          portalSubtitle: data.portal_subtitle || 'Hotel Sukhumvit',
+          portalSubtitle: data.portal_subtitle || 'SUKHUMVIT HOTEL',
           portalWelcomeText: data.portal_welcome_text || 'WELCOME TO',
-          marqueeMessage: data.marquee_message || 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸',
+          marqueeMessage: data.marquee_message !== undefined && data.marquee_message !== null ? data.marquee_message : 'WELCOME TO S31 SUKHUMVIT HOTEL. EXPERIENCE UNPARALLELED LUXURY AND WORLD-CLASS SERVICE IN THE HEART OF BANGKOK.',
+          marqueeSpeed: data.marquee_speed || 25,
           guestServicesEnabled: data.guestServicesEnabled || { services: true, dining: true, localGuide: true },
           guestMenuCategories: data.guestMenuCategories || {}
         });
@@ -370,11 +373,11 @@ function App() {
     });
     socket.on('show_marquee', (data: any) => {
       if (data && data.message) {
-        setMarquee({ message: data.message, type: data.type || 'default' });
+        setMarquee({ message: data.message, type: data.type || 'default', speed: data.speed || appSettings.marqueeSpeed || 25 });
       }
     });
     socket.on('hide_marquee', () => {
-      setMarquee({ message: '', type: 'default' });
+      setMarquee({ message: '', type: 'default', speed: 25 });
     });
     socket.on('show_modal', (data: any) => {
       if (data && data.message) {
@@ -1014,7 +1017,7 @@ function App() {
               {guestData.isCheckedIn ? 'WELCOME' : (appSettings.portalWelcomeText || 'WELCOME TO')}
             </span>
             <h2 className="text-[5vw] font-normal text-[#e9c176] leading-[1.1] mb-[15px] drop-shadow-[0_4px_10px_rgba(0,0,0,0.8)] uppercase" style={{ fontFamily: "'Cinzel', serif" }}>
-              {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} ${appSettings.portalSubtitle || 'SUKHUMVIT'}`}
+              {guestData.isCheckedIn && guestData.name ? guestData.name : `${appSettings.portalMainTitle || 'S31'} ${appSettings.portalSubtitle || 'SUKHUMVIT HOTEL'}`.trim()}
             </h2>
             <p className="font-sans text-[1.4vw] text-white/80 max-w-[46vw] font-light leading-relaxed border-t border-white/10 pt-[15px]">
               {(() => {
@@ -1039,17 +1042,21 @@ function App() {
         </div>
 
         {/* ─── SCROLLING ANNOUNCEMENT TICKER (MARQUEE) ─── */}
-        <div
-          className={`w-full border-t border-b overflow-hidden flex items-center transition-all duration-500 marquee-container ${marquee.type === 'alert' ? 'bg-[#1f1104]/95 border-[#c9a84c]/50 shadow-[0_0_20px_rgba(201,168,76,0.3)]' : 'bg-[#0c0f0f]/95 border-[#e9c176]/20 shadow-[0_0_15px_rgba(0,0,0,0.5)]'}`}
-          style={{ height: '6vh', opacity: activeMenu ? 0 : 1 }}
-        >
-          <div className={`animate-marquee font-normal drop-shadow-md ${marquee.type === 'alert' ? 'text-[#fde68a]' : 'text-white/90'}`} style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '1.4vw', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            <span className={`mr-4 material-symbols-outlined align-middle ${marquee.type === 'alert' ? 'animate-pulse text-[#fbbf24]' : 'text-[#e9c176]'}`}>
-              {marquee.type === 'alert' ? 'campaign' : 'info'}
-            </span>
-            {marquee.type === 'default' && !marquee.message ? (appSettings.marqueeMessage || 'Welcome to S31 Hotel Sukhumvit!') : marquee.message}
+        {marquee.message && (
+          <div
+            className={`w-full border-t border-b overflow-hidden flex items-center transition-all duration-500 marquee-container ${marquee.type === 'alert' ? 'bg-[#1f1104]/95 border-[#c9a84c]/50 shadow-[0_0_20px_rgba(201,168,76,0.3)]' : 'bg-[#0c0f0f]/95 border-[#e9c176]/20 shadow-[0_0_15px_rgba(0,0,0,0.5)]'}`}
+            style={{ height: '6vh', opacity: activeMenu ? 0 : 1 }}
+          >
+            <div className={`animate-marquee font-normal drop-shadow-md ${marquee.type === 'alert' ? 'text-[#fde68a]' : 'text-white/90'}`} style={{ fontFamily: "'Montserrat', sans-serif", fontSize: '1.4vw', letterSpacing: '0.08em', textTransform: 'uppercase', animationDuration: `${marquee.speed || 25}s` }}>
+              {marquee.type === 'alert' && (
+                <span className="mr-4 material-symbols-outlined align-middle animate-pulse text-[#fbbf24]">
+                  campaign
+                </span>
+              )}
+              {marquee.message}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Horizontal Bottom Navigation Bar */}
         <div
@@ -1217,9 +1224,9 @@ function App() {
                       className="snap-center flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
                     >
                       {channel.bgImage ? (
-                        <img src={channel.bgImage.startsWith('http') ? channel.bgImage : `http://${window.location.hostname}:3000${channel.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                        <img src={channel.bgImage.startsWith('http') ? channel.bgImage : channel.bgImage.startsWith('/channel-bg') ? channel.bgImage : `http://${window.location.hostname}:3000${channel.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
                       ) : (
-                        <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <img src="/channel-bg-10.jpg" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
                       )}
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
                         <div className={`w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]`}>
@@ -1274,9 +1281,9 @@ function App() {
                       className="snap-center flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none"
                     >
                       {app.bgImage ? (
-                        <img src={app.bgImage.startsWith('http') ? app.bgImage : `http://${window.location.hostname}:3000${app.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-40 group-hover:opacity-60 transition-opacity duration-300" />
+                        <img src={app.bgImage.startsWith('http') ? app.bgImage : app.bgImage.startsWith('/channel-bg') ? app.bgImage : `http://${window.location.hostname}:3000${app.bgImage}`} alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
                       ) : (
-                        <div className={`absolute inset-0 w-full h-full bg-slate-800 opacity-40 group-hover:opacity-60 transition-opacity duration-300`}></div>
+                        <img src="/channel-bg-10.jpg" alt="" className="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
                       )}
                       <div className="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] text-left gap-[2vw]">
                         <div className={`w-[12vw] h-[7vw] bg-surface-container rounded-2xl flex items-center justify-center text-white font-bold text-[2.5vw] shadow-2xl flex-shrink-0 overflow-hidden p-[1vw]`}>

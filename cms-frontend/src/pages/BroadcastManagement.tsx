@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const DEFAULT_MARQUEE_TEXT = 'Welcome to S31 Hotel Sukhumvit! Experience our new Ice Bath & Sauna facilities on the wellness floor today. ❄️ | Join our special Happy Hour at the Bar from 5 PM to 7 PM. 🍸';
+const DEFAULT_MARQUEE_TEXT = 'WELCOME TO S31 SUKHUMVIT HOTEL. EXPERIENCE UNPARALLELED LUXURY AND WORLD-CLASS SERVICE IN THE HEART OF BANGKOK.';
 
 interface SavedMessage {
   id: string;
@@ -26,6 +26,7 @@ export const BroadcastManagement = () => {
   
   // Create Form State
   const [type, setType] = useState('default');
+  const [speed, setSpeed] = useState(25);
   const [message, setMessage] = useState(DEFAULT_MARQUEE_TEXT);
   const [target, setTarget] = useState('all');
   const [targetFloor, setTargetFloor] = useState('1');
@@ -128,6 +129,7 @@ export const BroadcastManagement = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type,
+          speed,
           message,
           target,
           targetRoom: target === 'room' ? targetRoom : null,
@@ -204,18 +206,32 @@ export const BroadcastManagement = () => {
             </div>
 
             <div className="space-y-6 animate-fade-in">
-              {/* Type Selection */}
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">หมวดหมู่ข้อความ (Message Type)</label>
-                <select 
-                  value={type} 
-                  onChange={(e) => handleTypeChange(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-300"
-                >
-                  <option value="alert">Alert (แจ้งเตือนเป็น Popup Modal กลางจอ)</option>
-                  <option value="default">Default (ตัวหนังสือวิ่งปกติ)</option>
-                  <option value="custom">Custom (เขียนประโยควิ่งเอง)</option>
-                </select>
+              {/* Type and Speed Selection */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">หมวดหมู่ข้อความ (Message Type)</label>
+                  <select 
+                    value={type} 
+                    onChange={(e) => handleTypeChange(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-300"
+                  >
+                    <option value="alert">Alert (แจ้งเตือนเป็น Popup Modal กลางจอ)</option>
+                    <option value="default">Default (ตัวหนังสือวิ่งปกติ)</option>
+                    <option value="custom">Custom (เขียนประโยควิ่งเอง)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">ความเร็ว (Speed)</label>
+                  <select 
+                    value={speed} 
+                    onChange={(e) => setSpeed(Number(e.target.value))}
+                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-slate-100 rounded-xl p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-300"
+                  >
+                    <option value={35}>Slow (ช้า)</option>
+                    <option value={25}>Normal (ปกติ)</option>
+                    <option value={15}>Fast (เร็ว)</option>
+                  </select>
+                </div>
               </div>
 
               {/* Message Content */}

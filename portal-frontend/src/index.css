@@ -167,7 +167,7 @@ body {
 }
 
 .bg-gradient-overlay-x {
-  background: linear-gradient(to right, rgba(18, 20, 20, 0.98) 0%, rgba(18, 20, 20, 0.7) 40%, rgba(18, 20, 20, 0) 100%);
+  background: linear-gradient(to right, rgba(18, 20, 20, 0.85) 0%, rgba(18, 20, 20, 0.4) 40%, rgba(18, 20, 20, 0) 100%);
 }
 
 /* Liquid Glass Alert Styles */

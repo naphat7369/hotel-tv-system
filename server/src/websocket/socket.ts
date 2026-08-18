@@ -175,6 +175,38 @@ export const initWebSocket = (server: HttpServer) => {
           }
         }).catch(err => console.error('[WebSocket] Error fetching room:', err));
       }
+
+      // Fetch currently active broadcasts and send to newly connected device
+      prisma.activeBroadcast.findFirst({
+        where: {
+          hotelId: MOCK_HOTEL_ID,
+          isActive: true,
+          OR: [
+            { startTime: null },
+            { startTime: { lte: new Date() } }
+          ],
+          AND: [
+            { OR: [{ endTime: null }, { endTime: { gt: new Date() } }] }
+          ]
+        },
+        orderBy: { createdAt: 'desc' }
+      }).then((activeBroadcast) => {
+        if (activeBroadcast) {
+           const eventName = activeBroadcast.type === 'alert' ? 'show_modal' : 'show_marquee';
+           // Check targeting
+           let shouldSend = true;
+           if (activeBroadcast.target === 'room' && activeBroadcast.targetRoom !== String(roomNumber)) {
+             shouldSend = false;
+           }
+           if (shouldSend) {
+             socket.emit(eventName, {
+               id: activeBroadcast.id,
+               message: activeBroadcast.message,
+               type: activeBroadcast.type
+             });
+           }
+        }
+      }).catch(err => console.error('[WebSocket] Error fetching active broadcast:', err));
     });
 
 

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Channel Card Background Preview</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            secondary: '#e9c176',
+          },
+          fontFamily: {
+            'display-lg': ['Cinzel', 'serif'],
+            'sans': ['Montserrat', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #0c0f0f; color: white; overflow-x: hidden; }
+    .bg-gradient-overlay-x {
+      background: linear-gradient(to right, rgba(18, 20, 20, 0.85) 0%, rgba(18, 20, 20, 0.4) 40%, rgba(18, 20, 20, 0) 100%);
+    }
+  </style>
+</head>
+<body class="p-8 font-sans">
+  
+  <div class="w-full max-w-[1920px] mx-auto">
+    <h1 class="text-[2vw] font-display-lg text-secondary text-center mb-2">Channel Card Background Preview</h1>
+    <p class="text-center text-white/50 mb-[5vh] text-[1vw]">เปรียบเทียบภาพพื้นหลัง 5 แบบเมื่อนำมาใส่ในการ์ดช่องทีวีจริง (ขนาดจำลองจากหน้าจอ TV)</p>
+
+    <!-- Container จำลองความกว้าง 65% ของหน้าจอ (เหมือน Layout จริงใน App.tsx) -->
+    <div class="flex flex-col gap-[3vh] w-[65vw] mx-auto pb-20">
+        
+      <!-- 0. Default -->
+      <div class="relative">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">0. Default (สีน้ำเงินเข้มแบบปัจจุบัน)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <div class="absolute inset-0 w-full h-full bg-gradient-to-br from-[#1E293B] to-[#0F172A] opacity-90 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 1. Gold Bokeh -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">1. Gold Bokeh (Navy & Gold)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-1.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 2. Black Marble -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">2. Black Marble (Gold Veining)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-2.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 3. Bangkok Night -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">3. Bangkok Night (Cityscape Bokeh)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-3.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 4. Dark Silk -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">4. Dark Silk (Flowing Waves)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-4.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 5. Tropical Resort -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">5. Tropical Resort (Twilight)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-5.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 6. Luminous Blue Gold Silk -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">6. Luminous Blue Gold (คล้ายแบบที่ 4 แต่สว่างและสดใสขึ้น)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-6.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 7. Pearl Champagne Silk -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">7. Pearl Champagne (โทนขาวมุก สว่างและนุ่มนวล)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-7.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 8. Warm Gold Copper Silk -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">8. Warm Gold Copper (โทนทองแดง อบอุ่นและหรูหรา)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-8.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 9. Midnight Silk & Gold Sand -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">9. Midnight Silk & Gold Sand (ผ้าไหมกรมท่า + ทรายทองระยิบระยับ)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-9.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <!-- 10. Charcoal Silk & Gold Sand -->
+      <div class="relative mt-[2vh]">
+        <div class="text-[1vw] text-secondary mb-[1vh] uppercase tracking-widest">10. Charcoal Silk & Gold Sand (ผ้าไหมสีดำ + ทางช้างเผือกทรายทอง)</div>
+        <button class="flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] bg-gradient-to-br from-slate-800 to-slate-900 text-left cursor-default block">
+          <img src="channel-bg-10.jpg" alt="" class="absolute inset-0 w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
+          <div class="absolute inset-0 bg-gradient-overlay-x flex items-center p-[2vw] gap-[2vw]">
+            <div class="w-[10vw] h-[6.5vw] bg-white rounded-xl flex items-center justify-center text-white font-bold text-[2vw] shadow-2xl flex-shrink-0 overflow-hidden p-[0.5vw]">
+               <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cd/Channel_7_HD_logo.svg/512px-Channel_7_HD_logo.svg.png" class="w-full h-full object-contain" alt="CH7">
+            </div>
+            <div class="flex-1">
+              <span class="inline-flex px-[1vw] py-[0.5vh] bg-secondary text-black text-[0.8vw] font-bold rounded-full mb-[1vh] tracking-widest items-center gap-[0.3vw] w-fit">
+                <span class="material-symbols-outlined" style="font-size: 1vw;">tv</span> CH 07
+              </span>
+              <h3 class="font-display-lg text-[2.5vw] leading-tight mb-[0.5vh] text-white">TEST</h3>
+            </div>
+          </div>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

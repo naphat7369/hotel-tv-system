@@ -44,7 +44,7 @@ export default function PortalSettings() {
       };
 
       const bgs = data.backgroundImages || [];
-      const requiredTags = ['Default', 'VIP', 'Honeymoon'];
+      const requiredTags = ['Default'];
       const mergedBgs = [...bgs];
       requiredTags.forEach(tag => {
         let existing = mergedBgs.find((b: any) => b.tag === tag);
@@ -164,11 +164,11 @@ export default function PortalSettings() {
           </div>
           <button
             onClick={() => {
-                if (backgroundImages.length < 5) {
+                if (backgroundImages.length < 10) {
                   setBackgroundImages([...backgroundImages, { tag: `Tag ${backgroundImages.length + 1}`, url: '' }]);
                 }
             }}
-            disabled={backgroundImages.length >= 5}
+            disabled={backgroundImages.length >= 10}
             className="bg-surface-container-high hover:bg-surface-container-highest text-on-surface px-4 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 flex items-center gap-2 border border-outline-variant"
           >
             <Plus size={16} /> Add New Tag
@@ -189,10 +189,10 @@ export default function PortalSettings() {
                           newBgs[index].tag = e.target.value;
                           setBackgroundImages(newBgs);
                         }}
-                        disabled={['Default', 'VIP', 'Honeymoon'].includes(bg.tag)}
+                        disabled={bg.tag === 'Default'}
                         className="bg-surface border border-outline rounded-lg px-3 py-1.5 text-on-surface focus:outline-none focus:border-primary disabled:opacity-70"
                     />
-                    {!['Default', 'VIP', 'Honeymoon'].includes(bg.tag) && (
+                    {bg.tag !== 'Default' && (
                       <button onClick={() => {
                         const newBgs = [...backgroundImages];
                         newBgs.splice(index, 1);

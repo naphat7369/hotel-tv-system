@@ -136,8 +136,8 @@ router.post('/', (req, res, next) => {
       try {
         const parsedBgs = JSON.parse(req.body.backgroundImages);
         if (Array.isArray(parsedBgs)) {
-          // Limit to 5
-          newSettings.backgroundImages = parsedBgs.slice(0, 5);
+          // Limit to 10
+          newSettings.backgroundImages = parsedBgs.slice(0, 10);
         }
       } catch (err) {
         console.error('Failed to parse backgroundImages field', err);
@@ -166,7 +166,7 @@ router.post('/', (req, res, next) => {
             const bgIndex = newSettings.backgroundImages.findIndex((bg: any) => bg.tag === tag);
             if (bgIndex >= 0) {
               newSettings.backgroundImages[bgIndex].url = fileUrl;
-            } else if (newSettings.backgroundImages.length < 5) {
+            } else if (newSettings.backgroundImages.length < 10) {
               newSettings.backgroundImages.push({ tag, url: fileUrl });
             }
           } else {

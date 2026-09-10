@@ -326,7 +326,15 @@ async function computeReportsData(options: {
     .map(item => ({ name: item.name, count: item.count, category: 'DINING' }))
     .sort((a, b) => b.count - a.count);
 
-  let slotSummary = null;
+  let slotSummary: {
+    slot: string;
+    startHour: number;
+    endHour: number;
+    totalWatchTimeMinutes: number;
+    totalWatchMinutes: number;
+    peakHour: number;
+    peakHourEvents: number;
+  } | null = null;
   if (isTimeSlotActive) {
     let peakHour = startHour!;
     let peakEvents = 0;

@@ -124,7 +124,7 @@ export async function moveToDeadLetter(
   errorMessage: string,
   retryCount: number,
   hotelId?: string
-): Promise<string> {
+): Promise<string | null> {
   const deadEntryId = await redis.xadd(
     USAGE_DEAD_LETTER_STREAM,
     '*',
@@ -171,7 +171,7 @@ export async function getDeadLetterEntries(limit = 100): Promise<Array<{
         fieldMap[fields[i]] = fields[i + 1];
       }
 
-      let parsedData = null;
+      let parsedData: any = null;
       try {
         parsedData = JSON.parse(fieldMap.data || '{}');
       } catch (e) {

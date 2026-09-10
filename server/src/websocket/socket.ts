@@ -3,6 +3,8 @@ import { Server, Socket } from 'socket.io';
 import { exec } from 'child_process';
 import { PrismaClient } from '@prisma/client';
 import { clearGuestApps } from '../services/adb.service';
+import { addUsageEventToStream } from '../lib/redis';
+import { normalizeEvent } from '../lib/analytics-normalizer';
 
 const prisma = new PrismaClient();
 const MOCK_HOTEL_ID = '123e4567-e89b-12d3-a456-426614174000';
@@ -113,7 +115,7 @@ export const initWebSocket = (server: HttpServer) => {
           if (room) roomId = room.id;
         }
 
-        await prisma.device.upsert({
+        const dbDevice = await prisma.device.upsert({
           where: { boxSerial: deviceId },
           update: {
             isOnline: true,
@@ -132,6 +134,12 @@ export const initWebSocket = (server: HttpServer) => {
             macAddress: existingDevice.macAddress || undefined
           }
         });
+
+        // Cache session context on socket instance for zero-DB event ingestion
+        socket.data.roomUuid = roomId;
+        socket.data.deviceUuid = dbDevice.id;
+        socket.data.hotelId = MOCK_HOTEL_ID;
+        socket.data.boxSerial = deviceId;
       } catch (dbErr) {
         console.error('[WebSocket] Failed to upsert device in DB:', dbErr);
       }
@@ -215,57 +223,21 @@ export const initWebSocket = (server: HttpServer) => {
     // This is more reliable on Android TV WebViews which can drop HTTP requests
     // when navigation happens immediately after (e.g. launchApp is called).
     socket.on('track_event', async (data) => {
-      const { deviceId, roomId, eventType, value, durationSeconds } = data;
-      if (!deviceId || !eventType) return;
-
-      // Do NOT track Hotel TV system itself in app metrics
-      if (eventType === 'APP_OPEN' || eventType === 'APP_WATCH_DURATION') {
-        if (value) {
-          const appName = String(value.appName || '');
-          const pkgName = String(value.packageName || '');
-          if (pkgName === 'com.hotel.tvapp' || appName.toLowerCase().includes('hotel tv')) {
-            console.log(`[Analytics/WS] Ignored event for Hotel TV system (${eventType})`);
-            return;
-          }
-        }
-      }
-
-      console.log(`[Analytics/WS] ${deviceId} → ${eventType}`);
+      if (!data) return;
 
       try {
-        // Resolve roomId (room number string like "2003") to the UUID
-        let actualRoomId: string | null = null;
-        if (roomId) {
-          const room = await prisma.room.findFirst({
-            where: { roomNumber: String(roomId), hotelId: MOCK_HOTEL_ID }
-          });
-          if (room) actualRoomId = room.id;
-        }
+        const session = {
+          hotelId: socket.data?.hotelId || MOCK_HOTEL_ID,
+          roomUuid: socket.data?.roomUuid,
+          deviceUuid: socket.data?.deviceUuid
+        };
 
-        // Resolve deviceId (boxSerial like "BOX-101-A") to the Device UUID
-        // The FK on usage_events.device_id references devices.id (UUID), not box_serial
-        let actualDeviceId: string | null = null;
-        const device = await prisma.device.findUnique({ where: { boxSerial: deviceId } });
-        if (device) {
-          actualDeviceId = device.id;
-        } else {
-          console.warn(`[Analytics/WS] Device not found for boxSerial=${deviceId}, saving event without device link.`);
-        }
+        const normalized = normalizeEvent(data, session);
+        if (!normalized) return;
 
-        await prisma.usageEvent.create({
-          data: {
-            hotelId: MOCK_HOTEL_ID,
-            deviceId: actualDeviceId,
-            eventType,
-            value: value ? JSON.stringify(value) : null,
-            durationSeconds: durationSeconds ? parseInt(String(durationSeconds), 10) : null,
-            roomId: actualRoomId,
-          }
-        });
-
-        console.log(`[Analytics/WS] ✓ Saved ${eventType} for device ${deviceId}`);
-      } catch (err) {
-        console.error(`[Analytics/WS] ✗ Failed to save ${eventType}:`, err);
+        await addUsageEventToStream(normalized);
+      } catch (err: any) {
+        console.error('[Analytics/WS] Error buffering event to Redis stream:', err.message);
       }
     });
 

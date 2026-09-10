@@ -29,6 +29,7 @@ interface MenuItem {
   displayContent: string
   bgImage?: string
   enabled?: boolean
+  section?: string
 }
 
 
@@ -203,6 +204,7 @@ function App() {
           displayContent: item.displayContent,
           bgImage: item.bgImage,
           enabled: item.enabled !== false,
+          section: item.section
         });
 
         const services = data.filter((i: any) => i.section === 'services').map(toMenuItem);
@@ -864,7 +866,11 @@ function App() {
               return;
             }
             setSelectedItem(item);
-            trackEvent('ITEM_VIEW', { itemId: item.id, name: item.name });
+            trackEvent('ITEM_VIEW', {
+              itemId: item.id,
+              name: item.name,
+              section: item.section || (activeMenu === 'Dining' ? 'dining' : 'services')
+            });
           }}
           className="flex-shrink-0 w-[24vw] h-[35vh] rounded-[24px] overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.02] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
         >

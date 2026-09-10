@@ -23,6 +23,8 @@ import settingsRoutes from './api/settings.routes';
 import streamingAppRoutes from './api/streaming-app.routes';
 import webhookRoutes from './api/webhook.routes';
 import uploadRoutes from './api/upload.routes';
+import dlqRoutes from './api/dlq.routes';
+import { startUsageEventWorker } from './workers/usage-event-worker';
 
 dotenv.config();
 
@@ -68,8 +70,12 @@ app.use('/api/v1/apps', appRoutes);
 app.use('/api/v1/screens', screenRoutes);
 app.use('/api/v1/epg', epgRoutes);
 app.use('/api/v1/services', serviceRoutes);
+app.use('/api/v1/analytics/admin', dlqRoutes);
 app.use('/api/v1/analytics', analyticsRoutes);
 app.use('/api/v1/requests', requestRoutes);
+
+// Start Usage Event Worker (XREADGROUP batch processor)
+startUsageEventWorker().catch(err => console.error('[Worker] Usage event worker failed to start:', err));
 app.use('/api/v1/mdm', mdmRoutes);
 app.use('/api/v1/broadcast', broadcastRoutes);
 app.use('/api/v1/pms', pmsRoutes);

@@ -2,6 +2,13 @@ import cron from 'node-cron';
 import os from 'os';
 import { Server } from 'socket.io';
 import { initBroadcastCron } from './broadcast.cron';
+import {
+  runHourlyRollup,
+  runDailyRollup,
+  runDailyReconciliation,
+  runRetentionCleanup
+} from '../workers/rollup-worker';
+import { trimProcessedStreamEntries } from '../lib/redis';
 
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces();
@@ -132,28 +139,52 @@ export const initCronJobs = (io: Server) => {
   // Initialize Broadcast Scheduling Cron
   initBroadcastCron(io);
 
-  // 4:00 AM Task: Analytics Data Retention Cleanup (Delete data older than 6 months)
-  cron.schedule('0 4 * * *', async () => {
-    console.log('[Cron] [4:00 AM] Running automated Analytics Cleanup task...');
+  // Hourly Rollup (3-hour window + UPSERT) at minute 5 of every hour
+  cron.schedule('5 * * * *', async () => {
+    console.log('[Cron] Running scheduled hourly rollup...');
     try {
-      const { PrismaClient } = require('@prisma/client');
-      const prisma = new PrismaClient();
-      
-      const sixMonthsAgo = new Date();
-      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      await runHourlyRollup(3);
+    } catch (err: any) {
+      console.error('[Cron] Hourly rollup error:', err.message);
+    }
+  });
 
-      const deleted = await prisma.usageEvent.deleteMany({
-        where: {
-          timestamp: {
-            lt: sixMonthsAgo
-          }
-        }
-      });
-      
-      console.log(`[Cron] Deleted ${deleted.count} old analytics records.`);
-      await prisma.$disconnect();
-    } catch (err) {
-      console.error('[Cron] Failed to cleanup analytics:', err);
+  // Daily Rollup at 00:05 daily
+  cron.schedule('5 0 * * *', async () => {
+    console.log('[Cron] Running scheduled daily rollup...');
+    try {
+      await runDailyRollup();
+    } catch (err: any) {
+      console.error('[Cron] Daily rollup error:', err.message);
+    }
+  });
+
+  // Daily Reconciliation (Full sweep of yesterday) at 02:30 daily
+  cron.schedule('30 2 * * *', async () => {
+    console.log('[Cron] Running daily reconciliation sweep...');
+    try {
+      await runDailyReconciliation();
+    } catch (err: any) {
+      console.error('[Cron] Daily reconciliation error:', err.message);
+    }
+  });
+
+  // Hourly Stream Maintenance (XTRIM acknowledged entries > 24h)
+  cron.schedule('0 * * * *', async () => {
+    try {
+      await trimProcessedStreamEntries(100000);
+    } catch (err: any) {
+      console.error('[Cron] Stream trim error:', err.message);
+    }
+  });
+
+  // 4:00 AM Task: Analytics Data Retention Cleanup (90 days raw, 365 days hourly)
+  cron.schedule('0 4 * * *', async () => {
+    console.log('[Cron] [4:00 AM] Running automated Analytics Retention Cleanup...');
+    try {
+      await runRetentionCleanup();
+    } catch (err: any) {
+      console.error('[Cron] Failed to run retention cleanup:', err.message);
     }
   });
 };

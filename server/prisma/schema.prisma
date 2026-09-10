@@ -11,7 +11,7 @@ model Hotel {
   id              String            @id @default(uuid()) 
   name            String            
   code            String            @unique 
-  timezone        String?           
+  timezone        String?           @default("Asia/Bangkok")
   locale          String?           
   settings        String?
   createdAt       DateTime          @default(now()) @map("created_at") 
@@ -22,6 +22,8 @@ model Hotel {
   screenTemplates ScreenTemplate[]
   reservations    Reservation[]
   usageEvents     UsageEvent[]
+  hourlySummaries UsageHourlySummary[]
+  dailySummaries  UsageDailySummary[]
   guestRequests   GuestRequest[]
   savedMessages   SavedMessage[]
   activeBroadcasts ActiveBroadcast[]
@@ -160,21 +162,79 @@ model Reservation {
 
 model UsageEvent {
   id               String       @id @default(uuid()) 
+  eventId          String?      @unique @map("event_id")
   hotelId          String       @map("hotel_id") 
   roomId           String?      @map("room_id") 
   deviceId         String?      @map("device_id") 
   reservationId    String?      @map("reservation_id") 
+
+  category         String?
+  itemId           String?      @map("item_id")
+  itemName         String?      @map("item_name")
   eventType        String?      @map("event_type") 
+
+  startedAt        DateTime?    @map("started_at")
+  endedAt          DateTime?    @map("ended_at")
+  durationSec      Int?         @map("duration_sec")
+
+  extra            Json?
+
+  // Legacy columns for backward compatibility
   value            String?      
   durationSeconds  Int?         @map("duration_seconds")
   guestType        String?      @map("guest_type") 
   timestamp        DateTime     @default(now()) 
+
   hotel            Hotel        @relation(fields: [hotelId], references: [id])
   room             Room?        @relation(fields: [roomId], references: [id])
   device           Device?      @relation(fields: [deviceId], references: [id])
   reservation      Reservation? @relation(fields: [reservationId], references: [id])
 
+  @@index([hotelId, category, itemId, startedAt])
+  @@index([hotelId, startedAt])
   @@map("usage_events")
+}
+
+model UsageHourlySummary {
+  id               String   @id @default(uuid())
+  hotelId          String   @map("hotel_id")
+  hourBucket       DateTime @map("hour_bucket")
+  category         String
+  itemId           String   @map("item_id")
+  itemName         String   @map("item_name")
+
+  eventCount       Int      @default(0) @map("event_count")
+  totalDurationSec Int      @default(0) @map("total_duration_sec")
+  uniqueRooms      Int      @default(0) @map("unique_rooms")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+
+  hotel            Hotel    @relation(fields: [hotelId], references: [id])
+
+  @@unique([hotelId, hourBucket, category, itemId])
+  @@index([hotelId, hourBucket])
+  @@map("usage_hourly_summary")
+}
+
+model UsageDailySummary {
+  id               String   @id @default(uuid())
+  hotelId          String   @map("hotel_id")
+  dateBucket       DateTime @map("date_bucket")
+  category         String
+  itemId           String   @map("item_id")
+  itemName         String   @map("item_name")
+
+  eventCount       Int      @default(0) @map("event_count")
+  totalDurationSec Int      @default(0) @map("total_duration_sec")
+  uniqueRooms      Int      @default(0) @map("unique_rooms")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+
+  hotel            Hotel    @relation(fields: [hotelId], references: [id])
+
+  @@unique([hotelId, dateBucket, category, itemId])
+  @@index([hotelId, dateBucket])
+  @@map("usage_daily_summary")
 }
 
 model DeviceCommand {

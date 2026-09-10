@@ -354,13 +354,40 @@ export const api = {
 
   // ── SETTINGS ──
 
-  getAnalyticsReports: async (days: number | 'all' = 7) => {
-    const url = days === 'all' 
+  getAnalyticsReports: async (days: number | 'all' = 7, startHour?: number, endHour?: number) => {
+    let url = days === 'all' 
       ? `http://${window.location.hostname}:3000/api/v1/analytics/reports?days=0`
       : `http://${window.location.hostname}:3000/api/v1/analytics/reports?days=${days}`;
+    if (startHour !== undefined && endHour !== undefined) {
+      url += `&startHour=${startHour}&endHour=${endHour}`;
+    }
     const res = await fetch(url);
     if (!res.ok) throw new Error('Failed to fetch analytics reports');
-    return res.json();
+    return res.json() as Promise<{
+      topChannels: Array<{ name: string; count: number; duration: number }>;
+      topApps: Array<{ name: string; count: number; duration: number }>;
+      topMenus: Array<{ name: string; count: number }>;
+      topServices: Array<{ name: string; count: number; category: string }>;
+      topDining: Array<{ name: string; count: number; category: string }>;
+      totalEvents: number;
+      slotSummary?: {
+        startHour: number;
+        endHour: number;
+        totalWatchTimeMinutes: number;
+        peakHour: number;
+        peakHourEvents: number;
+      } | null;
+    }>;
+  },
+
+  exportAnalyticsReport: (days: number | 'all' = 7, startHour?: number, endHour?: number) => {
+    let url = days === 'all' 
+      ? `http://${window.location.hostname}:3000/api/v1/analytics/reports/export?days=0`
+      : `http://${window.location.hostname}:3000/api/v1/analytics/reports/export?days=${days}`;
+    if (startHour !== undefined && endHour !== undefined) {
+      url += `&startHour=${startHour}&endHour=${endHour}`;
+    }
+    window.open(url, '_blank');
   },
 
   getSettings: async () => {

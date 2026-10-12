@@ -8,6 +8,9 @@ import { PrismaClient } from '@prisma/client';
 const router = Router();
 const prisma = new PrismaClient();
 
+// Maximum number of TV boxes that can share the same room number
+const MAX_DEVICES_PER_ROOM = 2;
+
 // Helper to get the actual LAN IP of the Node.js server
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces();
@@ -96,33 +99,37 @@ router.post('/devices/:id/command', async (req: Request, res: Response) => {
     const targetRoomNumber = String(payload?.roomNumber || '').trim();
 
     if (targetRoomNumber && targetRoomNumber !== 'Unassigned') {
+      // A room may have up to MAX_DEVICES_PER_ROOM TV boxes (e.g. bedroom + living room).
+      // Collect other devices already assigned to this room (excluding this device itself).
+      const otherDevices = new Set<string>();
+
       // 1. Check connected devices in memory
       for (const [existingDeviceId, existingDevice] of connectedDevices.entries()) {
         if (existingDeviceId !== id && existingDevice.roomNumber === targetRoomNumber) {
-          console.warn(`[MDM Warning] Cannot set room ${targetRoomNumber} for ${id}: Already assigned to ${existingDeviceId}`);
-          return res.status(400).json({
-            error: `Cannot assign: Room ${targetRoomNumber} is already assigned to device ${existingDeviceId}`
-          });
+          otherDevices.add(existingDeviceId);
         }
       }
 
       // 2. Check Database records (to cover offline devices as well)
       try {
-        const dbConflict = await prisma.device.findFirst({
+        const dbDevices = await prisma.device.findMany({
           where: {
             boxSerial: { not: id },
             room: { roomNumber: targetRoomNumber }
-          }
+          },
+          select: { boxSerial: true }
         });
-
-        if (dbConflict) {
-          console.warn(`[MDM Warning] Cannot set room ${targetRoomNumber} for ${id}: Already assigned in DB to ${dbConflict.boxSerial}`);
-          return res.status(400).json({
-            error: `Cannot assign: Room ${targetRoomNumber} is already assigned to device ${dbConflict.boxSerial}`
-          });
-        }
+        for (const d of dbDevices) otherDevices.add(d.boxSerial);
       } catch (err) {
         console.error('[MDM Error] Error checking room conflict in DB:', err);
+      }
+
+      if (otherDevices.size >= MAX_DEVICES_PER_ROOM) {
+        const assigned = Array.from(otherDevices).join(', ');
+        console.warn(`[MDM Warning] Cannot set room ${targetRoomNumber} for ${id}: Room already has ${otherDevices.size} device(s): ${assigned}`);
+        return res.status(400).json({
+          error: `Cannot assign: Room ${targetRoomNumber} already has the maximum of ${MAX_DEVICES_PER_ROOM} devices (${assigned})`
+        });
       }
     }
 

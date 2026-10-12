@@ -69,24 +69,17 @@ export const initCronJobs = (io: Server) => {
             data: { status: 'Checked-Out' }
           });
           
-          // 2. Find Device & Trigger Clear
-          let targetDeviceId: string | null = null;
-          let targetIp: string | null = null;
-          for (const [id, device] of connectedDevices.entries()) {
-            if (device.roomNumber === String(res.room.roomNumber)) {
-              targetDeviceId = id;
-              targetIp = device.ipAddress || null;
-              break;
-            }
-          }
-          
-          if (targetDeviceId) {
+          // 2. Find all Devices in this room (may be more than one) & Trigger Clear
+          for (const [targetDeviceId, device] of connectedDevices.entries()) {
+            if (device.roomNumber !== String(res.room.roomNumber)) continue;
+            const targetIp = device.ipAddress || null;
+
             io.to(`device_${targetDeviceId}`).emit('guest_update', {
               status: 'checked_out',
               guestName: null,
               guestTag: null
             });
-            console.log(`[Cron Auto-Sweep] Sent checked_out to TV ${res.room.roomNumber}`);
+            console.log(`[Cron Auto-Sweep] Sent checked_out to TV ${res.room.roomNumber} (device ${targetDeviceId})`);
             
             if (targetIp) {
               console.log(`[Cron Auto-Sweep] Initiating ADB clear for IP: ${targetIp}`);

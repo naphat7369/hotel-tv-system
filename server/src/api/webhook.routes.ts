@@ -93,16 +93,11 @@ router.post('/checkin', async (req: Request, res: Response) => {
       // Socket update & ADB Clear
       const io = req.app.get('io');
       if (io) {
-        let targetDeviceId: string | null = null;
-        let targetIp: string | null = null;
-        for (const [id, device] of connectedDevices.entries()) {
-          if (device.roomNumber === String(roomNumber)) {
-            targetDeviceId = id;
-            targetIp = device.ipAddress || null;
-            break;
-          }
-        }
-        if (targetDeviceId) {
+        // A room may have multiple TV boxes — notify and clear all of them
+        for (const [targetDeviceId, device] of connectedDevices.entries()) {
+          if (device.roomNumber !== String(roomNumber)) continue;
+          const targetIp = device.ipAddress || null;
+
           io.to(`device_${targetDeviceId}`).emit('guest_update', {
             status: 'checked_out',
             guestName: null,
@@ -195,18 +190,13 @@ router.post('/checkin', async (req: Request, res: Response) => {
 
     const io = req.app.get('io');
     if (io) {
-      // Find the deviceId that matches this room number
-      let targetDeviceId: string | null = null;
-      let targetIp: string | null = null;
-      for (const [id, device] of connectedDevices.entries()) {
-        if (device.roomNumber === String(roomNumber)) {
-          targetDeviceId = id;
-          targetIp = device.ipAddress || null;
-          break;
-        }
-      }
+      // Find all devices that match this room number (a room may have multiple TV boxes)
+      let foundAny = false;
+      for (const [targetDeviceId, device] of connectedDevices.entries()) {
+        if (device.roomNumber !== String(roomNumber)) continue;
+        foundAny = true;
+        const targetIp = device.ipAddress || null;
 
-      if (targetDeviceId) {
         // Clear apps before showing new guest name to ensure privacy
         if (targetIp) {
           try {
@@ -223,7 +213,9 @@ router.post('/checkin', async (req: Request, res: Response) => {
           guestTag: vipStatus // Mapping vipStatus to guestTag for the TV frontend
         });
         console.log(`[Webhook] Sent guest_update(checked_in) to device_${targetDeviceId} (Room ${roomNumber})`);
-      } else {
+      }
+
+      if (!foundAny) {
         console.log(`[Webhook Warning] TV for room ${roomNumber} is currently offline. Screen will update when it wakes up.`);
       }
     }
@@ -279,18 +271,13 @@ router.post('/checkout', async (req: Request, res: Response) => {
 
     const io = req.app.get('io');
     if (io) {
-      // Find the deviceId that matches this room number
-      let targetDeviceId: string | null = null;
-      let targetIp: string | null = null;
-      for (const [id, device] of connectedDevices.entries()) {
-        if (device.roomNumber === String(roomNumber)) {
-          targetDeviceId = id;
-          targetIp = device.ipAddress || null;
-          break;
-        }
-      }
+      // Find all devices that match this room number (a room may have multiple TV boxes)
+      let foundAny = false;
+      for (const [targetDeviceId, device] of connectedDevices.entries()) {
+        if (device.roomNumber !== String(roomNumber)) continue;
+        foundAny = true;
+        const targetIp = device.ipAddress || null;
 
-      if (targetDeviceId) {
         io.to(`device_${targetDeviceId}`).emit('guest_update', {
           status: 'checked_out',
           guestName: null,
@@ -306,7 +293,9 @@ router.post('/checkout', async (req: Request, res: Response) => {
             }).catch(err => console.error(`[Webhook Error] Auto-clear failed:`, err));
           } catch(e) {}
         }
-      } else {
+      }
+
+      if (!foundAny) {
         console.log(`[Webhook Warning] TV for room ${roomNumber} is currently offline. Screen will update when it wakes up.`);
       }
     }

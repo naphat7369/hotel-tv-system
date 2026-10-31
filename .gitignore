@@ -2,6 +2,11 @@ node_modules/
 dist/
 build/
 .env
+server/.env
+server/backups/
+backups/
+server/logs/.heartbeat.json
+server/logs/*.jsonl*
 uploads/
 dev.db
 *.log

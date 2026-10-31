@@ -1,6 +1,7 @@
 import { exec } from 'child_process';
 import util from 'util';
 import path from 'path';
+import { IncidentService } from './incident.service';
 
 const execPromise = util.promisify(exec);
 
@@ -62,6 +63,15 @@ export function markIpUnauthorized(ip: string): void {
   // Disconnect so the host ADB daemon stops holding an unauthorized transport to the TV
   execPromise(`${ADB_PATH} disconnect ${ip}:5555`, { timeout: 5000 }).catch(() => {});
 
+  try {
+    if (IncidentService.isEnabled()) {
+      Promise.resolve()
+        .then(() => IncidentService.reportAdbUnauthorized(ip))
+        .catch(() => {});
+    }
+  } catch {
+    // Non-blocking fire-and-forget guard
+  }
 }
 
 /**
@@ -96,7 +106,16 @@ export const connectAdb = async (ip: string, forceRetry = false): Promise<boolea
       return false;
     }
 
-    unauthorizedIps.delete(ip);
+    const wasUnauthorized = unauthorizedIps.delete(ip);
+    try {
+      if (IncidentService.isEnabled() && wasUnauthorized) {
+        Promise.resolve()
+          .then(() => IncidentService.resolveAdbUnauthorized(ip))
+          .catch(() => {});
+      }
+    } catch {
+      // Non-blocking fire-and-forget guard
+    }
 
     return true;
   } catch (error: any) {

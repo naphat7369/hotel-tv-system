@@ -6,6 +6,7 @@ import { clearGuestApps, pendingClearRooms } from '../services/adb.service';
 import { addUsageEventToStream } from '../lib/redis';
 import { normalizeEvent } from '../lib/analytics-normalizer';
 import { logDeviceEvent } from '../services/device-log.service';
+import { IncidentService } from '../services/incident.service';
 
 const prisma = new PrismaClient();
 const MOCK_HOTEL_ID = '123e4567-e89b-12d3-a456-426614174000';
@@ -284,6 +285,13 @@ export const initWebSocket = (server: HttpServer) => {
         lastSeen: new Date().toISOString()
       });
 
+      try {
+        if (IncidentService.isEnabled()) {
+          IncidentService.recordDeviceHeartbeat(deviceId, existing?.roomNumber);
+        }
+      } catch {
+        // Non-blocking fire-and-forget guard
+      }
       
       // We don't broadcast on every heartbeat to save bandwidth, 
       // but the server knows it's online.

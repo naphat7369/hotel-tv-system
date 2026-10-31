@@ -318,3 +318,44 @@ model GuestMenuItem {
   @@map("guest_menu_items")
 }
 
+model Incident {
+  id                  String    @id @default(uuid())
+  incidentKey         String    @map("incident_key")
+  category            String
+  type                String
+  severity            String
+  status              String    @default("OPEN")
+  title               String
+  summary             String    @db.Text
+  affectedRooms       Json?     @map("affected_rooms")
+  floorBreakdown      Json?     @map("floor_breakdown")
+  vlanBreakdown       Json?     @map("vlan_breakdown")
+  suppressedCount     Int       @default(0) @map("suppressed_count")
+  escalationCount     Int       @default(0) @map("escalation_count")
+  flappingCount       Int       @default(0) @map("flapping_count")
+  telegramStatus      String    @default("PENDING") @map("telegram_status")
+  emailStatus         String    @default("PENDING") @map("email_status")
+  occurredAt          DateTime  @default(now()) @map("occurred_at")
+  lastAlertAt         DateTime? @map("last_alert_at")
+  resolvedAt          DateTime? @map("resolved_at")
+  durationSec         Int?      @map("duration_sec")
+  metadata            Json?
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@index([status, category])
+  @@index([incidentKey, status])
+  @@index([occurredAt])
+  @@map("incidents")
+}
+
+model SystemSetting {
+  key                 String    @id
+  value               Json
+  updatedBy           String?   @map("updated_by")
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@map("system_settings")
+}
+
+

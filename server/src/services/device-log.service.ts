@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { IncidentService } from './incident.service';
 
 export interface DeviceLogPayload {
   deviceId: string;
@@ -64,6 +65,15 @@ export function logDeviceEvent(data: DeviceLogPayload) {
     console.error('[DeviceLog] Error writing device log:', err);
   }
 
+  try {
+    if (IncidentService.isEnabled()) {
+      Promise.resolve()
+        .then(() => IncidentService.ingestDeviceLog(data))
+        .catch(() => {});
+    }
+  } catch {
+    // Non-blocking fire-and-forget guard
+  }
 }
 
 /**

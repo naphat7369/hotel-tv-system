@@ -1,7 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { connectedDevices } from '../websocket/socket';
-import { clearGuestApps } from '../services/adb.service';
+import { clearGuestApps, pendingClearRooms } from '../services/adb.service';
+import { IncidentService } from '../services/incident.service';
 import fs from 'fs';
 import path from 'path';
 
@@ -93,6 +94,7 @@ router.post('/checkin', async (req: Request, res: Response) => {
       // Socket update & ADB Clear
       const io = req.app.get('io');
       if (io) {
+        let clearedAny = false;
         // A room may have multiple TV boxes — notify and clear all of them
         for (const [targetDeviceId, device] of connectedDevices.entries()) {
           if (device.roomNumber !== String(roomNumber)) continue;
@@ -106,16 +108,26 @@ router.post('/checkin', async (req: Request, res: Response) => {
           console.log(`[Webhook] Sent guest_update(checked_out) to device_${targetDeviceId} (Room ${roomNumber})`);
           
           if (targetIp) {
+            clearedAny = true;
             try {
               console.log(`[Webhook] Initiating ADB auto-clear for IP: ${targetIp}`);
-              // Wait for the clearing process to completely finish without blocking the webhook too long? 
-              // Wait, doing it async might be better so webhook returns 200 immediately, but let's await it to guarantee it.
               clearGuestApps(targetIp).then(() => {
                 console.log(`[Webhook] Auto-clear finished for ${targetIp}.`);
               }).catch(err => console.error(`[Webhook Error] Auto-clear failed:`, err));
             } catch(e) {}
           }
         }
+        if (!clearedAny) {
+          pendingClearRooms.add(String(roomNumber));
+        }
+      }
+
+      try {
+        if (IncidentService.isEnabled()) {
+          IncidentService.recordPmsActivity(true);
+        }
+      } catch {
+        // Non-blocking fire-and-forget guard
       }
 
       return res.status(200).json({ message: 'Check-out (via delete service) processed successfully' });
@@ -216,13 +228,29 @@ router.post('/checkin', async (req: Request, res: Response) => {
       }
 
       if (!foundAny) {
-        console.log(`[Webhook Warning] TV for room ${roomNumber} is currently offline. Screen will update when it wakes up.`);
+        pendingClearRooms.add(String(roomNumber));
+        console.log(`[Webhook Warning] TV for room ${roomNumber} is currently offline. Queued pending auto-clear for when it wakes up.`);
       }
     }
 
+    try {
+      if (IncidentService.isEnabled()) {
+        IncidentService.recordPmsActivity(true);
+      }
+    } catch {
+      // Non-blocking fire-and-forget guard
+    }
+
     res.status(200).json({ message: 'Check-in processed successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Webhook] Check-in Error:', error);
+    try {
+      if (IncidentService.isEnabled()) {
+        IncidentService.recordPmsActivity(false, error?.message || 'Check-in webhook error');
+      }
+    } catch {
+      // Non-blocking fire-and-forget guard
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -296,13 +324,29 @@ router.post('/checkout', async (req: Request, res: Response) => {
       }
 
       if (!foundAny) {
-        console.log(`[Webhook Warning] TV for room ${roomNumber} is currently offline. Screen will update when it wakes up.`);
+        pendingClearRooms.add(String(roomNumber));
+        console.log(`[Webhook Warning] TV for room ${roomNumber} is currently offline. Queued pending auto-clear for when it wakes up.`);
       }
     }
 
+    try {
+      if (IncidentService.isEnabled()) {
+        IncidentService.recordPmsActivity(true);
+      }
+    } catch {
+      // Non-blocking fire-and-forget guard
+    }
+
     res.status(200).json({ message: 'Check-out processed successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('[Webhook] Check-out Error:', error);
+    try {
+      if (IncidentService.isEnabled()) {
+        IncidentService.recordPmsActivity(false, error?.message || 'Check-out webhook error');
+      }
+    } catch {
+      // Non-blocking fire-and-forget guard
+    }
     res.status(500).json({ error: 'Internal server error' });
   }
 });

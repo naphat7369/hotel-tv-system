@@ -2,6 +2,7 @@ import { PrismaClient, Channel } from '@prisma/client';
 import dgram from 'dgram';
 import http from 'http';
 import https from 'https';
+import { IncidentService } from './incident.service';
 
 const prisma = new PrismaClient();
 
@@ -33,7 +34,7 @@ export class StreamService {
     this.probeAllChannels();
   }
 
-  private static async probeAllChannels() {
+  public static async probeAllChannels() {
     const channels = await prisma.channel.findMany({
       where: { isActive: true },
     });
@@ -63,6 +64,17 @@ export class StreamService {
     // Broadcast the updated status map to CMS clients
     if (this.io) {
       this.io.emit('channel_status_update', this.statusMap);
+    }
+
+    try {
+      if (IncidentService.isEnabled()) {
+        const snapshot = { ...this.statusMap };
+        Promise.resolve()
+          .then(() => IncidentService.processStreamProbeResults(channels, snapshot))
+          .catch(() => {});
+      }
+    } catch {
+      // Non-blocking fire-and-forget guard
     }
   }
 

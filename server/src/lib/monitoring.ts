@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { IncidentService } from '../services/incident.service';
 
 export interface AlertOptions {
   type: string;
@@ -99,6 +100,24 @@ export async function sendAlert(options: AlertOptions): Promise<boolean> {
 
   const fullMessage = `[${severity.toUpperCase()}] [Hotel: ${hotelId}] [${type}] ${message}${suppressedSummary}`;
   console.error(`[Alert] ${fullMessage}`, metadata || '');
+
+  try {
+    if (IncidentService.isEnabled()) {
+      Promise.resolve()
+        .then(() =>
+          IncidentService.reportMonitoringAlert({
+            type,
+            message,
+            severity,
+            hotelId,
+            metadata,
+          })
+        )
+        .catch(() => {});
+    }
+  } catch {
+    // Non-blocking fire-and-forget guard
+  }
 
   const webhookUrl = process.env.ALERT_WEBHOOK_URL;
   if (!webhookUrl) {

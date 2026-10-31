@@ -1,7 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
+
+vi.mock('@prisma/client', () => {
+  return {
+    PrismaClient: class {
+      room = {
+        findFirst: vi.fn(async ({ where }: any) =>
+          where?.roomNumber === '202' ? { id: 'room-202', roomNumber: '202' } : null
+        ),
+      };
+      reservation = {
+        findFirst: vi.fn(async ({ where }: any) =>
+          where?.roomId === 'room-202'
+            ? {
+                id: 'res-202',
+                roomId: 'room-202',
+                guestFirstName: 'Jane Smith',
+                guestLoyaltyTier: 'Regular',
+                status: 'In-House',
+                checkOut: null,
+              }
+            : null
+        ),
+      };
+    },
+  };
+});
+
 import pmsRoutes from '../pms.routes';
+import { connectedDevices } from '../../websocket/socket';
 
 // Mock the adb.service
 vi.mock('../../services/adb.service', () => ({
@@ -88,6 +116,14 @@ describe('PMS Routes', () => {
   });
 
   it('GET /api/v1/pms/status/:ip should return current reservation status', async () => {
+    connectedDevices.set('BOX-202', {
+      deviceId: 'BOX-202',
+      roomNumber: '202',
+      ipAddress: '192.168.1.202',
+      isOnline: true,
+      lastSeen: new Date().toISOString(),
+    });
+
     // Check-in first to store in map
     await request(app)
       .post('/api/v1/pms/checkin')

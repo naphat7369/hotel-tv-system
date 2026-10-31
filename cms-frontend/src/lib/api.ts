@@ -403,6 +403,125 @@ export const api = {
     });
     if (!res.ok) throw new Error('Failed to update settings');
     return res.json();
+  },
+
+  // ── INCIDENT NOTIFICATION SETTINGS (Protected by X-Admin-Key) ──
+  // NOTE (ข้อจำกัดชั่วคราว / Temporary Limitation):
+  // การเก็บ Admin API Key ไว้ใน localStorage เป็นข้อจำกัดชั่วคราวเนื่องจากระบบ CMS ปัจจุบันยังไม่มีระบบ Login / Session Cookie แบบ HttpOnly
+  // เมื่อมีการเพิ่มระบบ Authentication หลักของ CMS ในอนาคต ควรย้ายไปใช้ HttpOnly Session / JWT แทน
+  getIncidentAdminKey: (): string => {
+    try {
+      return localStorage.getItem('hotel_cms_admin_key') || '';
+    } catch {
+      return '';
+    }
+  },
+
+  setIncidentAdminKey: (key: string): void => {
+    try {
+      localStorage.setItem('hotel_cms_admin_key', key.trim());
+    } catch {
+      // Ignore storage errors
+    }
+  },
+
+  parseIncidentApiError: async (res: Response): Promise<never> => {
+    let serverDetail = '';
+    try {
+      const body = await res.json();
+      serverDetail = body?.error || '';
+    } catch {
+      // Ignore JSON parse error
+    }
+
+    if (res.status === 401) {
+      throw new Error('รหัส Admin API Key ไม่ถูกต้อง หรือยังไม่ได้ระบุ (401 Unauthorized)');
+    }
+    if (res.status === 404) {
+      throw new Error(
+        'ไม่พบ Endpoint ระบบแจ้งเตือนบนเซิร์ฟเวอร์ (404 Not Found) — โค้ด Backend คอมไพล์แล้วแต่ยังไม่ได้รีสตาร์ทโปรเซส hotel_server'
+      );
+    }
+    if (res.status === 503) {
+      throw new Error(
+        'ระบบจัดการ Incident ยังไม่พร้อมใช้งาน: ยังไม่ได้ตั้งค่า ADMIN_API_KEY ในไฟล์ .env ของเซิร์ฟเวอร์ (503 Service Unavailable - Fail Closed)'
+      );
+    }
+    if (res.status === 429) {
+      throw new Error(
+        'ส่งคำขอเกินโควตาที่กำหนด (เกิน 10 ครั้งต่อนาที) กรุณารอสักครู่แล้วลองใหม่อีกครั้ง (429 Too Many Requests)'
+      );
+    }
+    throw new Error(serverDetail || `เกิดข้อผิดพลาดจากเซิร์ฟเวอร์ (HTTP ${res.status})`);
+  },
+
+  getIncidentConfig: async () => {
+    const adminKey = api.getIncidentAdminKey();
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/settings/incidents/config`, {
+      headers: {
+        'x-admin-key': adminKey,
+      },
+      cache: 'no-store',
+    });
+    if (!res.ok) return api.parseIncidentApiError(res);
+    return res.json();
+  },
+
+  updateIncidentConfig: async (payload: Record<string, any>) => {
+    const adminKey = api.getIncidentAdminKey();
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/settings/incidents/config`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': adminKey,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) return api.parseIncidentApiError(res);
+    return res.json();
+  },
+
+  muteIncidents: async (durationMinutes: number) => {
+    const adminKey = api.getIncidentAdminKey();
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/settings/incidents/mute`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': adminKey,
+      },
+      body: JSON.stringify({ durationMinutes }),
+    });
+    if (!res.ok) return api.parseIncidentApiError(res);
+    return res.json();
+  },
+
+  testIncidentNotification: async (channel: 'telegram' | 'email' | 'both') => {
+    const adminKey = api.getIncidentAdminKey();
+    const res = await fetch(`http://${window.location.hostname}:3000/api/v1/settings/incidents/test`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-admin-key': adminKey,
+      },
+      body: JSON.stringify({ channel }),
+    });
+    if (!res.ok) return api.parseIncidentApiError(res);
+    return res.json();
+  },
+
+  getRecentIncidents: async (limit = 20) => {
+    const adminKey = api.getIncidentAdminKey();
+    const res = await fetch(
+      `http://${window.location.hostname}:3000/api/v1/settings/incidents/recent?limit=${limit}`,
+      {
+        headers: {
+          'x-admin-key': adminKey,
+        },
+        cache: 'no-store',
+      }
+    );
+    if (!res.ok) return api.parseIncidentApiError(res);
+    return res.json();
   }
 };
 

@@ -9,6 +9,7 @@ import DeviceManagement from './pages/DeviceManagement';
 import BroadcastManagement from './pages/BroadcastManagement';
 import Settings from './pages/settings/Settings';
 import PortalSettings from './pages/settings/PortalSettings';
+import IncidentSettings from './pages/settings/IncidentSettings';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="requests" element={<GuestRequests />} />
           <Route path="settings" element={<Settings />} />
           <Route path="portal-settings" element={<PortalSettings />} />
+          <Route path="incident-settings" element={<IncidentSettings />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

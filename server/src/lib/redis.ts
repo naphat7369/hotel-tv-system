@@ -5,7 +5,7 @@ export const USAGE_STREAM = 'usage_events_stream';
 export const USAGE_GROUP = 'usage_worker_group';
 export const USAGE_DEAD_LETTER_STREAM = 'usage_events_stream:dead';
 
-const redisUrl = process.env.REDIS_URL || 'redis://localhost:6380';
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 export const redis = new Redis(redisUrl, {
   maxRetriesPerRequest: 3,
@@ -14,13 +14,24 @@ export const redis = new Redis(redisUrl, {
     return delay;
   },
   reconnectOnError(err) {
+    if (err.message && err.message.includes('BUSYGROUP')) {
+      return false;
+    }
     console.error('[Redis] Connection error:', err.message);
-    return true;
+    return err.message.includes('READONLY');
   }
 });
 
+let consumerGroupInitialized = false;
+
 redis.on('connect', () => {
   console.log('[Redis] Connected successfully to', redisUrl);
+});
+
+redis.on('ready', () => {
+  if (!consumerGroupInitialized) {
+    initRedisConsumerGroup().catch(() => {});
+  }
 });
 
 redis.on('error', (err) => {
@@ -31,13 +42,16 @@ redis.on('error', (err) => {
  * Ensures the stream and consumer group exist
  */
 export async function initRedisConsumerGroup(): Promise<void> {
+  if (consumerGroupInitialized) return;
   try {
     // MKSTREAM ensures the stream is created if it does not exist
     await redis.xgroup('CREATE', USAGE_STREAM, USAGE_GROUP, '0', 'MKSTREAM');
+    consumerGroupInitialized = true;
     console.log(`[Redis] Consumer group '${USAGE_GROUP}' initialized on '${USAGE_STREAM}'`);
   } catch (err: any) {
     if (err.message && err.message.includes('BUSYGROUP')) {
       // Group already exists, this is completely normal
+      consumerGroupInitialized = true;
       return;
     }
     console.error('[Redis] Failed to initialize consumer group:', err.message);

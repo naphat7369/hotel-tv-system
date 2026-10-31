@@ -4,6 +4,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import sharp from 'sharp';
+import { requireAdminAuth } from '../middleware/admin-auth.middleware';
+import { IncidentService } from '../services/incident.service';
 
 const prisma = new PrismaClient();
 const router = Router();
@@ -195,6 +197,101 @@ router.post('/', (req, res, next) => {
   } catch (error: any) {
     console.error('Error updating settings:', error);
     res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+//  INCIDENT NOTIFICATION SETTINGS & MANAGEMENT (Protected by requireAdminAuth)
+// ════════════════════════════════════════════════════════════════════════════
+router.use('/incidents', requireAdminAuth);
+
+// GET /api/v1/settings/incidents/config
+router.get('/incidents/config', async (_req: Request, res: Response) => {
+  try {
+    try {
+      await IncidentService.loadConfigFromDb();
+    } catch {
+      // Fallback to in-memory / .env defaults if DB temporarily unavailable
+    }
+    res.json(IncidentService.getPublicConfig());
+  } catch (error) {
+    console.error('[Settings/Incidents] Failed to get incident config:', error);
+    res.status(500).json({ error: 'Failed to fetch incident configuration' });
+  }
+});
+
+// PUT /api/v1/settings/incidents/config
+router.put('/incidents/config', async (req: Request, res: Response) => {
+  try {
+    const updatedConfig = await IncidentService.updateConfig(req.body || {}, 'cms-admin');
+    if (IncidentService.isEnabled()) {
+      IncidentService.startBackgroundTimers();
+    } else {
+      IncidentService.stopBackgroundTimers();
+    }
+    res.json({
+      success: true,
+      config: updatedConfig,
+    });
+  } catch (error) {
+    console.error('[Settings/Incidents] Failed to update incident config:', error);
+    res.status(500).json({ error: 'Failed to update incident configuration' });
+  }
+});
+
+// POST /api/v1/settings/incidents/mute
+router.post('/incidents/mute', async (req: Request, res: Response) => {
+  try {
+    const durationMinutes = Number(req.body?.durationMinutes) || 0;
+    const { muteUntil } = await IncidentService.setMute(durationMinutes, 'cms-admin');
+    res.json({
+      success: true,
+      muteUntil,
+      config: IncidentService.getPublicConfig(),
+    });
+  } catch (error) {
+    console.error('[Settings/Incidents] Failed to update mute state:', error);
+    res.status(500).json({ error: 'Failed to update mute settings' });
+  }
+});
+
+// POST /api/v1/settings/incidents/test
+// Works even when main Incident System is disabled (enabled=false) and bypasses Mute
+router.post('/incidents/test', async (req: Request, res: Response) => {
+  try {
+    const channel: 'telegram' | 'email' | 'both' =
+      req.body?.channel === 'telegram' || req.body?.channel === 'email'
+        ? req.body.channel
+        : 'both';
+    const result = await IncidentService.sendTestNotification(channel);
+    res.json({
+      success: result.telegramSent || result.emailSent,
+      ...result,
+    });
+  } catch (error) {
+    console.error('[Settings/Incidents] Failed to send test notification:', error);
+    res.status(500).json({ error: 'Failed to send test notification' });
+  }
+});
+
+// GET /api/v1/settings/incidents/recent
+router.get('/incidents/recent', async (req: Request, res: Response) => {
+  try {
+    const limit = parseInt(String(req.query.limit || '50'), 10) || 50;
+    const status = req.query.status ? String(req.query.status) : undefined;
+    const severity = req.query.severity ? String(req.query.severity) : undefined;
+    const category = req.query.category ? String(req.query.category) : undefined;
+
+    const incidents = await IncidentService.getRecentIncidents({
+      limit,
+      status,
+      severity,
+      category,
+    });
+    res.json({ incidents });
+  } catch (error) {
+    console.error('[Settings/Incidents] Failed to fetch recent incidents:', error);
+    res.status(500).json({ error: 'Failed to fetch recent incidents' });
   }
 });
 

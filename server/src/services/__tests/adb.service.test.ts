@@ -69,7 +69,7 @@ describe('ADB Service', () => {
   it('rebootDevice should call adb reboot power command', async () => {
     await rebootDevice('192.168.1.100');
     expect(mockExec).toHaveBeenCalledWith(
-      expect.stringContaining('-s 192.168.1.100:5555 shell svc power reboot'),
+      expect.stringContaining('-s 192.168.1.100:5555 reboot'),
       expect.any(Object)
     );
   });

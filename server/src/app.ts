@@ -1,12 +1,17 @@
+import 'dotenv/config';
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import { createServer } from 'http';
 import path from 'path';
 import { initWebSocket } from './websocket/socket';
 import { initCronJobs } from './services/cron.service';
 import { StreamService } from './services/stream.service';
+import { IncidentService } from './services/incident.service';
+import { redactSensitiveFields } from './utils/crypto.util';
 
 import deviceRoutes from './api/device.routes';
 import channelRoutes from './api/channel.routes';
@@ -25,8 +30,6 @@ import webhookRoutes from './api/webhook.routes';
 import uploadRoutes from './api/upload.routes';
 import dlqRoutes from './api/dlq.routes';
 import { startUsageEventWorker } from './workers/usage-event-worker';
-
-dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -47,10 +50,13 @@ app.use(helmet({ crossOriginResourcePolicy: false })); // Allow cross-origin sta
 app.use(cors());
 app.use(express.json());
 
-// Logger middleware to print incoming payloads
+// Logger middleware to print incoming payloads (with sensitive secret redaction)
 app.use((req: Request, res: Response, next) => {
   if (req.method !== 'GET') {
-    console.log(`[API] ${req.method} ${req.originalUrl} | Payload:`, JSON.stringify(req.body));
+    console.log(
+      `[API] ${req.method} ${req.originalUrl} | Payload:`,
+      JSON.stringify(redactSensitiveFields(req.body))
+    );
   }
   next();
 });
@@ -92,6 +98,30 @@ app.get('/health', (req: Request, res: Response) => {
 // Start Server
 httpServer.listen(port, () => {
   console.log(`Server is running on port ${port}`);
+  try {
+    IncidentService.initialize().catch((err) =>
+      console.error('[IncidentService] Initialization error:', err)
+    );
+  } catch {
+    // Non-blocking guard
+  }
 });
+
+// Graceful shutdown handlers to flush pending incident batches and record clean exit
+const handleGracefulShutdown = (signal: string) => {
+  try {
+    console.log(`[Server] Received ${signal}, flushing incident queues...`);
+    IncidentService.shutdown()
+      .catch(() => {})
+      .finally(() => {
+        process.exit(0);
+      });
+  } catch {
+    process.exit(0);
+  }
+};
+
+process.on('SIGTERM', () => handleGracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => handleGracefulShutdown('SIGINT'));
 
 export default app;

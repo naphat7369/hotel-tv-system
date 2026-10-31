@@ -179,7 +179,8 @@ router.get('/status/:ip', async (req: Request, res: Response) => {
         return res.json({
           status: 'checked_in',
           guestName: activeRes.guestFirstName,
-          guestTag: activeRes.guestLoyaltyTier
+          guestTag: activeRes.guestLoyaltyTier,
+          roomNumber: targetRoomNumber
         });
       }
     } else {

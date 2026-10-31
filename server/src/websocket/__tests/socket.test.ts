@@ -1,5 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EventEmitter } from 'events';
+
+vi.mock('@prisma/client', () => {
+  return {
+    PrismaClient: class {
+      device = {
+        findUnique: vi.fn().mockResolvedValue(null),
+        upsert: vi.fn().mockResolvedValue({ id: 'dev-uuid-1' }),
+        update: vi.fn().mockResolvedValue({}),
+        findMany: vi.fn().mockResolvedValue([]),
+      };
+      hotel = {
+        findUnique: vi.fn().mockResolvedValue({ id: '123e4567-e89b-12d3-a456-426614174000' }),
+        create: vi.fn().mockResolvedValue({}),
+      };
+      room = {
+        findFirst: vi.fn().mockResolvedValue({ id: 'room-uuid-101', roomNumber: '101' }),
+        create: vi.fn().mockResolvedValue({ id: 'room-uuid-101', roomNumber: '101' }),
+      };
+      reservation = {
+        findFirst: vi.fn().mockResolvedValue(null),
+      };
+      activeBroadcast = {
+        findFirst: vi.fn().mockResolvedValue(null),
+      };
+    },
+  };
+});
+
 import { initWebSocket, connectedDevices } from '../socket';
 
 // Mock Socket.io Server & Socket
@@ -49,7 +77,7 @@ describe('WebSocket Server Handler', () => {
     io = initWebSocket(mockHttpServer);
   });
 
-  it('should register a device and emit registered status', () => {
+  it('should register a device and emit registered status', async () => {
     const socket = new MockSocket();
     
     // Simulate connection
@@ -64,6 +92,7 @@ describe('WebSocket Server Handler', () => {
     });
 
     socket.emit('register_device', registerPayload);
+    await new Promise((r) => setTimeout(r, 30));
 
     // Verify stored device
     const device = connectedDevices.get('TV-101');
@@ -79,12 +108,13 @@ describe('WebSocket Server Handler', () => {
     expect(updateEvent).toBeDefined();
   });
 
-  it('should update network status report', () => {
+  it('should update network status report', async () => {
     const socket = new MockSocket();
     io.emit('connection', socket);
 
     // Register first
     socket.emit('register_device', { deviceId: 'TV-101', roomNumber: '101' });
+    await new Promise((r) => setTimeout(r, 30));
 
     // Send status report
     const reportPayload = {
@@ -95,6 +125,7 @@ describe('WebSocket Server Handler', () => {
     };
 
     socket.emit('network_status_report', reportPayload);
+    await new Promise((r) => setTimeout(r, 20));
 
     const device = connectedDevices.get('TV-101');
     expect(device?.ipAddress).toBe('192.168.1.101');
@@ -102,16 +133,23 @@ describe('WebSocket Server Handler', () => {
     expect(device?.wifiSignal).toBe(-50);
   });
 
-  it('should mark device as offline on socket disconnect', () => {
-    const socket = new MockSocket();
-    io.emit('connection', socket);
+  it('should mark device as offline on socket disconnect', async () => {
+    vi.useFakeTimers();
+    try {
+      const socket = new MockSocket();
+      io.emit('connection', socket);
 
-    // Register first
-    socket.emit('register_device', { deviceId: 'TV-101', roomNumber: '101' });
-    expect(connectedDevices.get('TV-101')?.isOnline).toBe(true);
+      // Register first
+      socket.emit('register_device', { deviceId: 'TV-101', roomNumber: '101' });
+      await vi.advanceTimersByTimeAsync(50);
+      expect(connectedDevices.get('TV-101')?.isOnline).toBe(true);
 
-    // Disconnect socket
-    socket.emit('disconnect');
-    expect(connectedDevices.get('TV-101')?.isOnline).toBe(false);
+      // Disconnect socket (no IP -> 15s initial timer + 2h grace period timer)
+      socket.emit('disconnect');
+      await vi.advanceTimersByTimeAsync(15000 + 2 * 60 * 60 * 1000 + 100);
+      expect(connectedDevices.get('TV-101')?.isOnline).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

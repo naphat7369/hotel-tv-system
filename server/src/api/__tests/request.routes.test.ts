@@ -9,6 +9,16 @@ app.use('/api/v1/requests', requestRoutes);
 
 describe('Request Routes', () => {
   it('GET /api/v1/requests should return a list of requests', async () => {
+    await request(app)
+      .post('/api/v1/requests')
+      .send({
+        hotelId: 'hotel-123',
+        roomId: 'room-101',
+        requestType: 'HOUSEKEEPING',
+        items: [],
+      })
+      .expect(201);
+
     const res = await request(app)
       .get('/api/v1/requests')
       .expect(200);

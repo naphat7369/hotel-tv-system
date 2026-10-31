@@ -1,9 +1,6 @@
 import { exec } from 'child_process';
 import util from 'util';
-import dotenv from 'dotenv';
 import path from 'path';
-
-dotenv.config();
 
 const execPromise = util.promisify(exec);
 
@@ -41,16 +38,75 @@ const ADDITIONAL_GUEST_PACKAGES = [
   'com.google.android.youtube.tvmusic',
 ];
 
+// Track active clear operations to prevent concurrent ADB clear loops on the same IP
+const activeClears = new Set<string>();
+
+// Track IPs that failed ADB authorization so we don't repeatedly trigger popups on guest TVs
+export const unauthorizedIps = new Map<string, number>();
+const UNAUTHORIZED_COOLDOWN_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+// Track rooms where a checkout occurred while the TV was offline/unreachable
+export const pendingClearRooms = new Set<string>();
+
+function isUnauthorizedCooldownActive(ip: string): boolean {
+  const blockedAt = unauthorizedIps.get(ip);
+  if (!blockedAt) return false;
+  if (Date.now() - blockedAt > UNAUTHORIZED_COOLDOWN_MS) {
+    return false;
+  }
+  return true;
+}
+
+export function markIpUnauthorized(ip: string): void {
+  unauthorizedIps.set(ip, Date.now());
+  // Disconnect so the host ADB daemon stops holding an unauthorized transport to the TV
+  execPromise(`${ADB_PATH} disconnect ${ip}:5555`, { timeout: 5000 }).catch(() => {});
+
+}
+
 /**
  * Connects ADB to the device over the network.
  */
-export const connectAdb = async (ip: string): Promise<boolean> => {
+export const connectAdb = async (ip: string, forceRetry = false): Promise<boolean> => {
+  if (!forceRetry && isUnauthorizedCooldownActive(ip)) {
+    console.warn(`[ADB] Skipping connect to ${ip}: device is in unauthorized cooldown (prevents TV popup).`);
+    return false;
+  }
+
   try {
     const { stdout, stderr } = await execPromise(`${ADB_PATH} connect ${ip}:5555`, { timeout: 5000 });
-    console.log(`[ADB] Connect ${ip}:`, stdout.trim());
+    const output = `${stdout || ''} ${stderr || ''}`.trim();
+    const lower = output.toLowerCase();
+    console.log(`[ADB] Connect ${ip}:`, (stdout || '').trim());
+
+    if (lower.includes('failed to authenticate') || lower.includes('unauthorized')) {
+      console.warn(`[ADB Warning] Device ${ip} is ADB unauthorized. Suppressing further ADB requests to avoid TV popup.`);
+      markIpUnauthorized(ip);
+      return false;
+    }
+
+    if (
+      lower.includes('failed to connect') ||
+      lower.includes('cannot connect') ||
+      lower.includes('unable to connect') ||
+      lower.includes('connection refused') ||
+      lower.includes('no route to host')
+    ) {
+      console.warn(`[ADB Warning] Could not connect to ${ip}: ${output}`);
+      return false;
+    }
+
+    unauthorizedIps.delete(ip);
+
     return true;
-  } catch (error) {
-    console.error(`[ADB Error] Failed to connect to ${ip}:`, error);
+  } catch (error: any) {
+    const errMsg = `${error?.stderr || ''} ${error?.message || ''}`.toLowerCase();
+    if (errMsg.includes('unauthorized') || errMsg.includes('failed to authenticate')) {
+      console.warn(`[ADB Warning] Device ${ip} is ADB unauthorized. Suppressing further ADB requests.`);
+      markIpUnauthorized(ip);
+      return false;
+    }
+    console.error(`[ADB Error] Failed to connect to ${ip}:`, error?.message || error);
     return false;
   }
 };
@@ -59,15 +115,27 @@ export const connectAdb = async (ip: string): Promise<boolean> => {
  * Dynamically fetches all 3rd party apps, filters against the whitelist, and wipes their data.
  */
 export const clearGuestApps = async (ip: string): Promise<void> => {
+  if (activeClears.has(ip)) {
+    console.log(`[ADB] Clear already in progress for ${ip}, skipping duplicate request.`);
+    return;
+  }
+
+  activeClears.add(ip);
   console.log(`[ADB] Starting dynamic app clearing for ${ip}...`);
 
   try {
     // Ensure we are connected first
-    await connectAdb(ip);
+    const connected = await connectAdb(ip);
+    if (!connected) {
+      return;
+    }
 
     // Get all third-party packages (-3 flag)
     const { stdout: packageListOutput } = await execPromise(`${ADB_PATH} -s ${ip}:5555 shell pm list packages -3`, { timeout: 10000 });
     
+    // If command succeeded, clear any previous unauthorized state
+    unauthorizedIps.delete(ip);
+
     // Parse the third-party output
     const thirdPartyPackages = packageListOutput
       .split('\n')
@@ -102,15 +170,23 @@ export const clearGuestApps = async (ip: string): Promise<void> => {
         console.log(`[ADB] Wiping data for ${pkg} on ${ip}...`);
         const { stdout: clearOutput } = await execPromise(`${ADB_PATH} -s ${ip}:5555 shell pm clear ${pkg}`, { timeout: 15000 });
         console.log(`[ADB] Success wiping ${pkg}:`, clearOutput.trim());
-      } catch (clearError) {
-        console.error(`[ADB Error] Failed to wipe ${pkg} on ${ip}:`, clearError);
+      } catch (clearError: any) {
+        console.error(`[ADB Error] Failed to wipe ${pkg} on ${ip}:`, clearError?.message || clearError);
       }
     }
 
     console.log(`[ADB] Finished clearing guest apps on ${ip}.`);
 
-  } catch (error) {
-    console.error(`[ADB Error] Process failed while clearing guest apps on ${ip}:`, error);
+  } catch (error: any) {
+    const errText = `${error?.stderr || ''} ${error?.message || ''}`.toLowerCase();
+    if (errText.includes('unauthorized') || errText.includes('failed to authenticate')) {
+      console.warn(`[ADB Warning] Process aborted on ${ip}: ADB device unauthorized. Suppressing further ADB attempts to avoid TV popup.`);
+      markIpUnauthorized(ip);
+    } else {
+      console.error(`[ADB Error] Process failed while clearing guest apps on ${ip}:`, error?.stderr?.trim() || error?.message || error);
+    }
+  } finally {
+    activeClears.delete(ip);
   }
 };
 

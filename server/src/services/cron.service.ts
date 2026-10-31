@@ -9,8 +9,14 @@ import {
   runRetentionCleanup
 } from '../workers/rollup-worker';
 import { trimProcessedStreamEntries } from '../lib/redis';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 function getLocalIpAddress() {
+  if (process.env.SERVER_IP) {
+    return process.env.SERVER_IP;
+  }
   const interfaces = os.networkInterfaces();
   for (const devName in interfaces) {
     const iface = interfaces[devName];
@@ -32,11 +38,9 @@ export const initCronJobs = (io: Server) => {
   // 1-Minute Auto-Sweep Task: Check for expired reservations and force check-out
   cron.schedule('* * * * *', async () => {
     try {
-      const { PrismaClient } = require('@prisma/client');
-      const { clearGuestApps } = require('./adb.service');
+      const { clearGuestApps, pendingClearRooms } = require('./adb.service');
       const { connectedDevices } = require('../websocket/socket');
       
-      const prisma = new PrismaClient();
       const now = new Date();
       
       // Find all In-House reservations where checkOut time has passed
@@ -51,17 +55,19 @@ export const initCronJobs = (io: Server) => {
       });
       
       for (const res of expiredReservations) {
+        if (!res.room) continue;
         // Double check: ensure no newer check-in exists for this room
         const newerRes = await prisma.reservation.findFirst({
           where: {
             roomId: res.roomId,
-            checkIn: { gt: res.checkIn },
+            ...(res.checkIn ? { checkIn: { gt: res.checkIn } } : {}),
             status: 'In-House'
           }
         });
         
         if (!newerRes) {
-          console.log(`[Cron Auto-Sweep] Room ${res.room.roomNumber} expired. Forcing check-out...`);
+          const roomNumStr = String(res.room.roomNumber);
+          console.log(`[Cron Auto-Sweep] Room ${roomNumStr} expired. Forcing check-out...`);
           
           // 1. Update Database
           await prisma.reservation.update({
@@ -70,8 +76,9 @@ export const initCronJobs = (io: Server) => {
           });
           
           // 2. Find all Devices in this room (may be more than one) & Trigger Clear
+          let clearedAny = false;
           for (const [targetDeviceId, device] of connectedDevices.entries()) {
-            if (device.roomNumber !== String(res.room.roomNumber)) continue;
+            if (device.roomNumber !== roomNumStr) continue;
             const targetIp = device.ipAddress || null;
 
             io.to(`device_${targetDeviceId}`).emit('guest_update', {
@@ -79,17 +86,19 @@ export const initCronJobs = (io: Server) => {
               guestName: null,
               guestTag: null
             });
-            console.log(`[Cron Auto-Sweep] Sent checked_out to TV ${res.room.roomNumber} (device ${targetDeviceId})`);
+            console.log(`[Cron Auto-Sweep] Sent checked_out to TV ${roomNumStr} (device ${targetDeviceId})`);
             
             if (targetIp) {
+              clearedAny = true;
               console.log(`[Cron Auto-Sweep] Initiating ADB clear for IP: ${targetIp}`);
               clearGuestApps(targetIp).catch((err: any) => console.error(`[Cron Auto-Sweep] Clear failed:`, err));
             }
           }
+          if (!clearedAny) {
+            pendingClearRooms.add(roomNumStr);
+          }
         }
       }
-      
-      await prisma.$disconnect();
     } catch (err) {
       console.error('[Cron Auto-Sweep] Error:', err);
     }

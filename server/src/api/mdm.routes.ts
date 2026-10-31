@@ -13,6 +13,9 @@ const MAX_DEVICES_PER_ROOM = 2;
 
 // Helper to get the actual LAN IP of the Node.js server
 function getLocalIpAddress() {
+  if (process.env.SERVER_IP) {
+    return process.env.SERVER_IP;
+  }
   const interfaces = os.networkInterfaces();
   for (const devName in interfaces) {
     const iface = interfaces[devName];
@@ -131,6 +134,30 @@ router.post('/devices/:id/command', async (req: Request, res: Response) => {
           error: `Cannot assign: Room ${targetRoomNumber} already has the maximum of ${MAX_DEVICES_PER_ROOM} devices (${assigned})`
         });
       }
+    }
+
+    // Persist room assignment to Database immediately
+    try {
+      let roomId: string | null = null;
+      if (targetRoomNumber && targetRoomNumber !== 'Unassigned') {
+        const hotel = await prisma.hotel.findFirst();
+        const hotelId = hotel?.id || '123e4567-e89b-12d3-a456-426614174000';
+        let room = await prisma.room.findFirst({
+          where: { roomNumber: targetRoomNumber, hotelId }
+        });
+        if (!room) {
+          room = await prisma.room.create({
+            data: { roomNumber: targetRoomNumber, hotelId }
+          });
+        }
+        roomId = room.id;
+      }
+      await prisma.device.update({
+        where: { boxSerial: id },
+        data: { roomId }
+      });
+    } catch (dbErr) {
+      console.error('[MDM Error] Failed to persist room number in DB:', dbErr);
     }
 
     const device = connectedDevices.get(id);

@@ -2,9 +2,10 @@ import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import { exec } from 'child_process';
 import { PrismaClient } from '@prisma/client';
-import { clearGuestApps } from '../services/adb.service';
+import { clearGuestApps, pendingClearRooms } from '../services/adb.service';
 import { addUsageEventToStream } from '../lib/redis';
 import { normalizeEvent } from '../lib/analytics-normalizer';
+import { logDeviceEvent } from '../services/device-log.service';
 
 const prisma = new PrismaClient();
 const MOCK_HOTEL_ID = '123e4567-e89b-12d3-a456-426614174000';
@@ -87,42 +88,56 @@ export const initWebSocket = (server: HttpServer) => {
       currentDeviceId = deviceId;
       const existingDevice: Partial<DeviceStatus> = connectedDevices.get(deviceId) || {};
 
-      // Prevent multiple tabs from wiping out a valid room number with 'Unassigned'
+      // Prevent multiple tabs or native background sockets from wiping out a valid room number with 'Unassigned'
       if (roomNumber === 'Unassigned' && existingDevice.roomNumber && existingDevice.roomNumber !== 'Unassigned') {
         roomNumber = existingDevice.roomNumber;
       }
 
-      console.log(`[WebSocket] Device registered: ${deviceId} (Room: ${roomNumber})`);
       socket.join(`device_${deviceId}`);
       
-      // Update store but preserve existing properties like ipAddress
-      connectedDevices.set(deviceId, {
-        ...existingDevice,
-        deviceId,
-        isOnline: true,
-        lastSeen: new Date().toISOString(),
-        socketId: socket.id,
-        roomNumber
-      });
-      
-      // Sync to Database
+      // Sync to Database & recover room assignment if client sent 'Unassigned'
       try {
         let roomId: string | null = null;
+        const existingDbDevice = await prisma.device.findUnique({
+          where: { boxSerial: deviceId },
+          include: { room: true }
+        });
+
         if (roomNumber !== 'Unassigned') {
           const room = await prisma.room.findFirst({
             where: { roomNumber: String(roomNumber), hotelId: MOCK_HOTEL_ID }
           });
           if (room) roomId = room.id;
+        } else if (existingDbDevice?.room?.roomNumber) {
+          roomId = existingDbDevice.roomId;
+          roomNumber = existingDbDevice.room.roomNumber;
         }
+
+        const resolvedIp = existingDevice.ipAddress || existingDbDevice?.ipAddress || undefined;
+        const resolvedMac = existingDevice.macAddress || existingDbDevice?.macAddress || undefined;
+
+        console.log(`[WebSocket] Device registered: ${deviceId} (Room: ${roomNumber})`);
+
+        // Update store while preserving existing properties like ipAddress and recovered roomNumber
+        connectedDevices.set(deviceId, {
+          ...existingDevice,
+          deviceId,
+          isOnline: true,
+          lastSeen: new Date().toISOString(),
+          socketId: socket.id,
+          roomNumber,
+          ipAddress: resolvedIp,
+          macAddress: resolvedMac
+        });
 
         const dbDevice = await prisma.device.upsert({
           where: { boxSerial: deviceId },
           update: {
             isOnline: true,
             lastSeen: new Date(),
-            roomId: roomId,
-            ipAddress: existingDevice.ipAddress || undefined,
-            macAddress: existingDevice.macAddress || undefined
+            ...(roomId !== null ? { roomId } : {}),
+            ipAddress: resolvedIp,
+            macAddress: resolvedMac
           },
           create: {
             boxSerial: deviceId,
@@ -130,8 +145,8 @@ export const initWebSocket = (server: HttpServer) => {
             isOnline: true,
             lastSeen: new Date(),
             roomId: roomId,
-            ipAddress: existingDevice.ipAddress || undefined,
-            macAddress: existingDevice.macAddress || undefined
+            ipAddress: resolvedIp,
+            macAddress: resolvedMac
           }
         });
 
@@ -142,10 +157,22 @@ export const initWebSocket = (server: HttpServer) => {
         socket.data.boxSerial = deviceId;
       } catch (dbErr) {
         console.error('[WebSocket] Failed to upsert device in DB:', dbErr);
+        console.log(`[WebSocket] Device registered (fallback): ${deviceId} (Room: ${roomNumber})`);
+        connectedDevices.set(deviceId, {
+          ...existingDevice,
+          deviceId,
+          isOnline: true,
+          lastSeen: new Date().toISOString(),
+          socketId: socket.id,
+          roomNumber
+        });
       }
 
       broadcastDeviceList(io);
-      socket.emit('registered', { status: 'success', bootId: SERVER_BOOT_ID });
+      socket.emit('registered', {
+        status: 'success',
+        ...(process.env.FORCE_PORTAL_RELOAD_ON_BOOT === 'true' ? { bootId: SERVER_BOOT_ID } : {})
+      });
       
       // Automatically request network status upon registration so CMS populates immediately
       io.to(`device_${deviceId}`).emit('mdm_command', { command: 'get_network_status', payload: {} });
@@ -172,11 +199,14 @@ export const initWebSocket = (server: HttpServer) => {
                   guestName: null,
                   guestTag: null
                 });
-                // Trigger auto-clear for vacant/checked-out rooms when TV boots up
-                const currentDevice = connectedDevices.get(deviceId);
-                if (currentDevice && currentDevice.ipAddress) {
-                  console.log(`[WebSocket] TV Booted in checked-out state. Initiating auto-clear for ${currentDevice.ipAddress}`);
-                  clearGuestApps(currentDevice.ipAddress).catch(err => console.error('[WebSocket] Auto-clear failed:', err));
+                // Only auto-clear if an explicit checkout occurred while the TV was offline
+                if (pendingClearRooms.has(String(roomNumber))) {
+                  const currentDevice = connectedDevices.get(deviceId);
+                  if (currentDevice && currentDevice.ipAddress) {
+                    pendingClearRooms.delete(String(roomNumber));
+                    console.log(`[WebSocket] TV connected with pending checkout for Room ${roomNumber}. Initiating auto-clear for ${currentDevice.ipAddress}`);
+                    clearGuestApps(currentDevice.ipAddress).catch(err => console.error('[WebSocket] Auto-clear failed:', err));
+                  }
                 }
               }
             }).catch(err => console.error('[WebSocket] Error fetching reservation:', err));
@@ -253,6 +283,7 @@ export const initWebSocket = (server: HttpServer) => {
         isOnline: true,
         lastSeen: new Date().toISOString()
       });
+
       
       // We don't broadcast on every heartbeat to save bandwidth, 
       // but the server knows it's online.
@@ -288,6 +319,22 @@ export const initWebSocket = (server: HttpServer) => {
 
       console.log(`[WebSocket] Network report from ${deviceId}: IP=${data.ipAddress}`);
       broadcastDeviceList(io);
+    });
+
+    // Handle Device Logs (Errors, Warnings, Debug from TV box / Frontend)
+    socket.on('device_log', (data) => {
+      if (!data) return;
+      const deviceId = data.deviceId || currentDeviceId || socket.data?.boxSerial || 'UnknownBox';
+      const existing = connectedDevices.get(deviceId);
+      const roomNumber = data.roomNumber || existing?.roomNumber || 'Unassigned';
+      const ipAddress = data.ipAddress || existing?.ipAddress;
+
+      logDeviceEvent({
+        ...data,
+        deviceId,
+        roomNumber,
+        ipAddress
+      });
     });
 
     // Handle Disconnect

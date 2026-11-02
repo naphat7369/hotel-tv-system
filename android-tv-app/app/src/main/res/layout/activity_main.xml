@@ -24,7 +24,9 @@
         android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#000000"
+        android:background="@android:color/transparent"
+        app:surface_type="texture_view"
+        app:shutter_background_color="@android:color/transparent"
         app:use_controller="false"
         app:resize_mode="fill"/>
 

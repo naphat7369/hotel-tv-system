@@ -140,7 +140,6 @@ class MainActivity : Activity() {
         loadingSubtitle = findViewById(R.id.loading_subtitle)
         loadingIpHint   = findViewById(R.id.loading_ip_hint)
 
-        playerView.setLayerType(View.LAYER_TYPE_HARDWARE, null)
         playerView.visibility = View.GONE
 
         configureWebView()

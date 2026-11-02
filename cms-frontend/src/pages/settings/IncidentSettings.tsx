@@ -121,14 +121,19 @@ export default function IncidentSettings() {
     setIncidentSuccess('');
     try {
       api.setIncidentAdminKey(adminKey);
+      // บันทึกค่า Token / Chat ID / SMTP ที่กรอกไว้ในฟอร์มลงฐานข้อมูลก่อนส่งทดสอบอัตโนมัติ
+      const saved = await api.updateIncidentConfig(incConfig);
+      if (saved?.config) {
+        setIncConfig((prev: any) => ({ ...prev, ...saved.config }));
+      }
       const res = await api.testIncidentNotification(channel);
       if (res?.success) {
         setIncidentSuccess(
-          `ส่งข้อความทดสอบผ่าน ${channel === 'telegram' ? 'Telegram' : 'Email'} สำเร็จแล้ว!`
+          `บันทึกค่าและส่งข้อความทดสอบผ่าน ${channel === 'telegram' ? 'Telegram' : 'Email'} สำเร็จแล้ว!`
         );
       } else {
         setIncidentError(
-          `ส่งข้อความทดสอบผ่าน ${channel === 'telegram' ? 'Telegram' : 'Email'} ไม่สำเร็จ กรุณาตรวจสอบ Token/Chat ID หรือค่า SMTP`
+          `ส่งข้อความทดสอบผ่าน ${channel === 'telegram' ? 'Telegram' : 'Email'} ไม่สำเร็จ กรุณาตรวจสอบว่าใส่ Bot Token และ Chat ID ถูกต้อง และได้กด Start บอทหรือดึงบอทเข้ากลุ่มแล้ว`
         );
       }
     } catch (err: any) {

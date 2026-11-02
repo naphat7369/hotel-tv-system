@@ -411,15 +411,23 @@ export const api = {
   // เมื่อมีการเพิ่มระบบ Authentication หลักของ CMS ในอนาคต ควรย้ายไปใช้ HttpOnly Session / JWT แทน
   getIncidentAdminKey: (): string => {
     try {
-      return localStorage.getItem('hotel_cms_admin_key') || '';
+      return (
+        localStorage.getItem('hotel_cms_admin_key') ||
+        ((import.meta as any).env?.VITE_ADMIN_API_KEY as string) ||
+        ''
+      );
     } catch {
-      return '';
+      return ((import.meta as any).env?.VITE_ADMIN_API_KEY as string) || '';
     }
   },
 
   setIncidentAdminKey: (key: string): void => {
     try {
-      localStorage.setItem('hotel_cms_admin_key', key.trim());
+      if (key && key.trim()) {
+        localStorage.setItem('hotel_cms_admin_key', key.trim());
+      } else {
+        localStorage.removeItem('hotel_cms_admin_key');
+      }
     } catch {
       // Ignore storage errors
     }

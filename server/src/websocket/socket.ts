@@ -47,13 +47,13 @@ const broadcastDeviceList = async (io: Server) => {
       const inMemory = connectedDevices.get(dbDevice.boxSerial);
       return {
         deviceId: dbDevice.boxSerial,
-        isOnline: dbDevice.isOnline,
-        lastSeen: dbDevice.lastSeen ? dbDevice.lastSeen.toISOString() : null,
-        ipAddress: dbDevice.ipAddress || undefined,
-        macAddress: dbDevice.macAddress || undefined,
+        isOnline: inMemory ? inMemory.isOnline : dbDevice.isOnline,
+        lastSeen: inMemory?.lastSeen || (dbDevice.lastSeen ? dbDevice.lastSeen.toISOString() : null),
+        ipAddress: inMemory?.ipAddress || dbDevice.ipAddress || undefined,
+        macAddress: inMemory?.macAddress || dbDevice.macAddress || undefined,
         wifiSignal: inMemory?.wifiSignal,
         socketId: inMemory?.socketId,
-        roomNumber: dbDevice.room?.roomNumber || undefined,
+        roomNumber: inMemory?.roomNumber || dbDevice.room?.roomNumber || undefined,
         deviceName: inMemory?.deviceName
       };
     });
@@ -66,6 +66,76 @@ const broadcastDeviceList = async (io: Server) => {
 // Map to hold disconnect timeout timers for grace period
 const disconnectTimers = new Map<string, NodeJS.Timeout>();
 
+const scheduleDeviceVerification = (
+  deviceIdToDisconnect: string,
+  ipToPing: string | undefined,
+  expectedSocketId: string | undefined,
+  io: Server,
+  initialDelayMs = 15000
+) => {
+  const existingTimer = disconnectTimers.get(deviceIdToDisconnect);
+  if (existingTimer) {
+    clearTimeout(existingTimer);
+    disconnectTimers.delete(deviceIdToDisconnect);
+  }
+
+  const verifyStatus = async () => {
+    const check = connectedDevices.get(deviceIdToDisconnect);
+    // Only proceed if it hasn't successfully reconnected with a new socketId
+    if (check && check.isOnline && (check.socketId === expectedSocketId || check.socketId === undefined)) {
+      if (ipToPing) {
+        if (await checkDeviceAlive(ipToPing)) {
+          // Device is alive (likely streaming an app) -> clear socketId so we know it's disconnected but keep online
+          check.socketId = undefined;
+          connectedDevices.set(deviceIdToDisconnect, check);
+          const nextTimer = setTimeout(verifyStatus, 3 * 60 * 1000); // Check every 3 mins while alive
+          disconnectTimers.set(deviceIdToDisconnect, nextTimer);
+        } else {
+          // Device is completely offline (ping failed) -> mark offline and STOP checking
+          check.isOnline = false;
+          check.lastSeen = new Date().toISOString();
+          connectedDevices.set(deviceIdToDisconnect, check);
+          disconnectTimers.delete(deviceIdToDisconnect);
+
+          prisma.device.update({
+            where: { boxSerial: deviceIdToDisconnect },
+            data: { isOnline: false, lastSeen: new Date() }
+          }).catch(() => {});
+
+          broadcastDeviceList(io);
+          console.log(`[WebSocket] Device ${deviceIdToDisconnect} marked offline (Ping failed).`);
+        }
+      } else {
+        // No IP address known (e.g. testing in browser or native app not responding).
+        // We can't ping, so we just give it a blind 2 hour grace period.
+        check.socketId = undefined;
+        connectedDevices.set(deviceIdToDisconnect, check);
+        const nextTimer = setTimeout(() => {
+          const finalCheck = connectedDevices.get(deviceIdToDisconnect);
+          if (finalCheck && finalCheck.socketId === undefined) {
+            finalCheck.isOnline = false;
+            finalCheck.lastSeen = new Date().toISOString();
+            connectedDevices.set(deviceIdToDisconnect, finalCheck);
+            disconnectTimers.delete(deviceIdToDisconnect);
+
+            prisma.device.update({
+              where: { boxSerial: deviceIdToDisconnect },
+              data: { isOnline: false, lastSeen: new Date() }
+            }).catch(() => {});
+
+            broadcastDeviceList(io);
+            console.log(`[WebSocket] Device ${deviceIdToDisconnect} marked offline (Grace period expired).`);
+          }
+        }, 2 * 60 * 60 * 1000); // 2 hours
+        disconnectTimers.set(deviceIdToDisconnect, nextTimer);
+      }
+    }
+  };
+
+  const timer = setTimeout(verifyStatus, initialDelayMs);
+  disconnectTimers.set(deviceIdToDisconnect, timer);
+};
+
 export const initWebSocket = (server: HttpServer) => {
   const io = new Server(server, {
     cors: {
@@ -73,6 +143,34 @@ export const initWebSocket = (server: HttpServer) => {
       methods: ['GET', 'POST']
     }
   });
+
+  // On server startup, hydrate devices that were marked online in DB so boxes without
+  // an active WebSocket (e.g. streaming an external app across a server reload) are still monitored via ping.
+  prisma.device.findMany({
+    where: { isOnline: true },
+    include: { room: true }
+  }).then((onlineDbDevices) => {
+    for (const dbDevice of onlineDbDevices) {
+      if (!connectedDevices.has(dbDevice.boxSerial)) {
+        connectedDevices.set(dbDevice.boxSerial, {
+          deviceId: dbDevice.boxSerial,
+          isOnline: true,
+          lastSeen: dbDevice.lastSeen ? dbDevice.lastSeen.toISOString() : new Date().toISOString(),
+          ipAddress: dbDevice.ipAddress || undefined,
+          macAddress: dbDevice.macAddress || undefined,
+          roomNumber: dbDevice.room?.roomNumber || 'Unassigned',
+          socketId: undefined
+        });
+        scheduleDeviceVerification(
+          dbDevice.boxSerial,
+          dbDevice.ipAddress || undefined,
+          undefined,
+          io,
+          30000
+        );
+      }
+    }
+  }).catch(() => {});
 
   io.on('connection', (socket: Socket) => {
     console.log(`[WebSocket] Client connected: ${socket.id}`);
@@ -87,6 +185,11 @@ export const initWebSocket = (server: HttpServer) => {
       if (!deviceId) return;
       
       currentDeviceId = deviceId;
+      const pendingTimer = disconnectTimers.get(deviceId);
+      if (pendingTimer) {
+        clearTimeout(pendingTimer);
+        disconnectTimers.delete(deviceId);
+      }
       const existingDevice: Partial<DeviceStatus> = connectedDevices.get(deviceId) || {};
 
       // Prevent multiple tabs or native background sockets from wiping out a valid room number with 'Unassigned'
@@ -352,62 +455,13 @@ export const initWebSocket = (server: HttpServer) => {
         const deviceIdToDisconnect = currentDeviceId;
         const existing = connectedDevices.get(deviceIdToDisconnect);
         if (existing && existing.socketId === socket.id) {
-          const ipToPing = existing.ipAddress;
-          
-          const verifyStatus = async () => {
-            const check = connectedDevices.get(deviceIdToDisconnect);
-            // Only proceed if it hasn't successfully reconnected with a new socketId
-            if (check && (check.socketId === socket.id || check.socketId === undefined)) {
-              if (ipToPing) {
-                if (await checkDeviceAlive(ipToPing)) {
-                  // Device is alive (likely streaming an app) -> clear socketId so we know it's disconnected but keep online
-                  check.socketId = undefined;
-                  connectedDevices.set(deviceIdToDisconnect, check);
-                  const nextTimer = setTimeout(verifyStatus, 3 * 60 * 1000); // Check every 3 mins
-                  disconnectTimers.set(deviceIdToDisconnect, nextTimer);
-                } else {
-                  // Device is completely offline (ping failed)
-                  check.isOnline = false;
-                  check.lastSeen = new Date().toISOString();
-                  connectedDevices.set(deviceIdToDisconnect, check);
-
-                  prisma.device.update({
-                    where: { boxSerial: deviceIdToDisconnect },
-                    data: { isOnline: false, lastSeen: new Date() }
-                  }).catch(() => {});
-
-                  broadcastDeviceList(io);
-                  console.log(`[WebSocket] Device ${deviceIdToDisconnect} marked offline (Ping failed).`);
-                }
-              } else {
-                 // No IP address known (e.g. testing in browser or native app not responding).
-                 // We can't ping, so we just give it a blind 2 hour grace period.
-                 check.socketId = undefined;
-                 connectedDevices.set(deviceIdToDisconnect, check);
-                 const nextTimer = setTimeout(() => {
-                   const finalCheck = connectedDevices.get(deviceIdToDisconnect);
-                   if (finalCheck && finalCheck.socketId === undefined) {
-                      finalCheck.isOnline = false;
-                      finalCheck.lastSeen = new Date().toISOString();
-                      connectedDevices.set(deviceIdToDisconnect, finalCheck);
-
-                      prisma.device.update({
-                        where: { boxSerial: deviceIdToDisconnect },
-                        data: { isOnline: false, lastSeen: new Date() }
-                      }).catch(() => {});
-
-                      broadcastDeviceList(io);
-                      console.log(`[WebSocket] Device ${deviceIdToDisconnect} marked offline (Grace period expired).`);
-                   }
-                 }, 2 * 60 * 60 * 1000); // 2 hours
-                 disconnectTimers.set(deviceIdToDisconnect, nextTimer);
-              }
-            }
-          };
-
-          // Start the verification process after 15 seconds to allow for short network blips
-          const timer = setTimeout(verifyStatus, 15000); 
-          disconnectTimers.set(deviceIdToDisconnect, timer);
+          scheduleDeviceVerification(
+            deviceIdToDisconnect,
+            existing.ipAddress,
+            socket.id,
+            io,
+            15000
+          );
         } else if (existing) {
           console.log(`[WebSocket] Ignored stale disconnect for ${deviceIdToDisconnect}`);
         }

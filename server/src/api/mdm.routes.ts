@@ -46,13 +46,13 @@ router.get('/devices', async (req: Request, res: Response) => {
 
       return {
         deviceId: dbDevice.boxSerial,
-        isOnline: dbDevice.isOnline,
-        lastSeen: dbDevice.lastSeen ? dbDevice.lastSeen.toISOString() : null,
-        ipAddress: dbDevice.ipAddress || undefined,
-        macAddress: dbDevice.macAddress || undefined,
+        isOnline: inMemory ? inMemory.isOnline : dbDevice.isOnline,
+        lastSeen: inMemory?.lastSeen || (dbDevice.lastSeen ? dbDevice.lastSeen.toISOString() : null),
+        ipAddress: inMemory?.ipAddress || dbDevice.ipAddress || undefined,
+        macAddress: inMemory?.macAddress || dbDevice.macAddress || undefined,
         wifiSignal: inMemory?.wifiSignal,
         socketId: inMemory?.socketId,
-        roomNumber: dbDevice.room?.roomNumber || undefined,
+        roomNumber: inMemory?.roomNumber || dbDevice.room?.roomNumber || undefined,
         deviceName: inMemory?.deviceName
       };
     });

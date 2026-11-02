@@ -57,6 +57,7 @@ interface LiveTVPlayerProps {
   initialChannelIndex: number;
   onExit: () => void;
   socket?: any;
+  onChannelChange?: (index: number) => void;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -175,7 +176,6 @@ function ChannelListOverlay({
   channels,
   currentIndex,
   focusedIndex,
-  onFocusChange,
   onSelect,
   categoryIndex,
   onCategoryChange,
@@ -183,7 +183,6 @@ function ChannelListOverlay({
   channels: Channel[];
   currentIndex: number;
   focusedIndex: number;
-  onFocusChange: (index: number) => void;
   onSelect: (index: number) => void;
   categoryIndex: number;
   onCategoryChange: (categories: string[], idx: number) => void;
@@ -291,7 +290,6 @@ function ChannelListOverlay({
               key={ch.id}
               ref={(el) => { itemRefs.current[idx] = el; }}
               onClick={() => onSelect(channels.indexOf(ch))}
-              onMouseEnter={() => onFocusChange(idx)}
               style={{ display:'flex', alignItems:'center', gap:'0.8vw', padding:'1.1vh 1.5vw', cursor:'pointer', position:'relative', transition:'transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease', transform: isFocused ? 'scale(1.02)' : 'scale(1)', transformOrigin: 'left center', willChange: 'transform', background: isFocused ? 'rgba(255,255,255,0.07)' : 'transparent', marginInline:'0.5vw', borderRadius:'10px', border: isFocused ? '1px solid rgba(255,255,255,0.12)' : '1px solid transparent', boxShadow: isFocused ? 'inset 0 0 0 1px rgba(99,102,241,0.25), 0 4px 15px rgba(0,0,0,0.3)' : 'none' }}
             >
               {isFocused && <div style={{ position:'absolute', left:0, top:'15%', bottom:'15%', width:'2.5px', borderRadius:'999px', background:'linear-gradient(180deg,#6366f1,#0ea5e9)', boxShadow:'0 0 8px rgba(99,102,241,0.8)' }} />}
@@ -353,6 +351,7 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
   initialChannelIndex,
   onExit,
   socket,
+  onChannelChange,
 }) => {
   const [currentIndex, setCurrentIndex] = useState(initialChannelIndex);
   const [showOSD, setShowOSD]           = useState(true);
@@ -379,44 +378,8 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
     setFocusedIndex(index);
     setShowChannelList(false);
     triggerOSD();
-  }, [triggerOSD]);
-
-  const switchChannel = useCallback((direction: 'UP' | 'DOWN') => {
-    if (channels.length === 0) return;
-    if (showChannelList) {
-      // Navigate within channel list (wrap around)
-      setFocusedIndex(prev => {
-        const next = direction === 'DOWN'
-          ? (prev + 1) % channels.length
-          : (prev - 1 + channels.length) % channels.length;
-        return next;
-      });
-    } else {
-      // Direct channel switching (wrap around)
-      setCurrentIndex(prev => {
-        const next = direction === 'DOWN'
-          ? (prev + 1) % channels.length
-          : (prev - 1 + channels.length) % channels.length;
-        return next;
-      });
-      triggerOSD();
-    }
-  }, [channels.length, showChannelList, triggerOSD]);
-
-  // ── Handle exit cleanly ────────────────────────────────────────────────
-  const handleExit = useCallback(() => {
-    if (showChannelList) {
-      // First Back closes the panel
-      setShowChannelList(false);
-      return;
-    }
-    if (isNative && window.AndroidTVBridge) {
-      window.AndroidTVBridge.stopStream();
-    }
-    restoreBodyBackground();
-    if (osdTimerRef.current) clearTimeout(osdTimerRef.current);
-    onExit();
-  }, [isNative, onExit, showChannelList]);
+    onChannelChange?.(index);
+  }, [triggerOSD, onChannelChange]);
 
   // ── Category tab navigation ──────────────────────────────────────────
   const [categoryIndex, setCategoryIndex] = useState(0);
@@ -442,10 +405,63 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
     });
   }, []);
 
+  const openChannelList = useCallback(() => {
+    setCategoryIndex(0);
+    setFocusedIndex(currentIndex);
+    setShowChannelList(true);
+    triggerOSD();
+  }, [currentIndex, triggerOSD]);
+
+  const switchChannel = useCallback((direction: 'UP' | 'DOWN') => {
+    if (channels.length === 0) return;
+    if (showChannelList) {
+      // Navigate within channel list (wrap around in filtered channels)
+      const activeCat = categoriesRef.current[categoryIndex] ?? 'All';
+      const filtered = activeCat === 'All'
+        ? channels
+        : channels.filter(c => (c.category ?? 'Live TV') === activeCat);
+      const total = filtered.length;
+      if (total === 0) return;
+
+      setFocusedIndex(prev => {
+        const next = direction === 'DOWN'
+          ? (prev + 1) % total
+          : (prev - 1 + total) % total;
+        return next;
+      });
+    } else {
+      // Direct channel switching (wrap around)
+      setCurrentIndex(prev => {
+        const next = direction === 'DOWN'
+          ? (prev + 1) % channels.length
+          : (prev - 1 + channels.length) % channels.length;
+        setFocusedIndex(next);
+        onChannelChange?.(next);
+        return next;
+      });
+      triggerOSD();
+    }
+  }, [channels, showChannelList, categoryIndex, triggerOSD, onChannelChange]);
+
+  // ── Handle exit cleanly ────────────────────────────────────────────────
+  const handleExit = useCallback(() => {
+    if (showChannelList) {
+      // First Back closes the panel
+      setShowChannelList(false);
+      return;
+    }
+    if (isNative && window.AndroidTVBridge) {
+      window.AndroidTVBridge.stopStream();
+    }
+    restoreBodyBackground();
+    if (osdTimerRef.current) clearTimeout(osdTimerRef.current);
+    onExit();
+  }, [isNative, onExit, showChannelList]);
+
   // ── Keyboard / D-Pad Navigation ────────────────────────────────────────
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape', 'Backspace', 'Enter', 'ChannelUp', 'ChannelDown', 'PageUp', 'PageDown'].includes(e.key) ||
+      if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Escape', 'Backspace', 'Enter', 'ChannelUp', 'ChannelDown', 'PageUp', 'PageDown', 'Guide', 'Menu', 'ContextMenu', 'TV', 'Live'].includes(e.key) ||
           e.keyCode === 4) {
         e.preventDefault();
       }
@@ -479,13 +495,34 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
           break;
         case 'Enter':
           if (showChannelList) {
-            // Confirm channel selection
+            // Confirm channel selection from filteredChannels
+            const activeCat = categoriesRef.current[categoryIndex] ?? 'All';
+            const filtered = activeCat === 'All'
+              ? channels
+              : channels.filter(c => (c.category ?? 'Live TV') === activeCat);
+            const selected = filtered[focusedIndex];
+            if (selected) {
+              const globalIdx = channels.findIndex(c => c.id === selected.id);
+              if (globalIdx !== -1) {
+                switchToIndex(globalIdx);
+                break;
+              }
+            }
             switchToIndex(focusedIndex);
           } else {
-            // Open channel list and show OSD
-            setFocusedIndex(currentIndex);
-            setShowChannelList(true);
-            triggerOSD();
+            // Open channel list and focus current playing channel
+            openChannelList();
+          }
+          break;
+        case 'Guide':
+        case 'Menu':
+        case 'ContextMenu':
+        case 'TV':
+        case 'Live':
+          if (showChannelList) {
+            setShowChannelList(false);
+          } else {
+            openChannelList();
           }
           break;
       }
@@ -495,7 +532,7 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [switchChannel, handleExit, triggerOSD, showChannelList, focusedIndex, currentIndex, switchToIndex, cycleCategoryLeft, cycleCategoryRight]);
+  }, [switchChannel, handleExit, openChannelList, showChannelList, focusedIndex, currentIndex, switchToIndex, cycleCategoryLeft, cycleCategoryRight, categoryIndex, channels]);
 
   // ── Listen for native player errors dispatched by Kotlin ──────────────
   useEffect(() => {
@@ -561,6 +598,9 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
     }
     return () => {
       restoreBodyBackground();
+      if (isNative && window.AndroidTVBridge) {
+        window.AndroidTVBridge.stopStream();
+      }
     };
   }, [isNative]);
 
@@ -617,7 +657,6 @@ const LiveTVPlayer: React.FC<LiveTVPlayerProps> = ({
             channels={channels}
             currentIndex={currentIndex}
             focusedIndex={focusedIndex}
-            onFocusChange={setFocusedIndex}
             onSelect={switchToIndex}
             categoryIndex={categoryIndex}
             onCategoryChange={handleCategoryChange}

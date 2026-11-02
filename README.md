@@ -90,8 +90,18 @@ The admin portal for the hotel IT team and reception.
 4. Server emits a WebSocket event to that specific TV.
 5. TV UI instantly transitions from generic screensaver to "Welcome Mr. John Doe".
 
-## 🛡️ Security & MDM
-For full MDM features (Reboot, Wipe Data), the Android App must be set as a **Device Owner**:
+## 🛡️ Security & MDM (Kiosk Lockdown)
+To provision any new Android TV box, enforce 100% kiosk lockdown (so exiting Netflix/YouTube returns straight to Hotel Portal), and install the app:
 ```bash
-adb shell dpm set-device-owner com.hotel.tvapp/.KioskAdminReceiver
+./setup-box.sh <DEVICE_IP>
+# Example:
+./setup-box.sh 172.16.110.54
 ```
+
+This automated script performs:
+1. Connects to device over ADB (`port 5555`).
+2. Installs latest Hotel TV APK (`/uploads/apks/hotel-tv-latest.apk`).
+3. Sets active Device Admin (`KioskAdminReceiver`).
+4. Permanently disables Google TV Launcher (`pm disable-user --user 0 com.google.android.tvlauncher`).
+5. Sets Hotel TV as the permanent system Home activity (`set-home-activity`).
+6. Verifies kiosk mode is active.

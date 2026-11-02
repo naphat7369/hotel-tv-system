@@ -112,6 +112,23 @@ class MainActivity : Activity() {
         }
         webSocketClient.connect()
 
+        // ── Global Uncaught Exception Handler (Report Crashes to Server) ──
+        val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                sendDeviceLog(
+                    "ERROR",
+                    "Crash",
+                    "Uncaught exception: ${throwable.message ?: throwable.javaClass.simpleName}",
+                    JSONObject().apply {
+                        put("stackTrace", Log.getStackTraceString(throwable))
+                    }
+                )
+                Thread.sleep(250)
+            } catch (ignored: Exception) {}
+            defaultHandler?.uncaughtException(thread, throwable)
+        }
+
         // ── Inflate Layout ────────────────────────────────────────────────
         setContentView(R.layout.activity_main)
 
@@ -203,6 +220,30 @@ class MainActivity : Activity() {
     }
 
     // ════════════════════════════════════════════════════════════════════════
+    //  DEVICE LOGGING (Centralized Reporting to Server)
+    // ════════════════════════════════════════════════════════════════════════
+
+    fun sendDeviceLog(level: String, tag: String, message: String, details: JSONObject? = null) {
+        try {
+            val logData = JSONObject().apply {
+                put("deviceId", Config.getDeviceId(this@MainActivity))
+                put("level", level)
+                put("tag", tag)
+                put("message", message)
+                put("timestamp", java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US).apply {
+                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                }.format(java.util.Date()))
+                if (details != null) {
+                    put("details", details)
+                }
+            }
+            webSocketClient.emit("device_log", logData)
+        } catch (e: Exception) {
+            Log.e("DeviceLog", "Failed to send device log", e)
+        }
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
     //  WEBVIEW CONFIGURATION
     // ════════════════════════════════════════════════════════════════════════
 
@@ -224,6 +265,15 @@ class MainActivity : Activity() {
                 setSupportZoom(false)
                 builtInZoomControls   = false
                 displayZoomControls   = false
+            }
+
+            webChromeClient = object : android.webkit.WebChromeClient() {
+                override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
+                    if (consoleMessage != null && consoleMessage.messageLevel() == android.webkit.ConsoleMessage.MessageLevel.ERROR) {
+                        sendDeviceLog("ERROR", "WebViewConsole", "${consoleMessage.message()} (${consoleMessage.sourceId()}:${consoleMessage.lineNumber()})")
+                    }
+                    return super.onConsoleMessage(consoleMessage)
+                }
             }
 
             webViewClient = object : WebViewClient() {
@@ -273,6 +323,7 @@ class MainActivity : Activity() {
                         }
                         pageHasError = true
                         Log.e("WebView", "Main frame error ($errorCode): $description")
+                        sendDeviceLog("ERROR", "WebView", "Network/Page load error ($errorCode): $description for ${request.url}")
                         showError("Could not reach the server.\nCheck Server IP or network.\n($description)")
                     }
                 }
@@ -288,6 +339,7 @@ class MainActivity : Activity() {
                         pageHasError = true
                         val code = errorResponse?.statusCode ?: 0
                         Log.e("WebView", "HTTP error: $code")
+                        sendDeviceLog("ERROR", "WebView", "HTTP error ($code) for ${request.url}")
                         showError("Server returned an error (HTTP $code).\nCheck if the server is running.")
                     }
                 }
@@ -305,18 +357,28 @@ class MainActivity : Activity() {
                 fun launchApp(packageName: String) {
                     runOnUiThread {
                         try {
+                            sendDeviceLog("INFO", "AppLaunch", "Launching app: $packageName")
+                            releasePlayer()
+                            releaseMulticastLock()
                             val intent = context.packageManager.getLeanbackLaunchIntentForPackage(packageName)
                                 ?: context.packageManager.getLaunchIntentForPackage(packageName)
                             if (intent != null) {
                                 intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                                 context.startActivity(intent)
                             } else {
+                                sendDeviceLog("WARN", "AppLaunch", "App not installed: $packageName")
                                 Toast.makeText(context, "App not installed: $packageName", Toast.LENGTH_SHORT).show()
                             }
                         } catch (e: Exception) {
+                            sendDeviceLog("ERROR", "AppLaunch", "Failed to launch $packageName: ${e.message}")
                             Log.e("WebAppInterface", "Failed to launch app: $packageName", e)
                         }
                     }
+                }
+
+                @JavascriptInterface
+                fun log(level: String, tag: String, message: String) {
+                    sendDeviceLog(level, tag, message)
                 }
             }, "AndroidTV")
 
@@ -460,6 +522,22 @@ class MainActivity : Activity() {
 
             else -> super.onKeyDown(keyCode, event)
         }
+    }
+
+    override fun onKeyUp(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            return true
+        }
+        return super.onKeyUp(keyCode, event)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onBackPressed() {
+        // In Kiosk/Hotel mode, never finish or minimize the activity on back press.
+        webView.evaluateJavascript(
+            "window.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape', keyCode: 27}));",
+            null
+        )
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -606,19 +684,31 @@ class MainActivity : Activity() {
          */
         @JavascriptInterface
         fun launchApp(packageName: String) {
-            try {
-                val intent = packageManager.getLeanbackLaunchIntentForPackage(packageName)
-                    ?: packageManager.getLaunchIntentForPackage(packageName)
-                if (intent != null) {
-                    intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(intent)
-                    Log.d("AndroidTVBridge", "Launched app: $packageName")
-                } else {
-                    Log.w("AndroidTVBridge", "App not found or not launchable: $packageName")
+            runOnUiThread {
+                try {
+                    sendDeviceLog("INFO", "AppLaunch", "Launching app: $packageName")
+                    releasePlayer()
+                    releaseMulticastLock()
+                    val intent = packageManager.getLeanbackLaunchIntentForPackage(packageName)
+                        ?: packageManager.getLaunchIntentForPackage(packageName)
+                    if (intent != null) {
+                        intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        Log.d("AndroidTVBridge", "Launched app: $packageName")
+                    } else {
+                        sendDeviceLog("WARN", "AppLaunch", "App not found or not launchable: $packageName")
+                        Log.w("AndroidTVBridge", "App not found or not launchable: $packageName")
+                    }
+                } catch (e: Exception) {
+                    sendDeviceLog("ERROR", "AppLaunch", "Failed to launch $packageName: ${e.message}")
+                    Log.e("AndroidTVBridge", "Failed to launch app: $packageName", e)
                 }
-            } catch (e: Exception) {
-                Log.e("AndroidTVBridge", "Failed to launch app: $packageName", e)
             }
+        }
+
+        @JavascriptInterface
+        fun log(level: String, tag: String, message: String) {
+            sendDeviceLog(level, tag, message)
         }
 
         @JavascriptInterface
@@ -705,6 +795,9 @@ class MainActivity : Activity() {
                         when (state) {
                             Player.STATE_READY    -> {
                                 playerView.visibility = View.VISIBLE
+                                if (retryCount > 0) {
+                                    sendDeviceLog("INFO", "ExoPlayer", "Stream recovered successfully on $streamUrl")
+                                }
                                 retryCount = 0  // Reset retry count on successful playback
                             }
                             Player.STATE_ENDED    -> Log.d("ExoPlayer", "Stream ended")
@@ -713,9 +806,11 @@ class MainActivity : Activity() {
                         }
                     }
                     override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                        val errorDesc = "Playback error (${error.errorCodeName}): ${error.message} on $streamUrl"
                         Log.e("ExoPlayer", "Playback error (retry $retryCount/$MAX_RETRIES): ${error.message}", error)
                         if (retryCount < MAX_RETRIES) {
                             retryCount++
+                            sendDeviceLog("WARN", "ExoPlayer", "Retrying ($retryCount/$MAX_RETRIES): $errorDesc")
                             Log.d("ExoPlayer", "Auto-retrying in 3 seconds (attempt $retryCount)...")
                             Handler(Looper.getMainLooper()).postDelayed({
                                 try {
@@ -729,6 +824,7 @@ class MainActivity : Activity() {
                             }, 3000)
                         } else {
                             Log.e("ExoPlayer", "Max retries reached. Notifying WebView.")
+                            sendDeviceLog("ERROR", "ExoPlayer", "Max retries reached ($MAX_RETRIES): $errorDesc")
                             runOnUiThread {
                                 webView.evaluateJavascript(
                                     "window.dispatchEvent(new CustomEvent('nativePlayerError', { detail: { message: '${error.message}' } }));",
@@ -902,7 +998,8 @@ class MainActivity : Activity() {
     override fun onPause() {
         super.onPause()
         webView.onPause()
-        exoPlayer?.pause()
+        releasePlayer()
+        releaseMulticastLock()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

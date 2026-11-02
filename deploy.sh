@@ -1,0 +1,1 @@
+/home/itadmin/hotel-tv-system/update-server.sh

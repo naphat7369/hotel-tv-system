@@ -56,6 +56,7 @@ export interface AppSettings {
   portalSubtitle: string;
   portalWelcomeText: string;
   marqueeMessage: string;
+  marqueeSpeed?: number;
   guestServicesEnabled: { services: boolean; dining: boolean; localGuide: boolean };
   guestMenuCategories?: GuestMenuCategories;
 }
@@ -273,6 +274,42 @@ function App() {
     };
     bootApp();
 
+    // ── Global Error & Promise Rejection Reporting ──────────────────────────
+    const handleGlobalError = (e: ErrorEvent) => {
+      const errMessage = `${e.message} at ${e.filename}:${e.lineno}:${e.colno}`;
+      console.error('[GlobalError]', errMessage);
+      if ((window as any).AndroidTVBridge?.log) {
+        (window as any).AndroidTVBridge.log('ERROR', 'FrontendJS', errMessage);
+      } else if (socketRef.current?.connected) {
+        socketRef.current.emit('device_log', {
+          deviceId: deviceIdRef.current,
+          roomNumber: roomNumberRef.current,
+          level: 'ERROR',
+          tag: 'FrontendJS',
+          message: errMessage
+        });
+      }
+    };
+
+    const handleGlobalRejection = (e: PromiseRejectionEvent) => {
+      const reasonStr = e.reason?.stack || e.reason?.message || String(e.reason);
+      console.error('[UnhandledPromise]', reasonStr);
+      if ((window as any).AndroidTVBridge?.log) {
+        (window as any).AndroidTVBridge.log('ERROR', 'UnhandledPromise', reasonStr);
+      } else if (socketRef.current?.connected) {
+        socketRef.current.emit('device_log', {
+          deviceId: deviceIdRef.current,
+          roomNumber: roomNumberRef.current,
+          level: 'ERROR',
+          tag: 'UnhandledPromise',
+          message: reasonStr
+        });
+      }
+    };
+
+    window.addEventListener('error', handleGlobalError);
+    window.addEventListener('unhandledrejection', handleGlobalRejection);
+
     const serverHost = `http://${window.location.hostname}:3000`;
 
     // Prevent duplicate socket connections if already connected
@@ -390,11 +427,13 @@ function App() {
       setAlertModal({ active: false, message: '' });
     });
     socket.on('hide_broadcast', () => {
-      setMarquee({ message: '', type: 'default' });
+      setMarquee({ message: '', type: 'default', speed: 25 });
       setAlertModal({ active: false, message: '' });
       setInboxMessages([]);
     });
     return () => {
+      window.removeEventListener('error', handleGlobalError);
+      window.removeEventListener('unhandledrejection', handleGlobalRejection);
       clearInterval(heartbeatInterval);
       socket.disconnect();
       socketRef.current = null;
@@ -597,20 +636,21 @@ function App() {
     }
   }, [alertModal.active]);
 
-  // Auto-focus the first item in the sub-menu when a menu opens
+  // Auto-focus the first item in the sub-menu when a menu opens or when returning from TV
   useEffect(() => {
     if (activeMenu) {
       setTimeout(() => {
-        const firstFocusable = subMenuRefs.current.find(ref => ref !== null);
+        const firstFocusable = subMenuRefs.current[0] || subMenuRefs.current.find(ref => ref !== null);
         if (firstFocusable) {
           firstFocusable.focus();
+          firstFocusable.scrollIntoView({ block: 'center', behavior: 'smooth' });
         }
       }, 50);
     } else {
       // Clear refs when menu closes so old ones don't linger
       subMenuRefs.current = [];
     }
-  }, [activeMenu]);
+  }, [activeMenu, isPlayingLiveTV]);
 
   // Auto-focus Channel TV on initial load or when returning to main menu
   useEffect(() => {
@@ -1227,6 +1267,25 @@ function App() {
                           setIsPlayingLiveTV(true);
                         }
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          const nextIdx = (idx + 1) % liveChannels.length;
+                          const target = subMenuRefs.current[nextIdx];
+                          if (target) {
+                            target.focus();
+                            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                          }
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          const prevIdx = (idx - 1 + liveChannels.length) % liveChannels.length;
+                          const target = subMenuRefs.current[prevIdx];
+                          if (target) {
+                            target.focus();
+                            target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                          }
+                        }
+                      }}
                       className="snap-center flex-shrink-0 w-full h-[22vh] rounded-2xl overflow-hidden relative group border-2 border-transparent transition-all duration-300 hover:scale-[1.01] glow-focus outline-none bg-gradient-to-br from-slate-800 to-slate-900"
                     >
                       {channel.bgImage ? (
@@ -1393,6 +1452,7 @@ function App() {
             initialChannelIndex={currentChannelIndex}
             onExit={() => {
               setIsPlayingLiveTV(false);
+              setCurrentChannelIndex(0);
               // If a server restart was detected while watching TV, reload now
               if (pendingReloadRef.current) {
                 console.log('Deferred reload triggered — server had restarted during TV viewing.');

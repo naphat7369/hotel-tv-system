@@ -40,6 +40,17 @@ if [ "$STATE" != "device" ]; then
 fi
 echo "✅ Connected successfully!"
 
+# Detect Android version — app requires minSdk 28 (Android 9+).
+# Live TV uses TextureView rendering, verified on Android 11 (SDK 30) and Android 14 (SDK 34).
+ANDROID_VER=$(adb -s "${DEVICE}" shell getprop ro.build.version.release | tr -d '\r')
+ANDROID_SDK=$(adb -s "${DEVICE}" shell getprop ro.build.version.sdk | tr -d '\r')
+BOX_MODEL=$(adb -s "${DEVICE}" shell getprop ro.product.model | tr -d '\r')
+echo "📱 Box model: ${BOX_MODEL} | Android ${ANDROID_VER} (SDK ${ANDROID_SDK})"
+if [ -n "$ANDROID_SDK" ] && [ "$ANDROID_SDK" -lt 28 ] 2>/dev/null; then
+    echo "❌ Error: Android ${ANDROID_VER} (SDK ${ANDROID_SDK}) is not supported. Minimum is Android 9 (SDK 28)."
+    exit 1
+fi
+
 # 2. Install / Update APK
 if [ -f "$APK_PATH" ]; then
     echo "📦 [2/6] Installing Hotel TV App (${APK_PATH})..."

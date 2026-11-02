@@ -34,11 +34,11 @@ function mergeItemStats(
 // ── GET /api/v1/analytics/overview ───────────────────────────────────────────
 router.get('/overview', async (req: Request, res: Response) => {
   try {
-    const allDevices = Array.from(connectedDevices.values());
-    const onlineDevices = allDevices.filter(d => d.isOnline);
-    const offlineDevices = allDevices.filter(d => !d.isOnline);
-
-    const [totalChannels, activeChannels, topChannels] = await Promise.all([
+    const [dbDevices, totalChannels, activeChannels, topChannels] = await Promise.all([
+      prisma.device.findMany({
+        include: { room: true },
+        orderBy: { registeredAt: 'desc' }
+      }),
       prisma.channel.count({ where: { hotelId: MOCK_HOTEL_ID } }),
       prisma.channel.count({ where: { hotelId: MOCK_HOTEL_ID, isActive: true } }),
       prisma.channel.findMany({
@@ -51,21 +51,43 @@ router.get('/overview', async (req: Request, res: Response) => {
 
     const requestStats = getRequestStats();
 
-    const deviceList = allDevices.map(d => ({
-      deviceId: d.deviceId,
-      roomNumber: d.roomNumber || 'Unassigned',
-      isOnline: d.isOnline,
-      ipAddress: d.ipAddress,
-      wifiSignal: d.wifiSignal,
-      lastSeen: d.lastSeen,
-      deviceName: d.deviceName
-    }));
+    const seenDeviceIds = new Set<string>();
+    const deviceList = dbDevices.map(dbDevice => {
+      seenDeviceIds.add(dbDevice.boxSerial);
+      const inMemory = connectedDevices.get(dbDevice.boxSerial);
+      return {
+        deviceId: dbDevice.boxSerial,
+        roomNumber: inMemory?.roomNumber || dbDevice.room?.roomNumber || 'Unassigned',
+        isOnline: inMemory ? inMemory.isOnline : dbDevice.isOnline,
+        ipAddress: inMemory?.ipAddress || dbDevice.ipAddress || undefined,
+        wifiSignal: inMemory?.wifiSignal,
+        lastSeen: inMemory?.lastSeen || (dbDevice.lastSeen ? dbDevice.lastSeen.toISOString() : ''),
+        deviceName: inMemory?.deviceName
+      };
+    });
+
+    for (const d of connectedDevices.values()) {
+      if (!seenDeviceIds.has(d.deviceId)) {
+        deviceList.push({
+          deviceId: d.deviceId,
+          roomNumber: d.roomNumber || 'Unassigned',
+          isOnline: d.isOnline,
+          ipAddress: d.ipAddress,
+          wifiSignal: d.wifiSignal,
+          lastSeen: d.lastSeen,
+          deviceName: d.deviceName
+        });
+      }
+    }
+
+    const onlineDevices = deviceList.filter(d => d.isOnline);
+    const offlineDevices = deviceList.filter(d => !d.isOnline);
 
     res.status(200).json({
       devices: {
         online: onlineDevices.length,
         offline: offlineDevices.length,
-        total: allDevices.length,
+        total: deviceList.length,
         list: deviceList
       },
       channels: {

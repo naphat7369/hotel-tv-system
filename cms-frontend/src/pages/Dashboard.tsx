@@ -280,10 +280,14 @@ function StatCard({
 
 function DeviceRow({ device, index }: { device: AnalyticsData['devices']['list'][0]; index: number }) {
   const timeSince = (iso: string) => {
-    const diff = Date.now() - new Date(iso).getTime();
+    if (!iso) return 'Offline';
+    const ts = new Date(iso).getTime();
+    if (Number.isNaN(ts)) return 'Offline';
+    const diff = Date.now() - ts;
     if (diff < 60000) return 'Just now';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    return `${Math.floor(diff / 3600000)}h ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return `${Math.floor(diff / 86400000)}d ago`;
   };
 
   return (

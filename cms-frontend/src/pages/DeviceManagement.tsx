@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
+import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 
 interface Device {
   deviceId: string;
@@ -12,10 +13,32 @@ interface Device {
   deviceName?: string;
 }
 
+type SortKey = 'deviceRoom' | 'status' | 'network';
+
+interface SortConfig {
+  key: SortKey | null;
+  direction: 'asc' | 'desc';
+}
+
+const compareIpAddresses = (ipA?: string, ipB?: string): number => {
+  const partsA = (ipA || '').split('.').map(Number);
+  const partsB = (ipB || '').split('.').map(Number);
+  if (partsA.length === 4 && partsB.length === 4 && partsA.every(n => !isNaN(n)) && partsB.every(n => !isNaN(n))) {
+    for (let i = 0; i < 4; i++) {
+      if (partsA[i] !== partsB[i]) {
+        return partsA[i] - partsB[i];
+      }
+    }
+    return 0;
+  }
+  return (ipA || '').localeCompare(ipB || '', undefined, { numeric: true, sensitivity: 'base' });
+};
+
 export const DeviceManagement = () => {
   const [devices, setDevices] = useState<Device[]>([]);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: null, direction: 'asc' });
 
   useEffect(() => {
     // Connect to WebSocket server to receive real-time device updates
@@ -88,6 +111,26 @@ export const DeviceManagement = () => {
     }
   };
 
+  const handleSort = (key: SortKey) => {
+    setSortConfig(prev => {
+      if (prev.key === key) {
+        return { key, direction: prev.direction === 'asc' ? 'desc' : 'asc' };
+      }
+      return { key, direction: 'asc' };
+    });
+  };
+
+  const renderSortIcon = (key: SortKey) => {
+    if (sortConfig.key !== key) {
+      return <ArrowUpDown className="w-4 h-4 inline-block ml-1.5 text-gray-400 opacity-60 group-hover:opacity-100" />;
+    }
+    return sortConfig.direction === 'desc' ? (
+      <ArrowDown className="w-4 h-4 inline-block ml-1.5 text-indigo-600" />
+    ) : (
+      <ArrowUp className="w-4 h-4 inline-block ml-1.5 text-indigo-600" />
+    );
+  };
+
   // Filter devices based on search term
   const filteredDevices = devices.filter(device => {
     if (!searchTerm.trim()) return true;
@@ -99,6 +142,58 @@ export const DeviceManagement = () => {
       (device.ipAddress && device.ipAddress.toLowerCase().includes(term)) ||
       (device.macAddress && device.macAddress.toLowerCase().includes(term))
     );
+  });
+
+  // Sort filtered devices
+  const sortedDevices = [...filteredDevices].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    const multiplier = sortConfig.direction === 'asc' ? 1 : -1;
+
+    if (sortConfig.key === 'deviceRoom') {
+      const hasRoomA = Boolean(a.roomNumber && a.roomNumber.trim());
+      const hasRoomB = Boolean(b.roomNumber && b.roomNumber.trim());
+
+      if (hasRoomA && !hasRoomB) return -1 * multiplier;
+      if (!hasRoomA && hasRoomB) return 1 * multiplier;
+
+      if (hasRoomA && hasRoomB) {
+        const roomCmp = (a.roomNumber || '').localeCompare(b.roomNumber || '', undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        });
+        if (roomCmp !== 0) return roomCmp * multiplier;
+      }
+
+      const nameA = a.deviceName || a.deviceId || '';
+      const nameB = b.deviceName || b.deviceId || '';
+      return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: 'base' }) * multiplier;
+    }
+
+    if (sortConfig.key === 'status') {
+      if (a.isOnline !== b.isOnline) {
+        return (a.isOnline ? -1 : 1) * multiplier;
+      }
+      const timeA = new Date(a.lastSeen).getTime() || 0;
+      const timeB = new Date(b.lastSeen).getTime() || 0;
+      return (timeB - timeA) * multiplier;
+    }
+
+    if (sortConfig.key === 'network') {
+      const hasIpA = Boolean(a.ipAddress);
+      const hasIpB = Boolean(b.ipAddress);
+
+      if (hasIpA && !hasIpB) return -1 * multiplier;
+      if (!hasIpA && hasIpB) return 1 * multiplier;
+
+      const ipCmp = compareIpAddresses(a.ipAddress, b.ipAddress);
+      if (ipCmp !== 0) return ipCmp * multiplier;
+
+      const sigA = a.wifiSignal ?? -100;
+      const sigB = b.wifiSignal ?? -100;
+      return (sigB - sigA) * multiplier;
+    }
+
+    return 0;
   });
 
   const onlineCount = devices.filter(d => d.isOnline).length;
@@ -158,20 +253,50 @@ export const DeviceManagement = () => {
         <table className="min-w-full divide-y divide-gray-300">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Device & Room</th>
-              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-              <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Network Info</th>
+              <th
+                scope="col"
+                onClick={() => handleSort('deviceRoom')}
+                className="group py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6 cursor-pointer select-none hover:bg-gray-100 transition-colors"
+                title="Sort by Room / Device Name"
+              >
+                <span className="inline-flex items-center">
+                  Device & Room
+                  {renderSortIcon('deviceRoom')}
+                </span>
+              </th>
+              <th
+                scope="col"
+                onClick={() => handleSort('status')}
+                className="group px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer select-none hover:bg-gray-100 transition-colors"
+                title="Sort by Online / Offline Status"
+              >
+                <span className="inline-flex items-center">
+                  Status
+                  {renderSortIcon('status')}
+                </span>
+              </th>
+              <th
+                scope="col"
+                onClick={() => handleSort('network')}
+                className="group px-3 py-3.5 text-left text-sm font-semibold text-gray-900 cursor-pointer select-none hover:bg-gray-100 transition-colors"
+                title="Sort by IP Address / Signal"
+              >
+                <span className="inline-flex items-center">
+                  Network Info
+                  {renderSortIcon('network')}
+                </span>
+              </th>
               <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 bg-white">
-            {filteredDevices.length === 0 ? (
+            {sortedDevices.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-8 text-center text-gray-500">
                   {searchTerm ? `No devices matching "${searchTerm}"` : 'No devices connected yet.'}
                 </td>
               </tr>
-            ) : filteredDevices.map((device) => (
+            ) : sortedDevices.map((device) => (
               <tr key={device.deviceId}>
                 <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
                   <div className="flex items-center gap-2">
